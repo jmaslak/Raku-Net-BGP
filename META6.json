@@ -5,7 +5,7 @@
   ],
   "build-depends" : [ ],
   "depends" : [ ],
-  "description" : "BGP Server",
+  "description" : "BGP Server Support",
   "license" : "Artistic-2.0",
   "name" : "Net::BGP",
   "perl" : "6.c",
