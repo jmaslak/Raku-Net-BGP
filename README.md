@@ -10,10 +10,20 @@ SYNOPSIS
 
     use Net::BGP
 
+    my $bgp = Net::BGP.new( port => 179 );  # Create a server object
+
 DESCRIPTION
 ===========
 
 This provides framework to support the BGP protocol within a Perl6 application.
+
+ATTRIBUTES
+==========
+
+port
+----
+
+The port attribute defaults to 179 (the IETF assigned port default), but can be set to any value between 0 and 65535. It can also be set to Nil, meaning that it will be an ephimeral port that will be set once the listener is started.
 
 FUNCTIONS
 =========
