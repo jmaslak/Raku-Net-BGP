@@ -5,18 +5,80 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     our subset PortNum of Int where ^65536;
 
-    has PortNum $.port is default(179);
+    has PortNum:D $.port is default(179);
+
+    has Channel $!listener-channel; # Listener supply
 
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
-            if $k eq 'port' {
-                $!port := %args{$k} if defined %args{$k};
-            } else {
-                die("Invalid attribute set in call to constructor: $k");
+            given $k {
+                when 'port'     { $!port     = %args{$k} if defined %args{$k} }
+                default { die("Invalid attribute set in call to constructor: $k") }
             }
         }
     }
-};
+
+    method listen-stop(--> Nil) {
+        say "Sending Stop";
+        if defined $!listener-channel {
+            say "Sending Stop2";
+            $!listener-channel.send("STOP");
+        }
+    }
+
+    method listen(--> Nil) {
+        say "Listening on $.port";
+        my $promise = Promise.new;
+
+        my $listen-socket;
+
+        if defined $!listener-channel {
+            die("BGP is already listening");
+        }
+
+        $!listener-channel = Channel.new;
+        my $listen-promise = Promise.new;
+
+        start {
+            $listen-socket = IO::Socket::Async.listen("::", $.port);
+            
+            react {
+                my $listen-tap = do whenever $listen-socket -> $conn {
+                    start {
+                        say "Connection established!";
+                        react { 
+                            whenever $conn.Supply.lines -> $line {
+                                $conn.print("Hello, $line!\n");
+                                LAST { say "CLOSED" }
+                                QUIT { say "QUIT"; $conn.close }
+                            }
+                        }
+                    }
+                }
+
+                await $listen-tap.socket-port;
+                $!port = $listen-tap.socket-port.result;
+                $listen-promise.keep($.port);
+
+                whenever $!listener-channel -> $msg {
+                    say "Got MSG!";
+                    say $msg;
+                    if ($msg eq "STOP") {
+                        say "Stopping!";
+                        $listen-socket.close();
+                        $promise.keep();
+                        done();
+                    }
+                }
+            }
+            
+            await $promise;
+        }
+        await $listen-promise;
+
+        return;
+    }
+}
 
 =begin pod
 
@@ -45,9 +107,14 @@ started.
 
 =head1 METHODS
 
-=head2 ...
+=head2 listen
 
-...
+  $bgp.listen();
+
+Starts BGP listener, on the port provided in the port attribute.
+
+For a given instance of the BGP class, only one listener can be active at any
+point in time.
 
 =head1 AUTHOR
 
