@@ -1,8 +1,6 @@
 use v6.c;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
-    use StrictNamedArguments;
-
     our subset PortNum of Int where ^65536;
 
     has PortNum:D $.port is default(179);
