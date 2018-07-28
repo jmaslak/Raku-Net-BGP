@@ -19,15 +19,12 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     }
 
     method listen-stop(--> Nil) {
-        say "Sending Stop";
         if defined $!listener-channel {
-            say "Sending Stop2";
             $!listener-channel.send("STOP");
         }
     }
 
     method listen(--> Nil) {
-        say "Listening on $.port";
         my $promise = Promise.new;
 
         my $listen-socket;
@@ -45,7 +42,6 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             react {
                 my $listen-tap = do whenever $listen-socket -> $conn {
                     start {
-                        say "Connection established!";
                         react { 
                             whenever $conn.Supply.lines -> $line {
                                 $conn.print("Hello, $line!\n");
@@ -61,10 +57,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                 $listen-promise.keep($.port);
 
                 whenever $!listener-channel -> $msg {
-                    say "Got MSG!";
-                    say $msg;
                     if ($msg eq "STOP") {
-                        say "Stopping!";
                         $listen-socket.close();
                         $promise.keep();
                         done();
