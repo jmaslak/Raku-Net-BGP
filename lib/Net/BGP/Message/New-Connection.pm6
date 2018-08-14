@@ -6,6 +6,9 @@ use v6;
 #
 
 class Net::BGP::Message::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
+    has Str $.client-ip;
+    has Int $.client-port;
+
     method message-type(-->Str) { 'New-Connection' };
 }
 

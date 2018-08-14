@@ -45,7 +45,12 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             react {
                 my $listen-tap = do whenever $listen-socket -> $conn {
                     start {
-                        $.user-channel.send( Net::BGP::Message::New-Connection.new );
+                        $.user-channel.send(
+                            Net::BGP::Message::New-Connection.new(
+                                :client-ip( $conn.peer-host ),
+                                :client-port( $conn.peer-port ),
+                            ),
+                        );
                         react { 
                             whenever $conn.Supply.lines -> $line {
                                 $conn.print("Hello, $line!\n");

@@ -16,6 +16,19 @@ subtest 'Parent Class', {
     done-testing;
 };
 
+subtest 'New-Connection', {
+    my $msg = Net::BGP::Message::New-Connection.new(
+        :client-ip('192.0.2.1'),
+        :client-port(1500),
+    );
+    ok $msg, "Created BGP Class";
+    is $msg.message-type, 'New-Connection', 'Proper New-Connection message';
+    is $msg.client-ip, '192.0.2.1', 'Client IP address';
+    is $msg.client-port, 1500, 'Client IP port';
+
+    done-testing;
+};
+
 subtest 'Stop', {
     my $msg = Net::BGP::Message::Stop.new();
     ok $msg, "Created BGP Class";

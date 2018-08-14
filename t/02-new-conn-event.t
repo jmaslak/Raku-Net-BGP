@@ -23,6 +23,8 @@ subtest 'Event', {
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.client-ip, '::1', 'Client IP is as expected';
+        ok $cr.client-port > 0, 'Client port is as expected';
 
         $client.close();
 
