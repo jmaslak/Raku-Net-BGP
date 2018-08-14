@@ -25,6 +25,16 @@ port
 
 The port attribute defaults to 179 (the IETF assigned port default), but can be set to any value between 0 and 65535. It can also be set to Nil, meaning that it will be an ephimeral port that will be set once the listener is started.
 
+server-channel
+--------------
+
+Returns the channel communicate to command the BGP server process. This will not be defined until `listen()` is executed. It is intended that user code will send messages to the BGP server.
+
+user-channel
+------------
+
+Returns the channel communicate for the BGP server process to communicate to user code.
+
 METHODS
 =======
 
