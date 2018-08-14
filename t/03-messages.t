@@ -16,5 +16,13 @@ subtest 'Parent Class', {
     done-testing;
 };
 
+subtest 'Stop', {
+    my $msg = Net::BGP::Message::Stop.new();
+    ok $msg, "Created BGP Class";
+    is $msg.message-type, 'Stop', 'Proper Stop message';
+
+    done-testing;
+};
+
 done-testing;
 

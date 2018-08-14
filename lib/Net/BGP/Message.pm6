@@ -5,6 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
+use Net::BGP::Message::New-Connection;
+use Net::BGP::Message::Stop;
+
 class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
     method message-type(-->Str) { 'NOOP' };
 }
