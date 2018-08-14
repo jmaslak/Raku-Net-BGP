@@ -18,12 +18,11 @@ subtest 'Event', {
 
         diag "Port is: " ~ $bgp.port;
 
-        my $client = IO::Socket::INET.new(:host<::>, :port($bgp.port), :family(PF_INET6) );
-        $client.print("HERE");
+        my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
-        is $cr.client-ip, '::1', 'Client IP is as expected';
+        is normalize-ip($cr.client-ip), '127.0.0.1', 'Client IP is as expected';
         ok $cr.client-port > 0, 'Client port is as expected';
 
         $client.close();
@@ -36,6 +35,13 @@ subtest 'Event', {
 };
 
 done-testing;
+
+sub normalize-ip($ip) {
+    my $normalized-ip = $ip;
+    $normalized-ip ~~ s/^ '::ffff:' //;
+
+    return $normalized-ip;
+}
 
 sub check-compiler-version(--> Bool) {
     # We don't know about anything but Rakudo, so we assume it works.
