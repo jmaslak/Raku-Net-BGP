@@ -11,10 +11,11 @@
   "perl" : "6.c",
   "provides" : {
     "Net::BGP" : "lib/Net/BGP.pm6",
-    "Net::BGP::Message" : "lib/Net/BGP/Message.pm6",
-    "Net::BGP::Message::Closed-Connection" : "lib/Net/BGP/Message/Closed-Connection.pm6",
-    "Net::BGP::Message::New-Connection" : "lib/Net/BGP/Message/New-Connection.pm6",
-    "Net::BGP::Message::Stop" : "lib/Net/BGP/Message/Stop.pm6"
+    "Net::BGP::Command" : "lib/Net/BGP/Command.pm6",
+    "Net::BGP::Command::Stop" : "lib/Net/BGP/Command/Stop.pm6",
+    "Net::BGP::Notify" : "lib/Net/BGP/Notify.pm6",
+    "Net::BGP::Notify::Closed-Connection" : "lib/Net/BGP/Notify/Closed-Connection.pm6",
+    "Net::BGP::Notify::New-Connection" : "lib/Net/BGP/Notify/New-Connection.pm6"
   },
   "resources" : [ ],
   "source-url" : "https://github.com/jmaslak/Perl6-Net-BGP.git",

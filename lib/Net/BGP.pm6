@@ -1,6 +1,7 @@
 use v6.c;
 
-use Net::BGP::Message;
+use Net::BGP::Command;
+use Net::BGP::Notify;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     our subset PortNum of Int where ^65536;
@@ -23,7 +24,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     method listen-stop(--> Nil) {
         if defined $!listener-channel {
-            $!listener-channel.send(Net::BGP::Message::Stop.new);
+            $!listener-channel.send(Net::BGP::Command::Stop.new);
         }
     }
 
@@ -47,7 +48,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                     start {
                         my $msg = buf8.new;
                         $.user-channel.send(
-                            Net::BGP::Message::New-Connection.new(
+                            Net::BGP::Notify::New-Connection.new(
                                 :client-ip( $conn.peer-host ),
                                 :client-port( $conn.peer-port ),
                             ),
@@ -65,7 +66,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                 # $conn.print("Hello, $char!\n");
                                 LAST {
                                     $.user-channel.send(
-                                        Net::BGP::Message::Closed-Connection.new(
+                                        Net::BGP::Notify::Closed-Connection.new(
                                             :client-ip( $conn.peer-host ),
                                             :client-port( $conn.peer-port ),
                                         ),
@@ -74,7 +75,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                 }
                                 QUIT {
                                     $.user-channel.send(
-                                        Net::BGP::Message::Closed-Connection.new(
+                                        Net::BGP::Noitify::Closed-Connection.new(
                                             :client-ip( $conn.peer-host ),
                                             :client-port( $conn.peer-port ),
                                         ),
@@ -90,7 +91,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                 $!port = $listen-tap.socket-port.result;
                 $listen-promise.keep($.port);
 
-                whenever $!listener-channel -> Net::BGP::Message $msg {
+                whenever $!listener-channel -> Net::BGP::Command $msg {
                     if ($msg.message-type eq "Stop") {
                         $listen-socket.close();
                         $promise.keep();

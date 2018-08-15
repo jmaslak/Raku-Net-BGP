@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Message::Closed-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
+class Net::BGP::Notify::Closed-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Str $.client-ip;
     has Int $.client-port;
 
@@ -16,20 +16,21 @@ class Net::BGP::Message::Closed-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
 
 =head1 NAME
 
-Net::BGP::Message::Closed-Connection - BGP Closed Connection Notification
+Net::BGP::Notify::Closed-Connection - BGP Closed Connection Notification
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Message::Closed-Connection;
+  use Net::BGP::Notify::Closed-Connection;
 
-  my $msg = Net::BGP::Message::Closed-Connection.new();
+  my $msg = Net::BGP::Notify::Closed-Connection.new();
 
 =head1 DESCRIPTION
 
-A Closed-Connection message.
+A Closed-Connection notification.
 
-The Closed-Connection message is only sent from the BGP server to the user code.
-This event is triggered when a connection to the BGP listener port is closed.
+The Closed-Connection notification is only sent from the BGP server to the user
+code.  This event is triggered when a connection to the BGP listener port is
+closed.
 
 =head1 METHODS
 

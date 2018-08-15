@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Message::Stop:ver<0.0.0>:auth<cpan:JMASLAK> {
+class Net::BGP::Command::Stop:ver<0.0.0>:auth<cpan:JMASLAK> {
     method message-type(-->Str) { 'Stop' };
 }
 
@@ -13,19 +13,19 @@ class Net::BGP::Message::Stop:ver<0.0.0>:auth<cpan:JMASLAK> {
 
 =head1 NAME
 
-Net::BGP::Message::Stop - BGP Stop Server Message
+Net::BGP::Command::Stop - BGP Stop Server Command
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Message::Stop;
+  use Net::BGP::Command::Stop;
 
-  my $msg = Net::BGP::Message::Stop.new();
+  my $msg = Net::BGP::Command::Stop.new();
 
 =head1 DESCRIPTION
 
-A Stop message.
+A Stop command.
 
-The Stop message is only sent from user code to the BGP server.  It will cause
+The Stop command is only sent from user code to the BGP server.  It will cause
 the BGP server to shut down all the connections.
 
 =head1 METHODS

@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Message::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
+class Net::BGP::Notify::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Str $.client-ip;
     has Int $.client-port;
 
@@ -16,21 +16,21 @@ class Net::BGP::Message::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
 
 =head1 NAME
 
-Net::BGP::Message::New-Connection - BGP New Connection Notification
+Net::BGP::Notify::New-Connection - BGP New Connection Notification
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Message::New-Connection;
+  use Net::BGP::Notify::New-Connection;
 
-  my $msg = Net::BGP::Message::New-Connection.new();
+  my $msg = Net::BGP::Notify::New-Connection.new();
 
 =head1 DESCRIPTION
 
-A New-Connection message.
+A New-Connection notification.
 
-The New-Connection message is only sent from the BGP server to the user code.
-This event is triggered when a new connection to the BGP listener port is
-received.
+The New-Connection notificationis only sent from the BGP server to the user
+code.  This event is triggered when a new connection to the BGP listener port
+is received.
 
 =head1 METHODS
 
