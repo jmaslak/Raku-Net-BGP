@@ -73,8 +73,8 @@ subtest 'Error' => {
     subtest 'Parent Class' => {
         my $msg = Net::BGP::Error.new();
         ok $msg, "Created BGP Class";
-        is $msg.message-type, 'NOOP', 'Message type has proper default';
-        is $msg.is-error, True, 'Message is not an error';
+        is $msg.message-type, 'NOOP', 'Message type has proper value';
+        is $msg.is-error, True, 'Message is an error';
         is $msg.human, 'No-Op', 'Human readable type';
 
         done-testing;
