@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Notify;
 
-class Net::BGP::Error:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Notify {
+class Net::BGP::Error:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Notify is Exception {
     method message-type(-->Str) { 'NOOP'  };
     method is-error(-->Bool)    { True    };
     method human(-->Str)        { 'No-Op' };

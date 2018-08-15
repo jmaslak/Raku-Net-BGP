@@ -61,10 +61,16 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                         react { 
                             whenever $conn.Supply(:bin).list -> $buf {
                                 $msg.append($buf);
-                                while my $remove = parse_bgp_message($msg) {
+                                while my $remove = self.parse_bgp_message($msg) {
                                     if $remove {
-                                        # $conn.print("Removing some command characters!\n");
+                                        $conn.print("Removing some command characters!\n");
                                         $msg.splice: 0, $remove, (); # Remove the message
+                                    }
+                                }
+                                CATCH {
+                                    when Net::BGP::Error {
+                                        $.user-channel.send( $_ );
+                                        $conn.close;
                                     }
                                 }
 
@@ -89,6 +95,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                 }
                             }
                         }
+
                     }
                 }
 
@@ -111,21 +118,36 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
         return;
     }
-}
 
-sub parse_bgp_message(buf8 $msg --> Int) {
-    if $msg.bytes < 19 {
-        return 0;  # We don't have a message
+    method parse_bgp_message(buf8 $msg --> Int) {
+        if $msg.bytes < 19 {
+            return 0;  # We don't have a message
+        }
+
+        if !self.valid-header($msg) {
+            die Net::BGP::Error::Marker-Format.new();
+        }
+
+        my $expected-len = nuint16($msg[16..17]);
+
+        if $msg.bytes < $expected-len {
+            return 0;
+        }
+
+        # TODO: Don't actually parse the message yet XXX
+        return $expected-len;
     }
 
-    my $expected-len = nuint16($msg[16..17]);
+    method valid-header(buf8 $msg -->Bool) {
+        if $msg.bytes < 16 { return False; }
+        
+        for ^16 -> $i {
+            if $msg[$i] != 255 { return False; }
+        }
 
-    if $msg.bytes < $expected-len {
-        return 0;
+        return True;
     }
 
-    # TODO: Don't actually parse the message yet XXX
-    return $expected-len;
 }
 
 multi sub nuint16(@a --> Int) {
