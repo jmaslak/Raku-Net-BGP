@@ -9,7 +9,7 @@ use Net::BGP::Error;
 
 class Net::BGP::Error::Marker-Format:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
     method message-type(-->Str) { 'Marker-Format' };
-    method human(-->Str)        { 'Invalid header marker format (RFC4271)' };
+    method message(-->Str)      { 'Invalid header marker format (RFC4271)' };
 }
 
 =begin pod
@@ -42,7 +42,7 @@ Contains the string C<Marker-Format>.
 
 Returns True (that this is an error).
 
-=head2 human
+=head2 message
 
 Returns a human-readable error message.
 

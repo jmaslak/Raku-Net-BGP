@@ -10,7 +10,7 @@ use Net::BGP::Notify;
 class Net::BGP::Error:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Notify is Exception {
     method message-type(-->Str) { 'NOOP'  };
     method is-error(-->Bool)    { True    };
-    method human(-->Str)        { 'No-Op' };
+    method message(-->Str)      { 'No-Op' };
 }
 
 =begin pod
@@ -41,7 +41,7 @@ Contains a string that describes what message type the error represents.
 Returns true or false based on whether this error represents an error.
 It defaults to True in the parent class.
 
-=head2 human
+=head2 message
 
 Returns a human-readable error message.
 

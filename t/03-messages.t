@@ -75,7 +75,7 @@ subtest 'Error' => {
         ok $msg, "Created BGP Class";
         is $msg.message-type, 'NOOP', 'Message type has proper value';
         is $msg.is-error, True, 'Message is an error';
-        is $msg.human, 'No-Op', 'Human readable type';
+        is $msg.message, 'No-Op', 'Human readable type';
 
         done-testing;
     };
@@ -85,7 +85,7 @@ subtest 'Error' => {
         ok $msg, "Created Error Class";
         is $msg.message-type, 'Marker-Format', 'Message type has proper value';
         is $msg.is-error, True, 'Message is an error';
-        is $msg.human, 'Invalid header marker format (RFC4271)', 'Human readable type';
+        is $msg.message, 'Invalid header marker format (RFC4271)', 'Human readable type';
 
         done-testing;
     };

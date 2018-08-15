@@ -13,6 +13,8 @@
     "Net::BGP" : "lib/Net/BGP.pm6",
     "Net::BGP::Command" : "lib/Net/BGP/Command.pm6",
     "Net::BGP::Command::Stop" : "lib/Net/BGP/Command/Stop.pm6",
+    "Net::BGP::Error" : "lib/Net/BGP/Error.pm6",
+    "Net::BGP::Error::Marker-Format" : "lib/Net/BGP/Error/Marker-Format.pm6",
     "Net::BGP::Notify" : "lib/Net/BGP/Notify.pm6",
     "Net::BGP::Notify::Closed-Connection" : "lib/Net/BGP/Notify/Closed-Connection.pm6",
     "Net::BGP::Notify::New-Connection" : "lib/Net/BGP/Notify/New-Connection.pm6"
