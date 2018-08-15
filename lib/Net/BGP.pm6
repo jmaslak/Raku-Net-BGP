@@ -45,6 +45,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             react {
                 my $listen-tap = do whenever $listen-socket -> $conn {
                     start {
+                        my $msg = buf8.new;
                         $.user-channel.send(
                             Net::BGP::Message::New-Connection.new(
                                 :client-ip( $conn.peer-host ),
@@ -52,9 +53,17 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                             ),
                         );
                         react { 
-                            whenever $conn.Supply.lines -> $line {
-                                $conn.print("Hello, $line!\n");
-                                LAST { say "CLOSED" }
+                            whenever $conn.Supply(:bin).list -> $buf {
+                                $msg.append($buf);
+                                while my $remove = parse_bgp_message($msg) {
+                                    if $remove {
+                                        # $conn.print("Removing some command characters!\n");
+                                        $msg.splice: 0, $remove, (); # Remove the message
+                                    }
+                                }
+
+                                # $conn.print("Hello, $char!\n");
+                                LAST { say $conn.peer-host ~ " CLOSED" }
                                 QUIT { say "QUIT"; $conn.close }
                             }
                         }
@@ -80,6 +89,29 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
         return;
     }
+}
+
+sub parse_bgp_message(buf8 $msg --> Int) {
+    if $msg.bytes < 19 {
+        return 0;  # We don't have a message
+    }
+
+    my $expected-len = nuint16($msg[16..17]);
+
+    if $msg.bytes < $expected-len {
+        return 0;
+    }
+
+    # TODO: Don't actually parse the message yet XXX
+    return $expected-len;
+}
+
+multi sub nuint16(@a --> Int) {
+    return nuint16(@a[0], @a[1]);
+}
+
+multi sub nuint16(byte $a, byte $b --> Int) {
+    return $a * 2⁸ + $b;
 }
 
 =begin pod
