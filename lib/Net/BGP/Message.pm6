@@ -5,6 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
+use Net::BGP::Message::Closed-Connection;
 use Net::BGP::Message::New-Connection;
 use Net::BGP::Message::Stop;
 

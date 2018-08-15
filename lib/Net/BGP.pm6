@@ -63,8 +63,24 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                 }
 
                                 # $conn.print("Hello, $char!\n");
-                                LAST { say $conn.peer-host ~ " CLOSED" }
-                                QUIT { say "QUIT"; $conn.close }
+                                LAST {
+                                    $.user-channel.send(
+                                        Net::BGP::Message::Closed-Connection.new(
+                                            :client-ip( $conn.peer-host ),
+                                            :client-port( $conn.peer-port ),
+                                        ),
+                                    );
+                                    $conn.close
+                                }
+                                QUIT {
+                                    $.user-channel.send(
+                                        Net::BGP::Message::Closed-Connection.new(
+                                            :client-ip( $conn.peer-host ),
+                                            :client-port( $conn.peer-port ),
+                                        ),
+                                    );
+                                    $conn.close
+                                }
                             }
                         }
                     }

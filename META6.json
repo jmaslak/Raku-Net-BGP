@@ -12,6 +12,7 @@
   "provides" : {
     "Net::BGP" : "lib/Net/BGP.pm6",
     "Net::BGP::Message" : "lib/Net/BGP/Message.pm6",
+    "Net::BGP::Message::Closed-Connection" : "lib/Net/BGP/Message/Closed-Connection.pm6",
     "Net::BGP::Message::New-Connection" : "lib/Net/BGP/Message/New-Connection.pm6",
     "Net::BGP::Message::Stop" : "lib/Net/BGP/Message/Stop.pm6"
   },
