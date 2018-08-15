@@ -2,6 +2,8 @@ use v6.c;
 
 use Net::BGP::Command;
 use Net::BGP::Command::Stop;
+use Net::BGP::Error;
+use Net::BGP::Error::Marker-Format;
 use Net::BGP::Notify;
 use Net::BGP::Notify::Closed-Connection;
 use Net::BGP::Notify::New-Connection;
