@@ -5,7 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Notify::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
+use Net::BGP::Notify;
+
+class Net::BGP::Notify::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Notify {
     has Str $.client-ip;
     has Int $.client-port;
 

@@ -5,8 +5,6 @@ use v6;
 # All Rights Reserved - See License
 #
 
-use Net::BGP::Command::Stop;
-
 class Net::BGP::Command:ver<0.0.0>:auth<cpan:JMASLAK> {
     method message-type(-->Str) { 'NOOP' };
 }

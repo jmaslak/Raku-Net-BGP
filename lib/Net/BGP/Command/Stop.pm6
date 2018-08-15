@@ -5,7 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Command::Stop:ver<0.0.0>:auth<cpan:JMASLAK> {
+use Net::BGP::Command;
+
+class Net::BGP::Command::Stop:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Command {
     method message-type(-->Str) { 'Stop' };
 }
 

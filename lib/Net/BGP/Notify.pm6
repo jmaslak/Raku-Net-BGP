@@ -5,11 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-use Net::BGP::Notify::Closed-Connection;
-use Net::BGP::Notify::New-Connection;
-
 class Net::BGP::Notify:ver<0.0.0>:auth<cpan:JMASLAK> {
     method message-type(-->Str) { 'NOOP' };
+    method is-error(-->Bool)    { False  };
 }
 
 =begin pod
@@ -34,6 +32,11 @@ server code to the user code.
 =head2 message-type
 
 Contains a string that describes what message type the notification represents.
+
+=head2 is-error
+
+Returns true or false based on whether this notification represents an error.
+It defaults to False in the parent class.
 
 =head1 AUTHOR
 

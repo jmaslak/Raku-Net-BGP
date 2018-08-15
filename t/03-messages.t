@@ -6,8 +6,7 @@ use Test;
 # All Rights Reserved - See License
 #
 
-use Net::BGP::Command;
-use Net::BGP::Notify;
+use Net::BGP;
 
 subtest 'Command' => {
     subtest 'Parent Class' => {
@@ -34,6 +33,7 @@ subtest 'Notify' => {
         my $msg = Net::BGP::Notify.new();
         ok $msg, "Created BGP Class";
         is $msg.message-type, 'NOOP', 'Message type has proper default';
+        is $msg.is-error, False, 'Message is not an error';
 
         done-testing;
     };
@@ -47,6 +47,7 @@ subtest 'Notify' => {
         is $msg.message-type, 'Closed-Connection', 'Proper Closed-Connection message';
         is $msg.client-ip, '192.0.2.1', 'Client IP address';
         is $msg.client-port, 1500, 'Client IP port';
+        is $msg.is-error, False, 'Message is not an error';
 
         done-testing;
     };
@@ -60,6 +61,7 @@ subtest 'Notify' => {
         is $msg.message-type, 'New-Connection', 'Proper New-Connection message';
         is $msg.client-ip, '192.0.2.1', 'Client IP address';
         is $msg.client-port, 1500, 'Client IP port';
+        is $msg.is-error, False, 'Message is not an error';
 
         done-testing;
     };
