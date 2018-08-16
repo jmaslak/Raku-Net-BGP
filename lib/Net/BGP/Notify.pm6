@@ -14,7 +14,7 @@ class Net::BGP::Notify:ver<0.0.0>:auth<cpan:JMASLAK> {
 
 =head1 NAME
 
-Net::BGP::Notify - BGP Server Noitfy Superclass
+Net::BGP::Notify - BGP Server Notify Superclass
 
 =head1 SYNOPSIS
 
