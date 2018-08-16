@@ -96,6 +96,14 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                             }
                         }
 
+                        CATCH {
+                            default {
+                                # We should log better
+                                $*ERR.say("Error in child process!");
+                                $*ERR.say(.message);
+                                .rethrow;
+                            }
+                        }
                     }
                 }
 
