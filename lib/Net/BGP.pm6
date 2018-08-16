@@ -125,7 +125,10 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     # WARNING - THIS METHOD HAS SIDE EFFECTS!
     #
-    # It will REMOVE the message from the buffer!
+    # Side Effect 1 - It will REMOVE the message from the buffer!
+    #
+    # Side Effect 2 - Will throw on BGP message error
+    #
     method pop_bgp_message(buf8 $msg is rw --> Hash) {
         my %parsed;
 
