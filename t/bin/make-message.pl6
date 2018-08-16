@@ -13,12 +13,14 @@ use v6;
 # ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff
 # 00 13 00
 #
+# Also allows trailing comments (prefaced by a "#")
+#
 # That will produce a 19 byte long file
 
 sub MAIN() {
     my buf8 $buf = buf8.new;
 
-    for $*IN.words -> $hex {
+    for $*IN.lines.map( { S/ \# .* $ // } ).words -> $hex {
         $buf.append( :16($hex) );
     }
 
