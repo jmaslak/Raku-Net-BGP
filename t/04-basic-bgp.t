@@ -52,7 +52,7 @@ subtest 'invalid-marker', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/02-test-invalid-header.msg') );
+        $client.write( read-message('t/bgp-messages/02-test-invalid-marker.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
