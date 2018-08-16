@@ -3,6 +3,7 @@ use v6.c;
 use Net::BGP::Command;
 use Net::BGP::Command::Stop;
 use Net::BGP::Error;
+use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
 use Net::BGP::Notify;
 use Net::BGP::Notify::Closed-Connection;
@@ -61,12 +62,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                         react { 
                             whenever $conn.Supply(:bin).list -> $buf {
                                 $msg.append($buf);
-                                while my $remove = self.parse_bgp_message($msg) {
-                                    if $remove {
-                                        $conn.print("Removing some command characters!\n");
-                                        $msg.splice: 0, $remove, (); # Remove the message
-                                    }
-                                }
+                                self.pop_bgp_message($msg);
                                 CATCH {
                                     when Net::BGP::Error {
                                         $.user-channel.send( $_ );
@@ -127,7 +123,12 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         return;
     }
 
-    method parse_bgp_message(buf8 $msg --> Int) {
+    # WARNING - THIS METHOD HAS SIDE EFFECTS!
+    #
+    # It will REMOVE the message from the buffer!
+    method pop_bgp_message(buf8 $msg is rw --> Hash) {
+        my %parsed;
+
         if $msg.bytes < 19 {
             return 0;  # We don't have a message
         }
@@ -137,13 +138,21 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
 
         my $expected-len = nuint16($msg[16..17]);
+        %parsed<length> = $expected-len;
 
         if $msg.bytes < $expected-len {
-            return 0;
+            return; # We don't yet have the full message
         }
 
+        if $expected-len < 19 {
+            # Too short
+            die Net::BGP::Error::Length-Too-Short.new();
+        }
+
+        $msg.splice: 0, $expected-len, (); # Remove the message
+
         # TODO: Don't actually parse the message yet XXX
-        return $expected-len;
+        return Hash.new;
     }
 
     method valid-header(buf8 $msg -->Bool) {

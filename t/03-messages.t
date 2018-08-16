@@ -80,6 +80,17 @@ subtest 'Error' => {
         done-testing;
     };
 
+    subtest 'Length-Too-Short' => {
+        my $msg = Net::BGP::Error::Length-Too-Short.new(:length(10));
+        ok $msg, "Created Error Class";
+        is $msg.message-type, 'Length-Too-Short', 'Message type has proper value';
+        is $msg.is-error, True, 'Message is an error';
+        is $msg.message, 'Length field in header is impossibly short (RFC4271)', 'Human readable type';
+        is $msg.length, 10, 'Length is valid';
+
+        done-testing;
+    };
+
     subtest 'Marker-Format' => {
         my $msg = Net::BGP::Error::Marker-Format.new();
         ok $msg, "Created Error Class";
