@@ -38,6 +38,17 @@ subtest 'Notify' => {
         done-testing;
     };
 
+    subtest 'BGP-Message' => {
+        my $bgp = Net::BGP::Message.from-raw( read-message('t/bgp-messages/05-open-message.msg')[18..*] );
+        my $msg = Net::BGP::Notify::BGP-Message.new(:message($bgp));
+        ok $msg, "Created Notify Class";
+        is $msg.message-type, 'BGP-Message', 'Message type has proper value';
+        is $msg.is-error, False, 'Message is not an error';
+        is $msg.message.message-type, 1, 'BGP message type is correct';
+
+        done-testing;
+    };
+
     subtest 'Closed-Connection' => {
         my $msg = Net::BGP::Notify::Closed-Connection.new(
             :client-ip('192.0.2.1'),
@@ -103,4 +114,8 @@ subtest 'Error' => {
 };
 
 done-testing;
+
+sub read-message($filename -->buf8) {
+    return slurp $filename, :bin;
+}
 

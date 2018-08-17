@@ -24,6 +24,12 @@ subtest 'Valid', {
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/01-noop-message.msg') );
+
+        my $cr-bgp = $uc.receive;
+        is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
+        is $cr-bgp.is-error, False, 'Is not an error';
+        is $cr-bgp.message.message-type, 0, 'BGP Message is proper type';
+
         $client.close();
 
         my $cr-bad = $uc.receive;
@@ -66,7 +72,7 @@ subtest 'invalid-marker', {
     done-testing;
 };
 
-subtest 'invalid-length', {
+subtest 'invalid-length-short', {
     if (check-compiler-version) {
         my $bgp = Net::BGP.new( port => 0);
         is $bgp.port, 0, 'BGP Port is 0';
@@ -81,12 +87,76 @@ subtest 'invalid-length', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/03-test-invalid-length.msg') );
+        $client.write( read-message('t/bgp-messages/03-test-invalid-length-short.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
         is $cr-bad.message-type, 'Length-Too-Short', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
+        
+        $bgp.listen-stop();
+    } else {
+        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
+    }
+    done-testing;
+};
+
+subtest 'invalid-length-long', {
+    if (check-compiler-version) {
+        my $bgp = Net::BGP.new( port => 0);
+        is $bgp.port, 0, 'BGP Port is 0';
+
+        $bgp.listen();
+        isnt $bgp.port, 0, 'BGP Port isnt 0';
+
+        diag "Port is: " ~ $bgp.port;
+
+        my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
+        my $uc = $bgp.user-channel;
+        my $cr = $uc.receive;
+        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+
+        $client.write( read-message('t/bgp-messages/04-test-invalid-length-long.msg') );
+        $client.close();
+
+        my $cr-bad = $uc.receive;
+        is $cr-bad.message-type, 'Length-Too-Long', 'Error message type is as expected';
+        is $cr-bad.is-error, True, 'Is an error';
+        
+        $bgp.listen-stop();
+    } else {
+        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
+    }
+    done-testing;
+};
+
+subtest 'OPEN', {
+    if (check-compiler-version) {
+        my $bgp = Net::BGP.new( port => 0);
+        is $bgp.port, 0, 'BGP Port is 0';
+
+        $bgp.listen();
+        isnt $bgp.port, 0, 'BGP Port isnt 0';
+
+        diag "Port is: " ~ $bgp.port;
+
+        my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
+        my $uc = $bgp.user-channel;
+        my $cr = $uc.receive;
+        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+
+        $client.write( read-message('t/bgp-messages/05-open-message.msg') );
+        
+        my $cr-bgp = $uc.receive;
+        is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
+        is $cr-bgp.is-error, False, 'Is not an error';
+        is $cr-bgp.message.message-type, 1, 'BGP Message is proper type';
+        
+        $client.close();
+
+        my $cr-bad = $uc.receive;
+        is $cr-bad.message-type, 'Closed-Connection', 'Close message type is as expected';
+        is $cr-bad.is-error, False, 'Is not an error';
         
         $bgp.listen-stop();
     } else {

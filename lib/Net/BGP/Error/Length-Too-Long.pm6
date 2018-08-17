@@ -7,38 +7,38 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Length-Too-Short:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
+class Net::BGP::Error::Length-Too-Long:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.length;  # Set to the length value in the header
 
-    method message-type(-->Str) { 'Length-Too-Short' };
-    method message(-->Str)      { 'Length field in header is impossibly short (RFC4271)' };
+    method message-type(-->Str) { 'Length-Too-Long' };
+    method message(-->Str)      { 'Length field in header is impossibly long (RFC4271)' };
 }
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Notify::Length-Too-Short - BGP Length Field Too-Short Error
+Net::BGP::Notify::Length-Too-Long - BGP Length Field Too-Long Error
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Notify::Length-Too-Short;
+  use Net::BGP::Notify::Length-Too-Long;
 
-  my $msg = Net::BGP::Error::Length-Too-Short.new(:length(10));
+  my $msg = Net::BGP::Error::Length-Too-Long.new(:length(8192));
 
 =head1 DESCRIPTION
 
 A length (in the BGP header) formatting erorr.
 
-The Length-Too-Short error is sent from the BGP server to the user code.  This
-error is triggered when a message is received that has a length less than 19
-octets long in the header as described in RFC4271 4.1.
+The Length-Too-Long error is sent from the BGP server to the user code.  This
+error is triggered when a message is received that has a length greater than
+4096 octets long in the header as described in RFC4271 section 4.1.
 
 =head1 METHODS
 
 =head2 message-type
 
-Contains the string C<Length-Too-Short>.
+Contains the string C<Length-Too-Long>.
 
 =head2 is-error
 

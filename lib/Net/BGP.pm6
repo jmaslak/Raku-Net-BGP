@@ -3,9 +3,13 @@ use v6.c;
 use Net::BGP::Command;
 use Net::BGP::Command::Stop;
 use Net::BGP::Error;
+use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
+use Net::BGP::Message;
+use Net::BGP::Message::Generic;
 use Net::BGP::Notify;
+use Net::BGP::Notify::BGP-Message;
 use Net::BGP::Notify::Closed-Connection;
 use Net::BGP::Notify::New-Connection;
 
@@ -62,7 +66,15 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                         react { 
                             whenever $conn.Supply(:bin).list -> $buf {
                                 $msg.append($buf);
-                                self.pop_bgp_message($msg);
+                                my $bgpmsg = self.pop_bgp_message($msg);
+                                if (defined($bgpmsg)) {
+                                    # Send message to client
+                                    $.user-channel.send(
+                                        Net::BGP::Notify::BGP-Message.new(
+                                            :message( $bgpmsg )
+                                        ),
+                                    );
+                                }
                                 CATCH {
                                     when Net::BGP::Error {
                                         $.user-channel.send( $_ );
@@ -70,7 +82,6 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                     }
                                 }
 
-                                # $conn.print("Hello, $char!\n");
                                 LAST {
                                     $.user-channel.send(
                                         Net::BGP::Notify::Closed-Connection.new(
@@ -97,6 +108,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                 # We should log better
                                 $*ERR.say("Error in child process!");
                                 $*ERR.say(.message);
+                                $*ERR.say(.backtrace.join);
                                 .rethrow;
                             }
                         }
@@ -129,36 +141,44 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     #
     # Side Effect 2 - Will throw on BGP message error
     #
-    method pop_bgp_message(buf8 $msg is rw --> Hash) {
-        my %parsed;
-
+    method pop_bgp_message(buf8 $msg is rw --> Net::BGP::Message) {
+        # We need at least 19 bytes to have a BGP message (RFC4271 4.1)
         if $msg.bytes < 19 {
             return 0;  # We don't have a message
         }
 
-        if !self.valid-header($msg) {
+        # Check for valid marker
+        if !self.valid-marker($msg) {
             die Net::BGP::Error::Marker-Format.new();
         }
 
+        # Parse length
         my $expected-len = nuint16($msg[16..17]);
-        %parsed<length> = $expected-len;
+
+        if $expected-len < 19 {
+            # Too short - RFC4271 4.1
+            die Net::BGP::Error::Length-Too-Short.new(:length($expected-len));
+        }
+        if $expected-len > 4096 {
+            # Too long - RFC4271 4.1
+            die Net::BGP::Error::Length-Too-Long.new(:length($expected-len));
+        }
 
         if $msg.bytes < $expected-len {
             return; # We don't yet have the full message
         }
 
-        if $expected-len < 19 {
-            # Too short
-            die Net::BGP::Error::Length-Too-Short.new();
-        }
+        # We delegate the hard work of parsing this message
+        my $bgp-msg = Net::BGP::Message.from-raw( $msg[18..*] );
 
-        $msg.splice: 0, $expected-len, (); # Remove the message
+        # Remove message
+        $msg.splice: 0, $expected-len, ();
 
-        # TODO: Don't actually parse the message yet XXX
-        return Hash.new;
+        # Here we go - hand back parsed hash
+        return $bgp-msg;
     }
 
-    method valid-header(buf8 $msg -->Bool) {
+    method valid-marker(buf8 $msg -->Bool) {
         if $msg.bytes < 16 { return False; }
         
         for ^16 -> $i {
@@ -177,63 +197,4 @@ multi sub nuint16(@a --> Int) {
 multi sub nuint16(byte $a, byte $b --> Int) {
     return $a * 2⁸ + $b;
 }
-
-=begin pod
-
-=head1 NAME
-
-Net::BGP - BGP Server Support
-
-=head1 SYNOPSIS
-
-  use Net::BGP
-
-  my $bgp = Net::BGP.new( port => 179 );  # Create a server object
-
-=head1 DESCRIPTION
-
-This provides framework to support the BGP protocol within a Perl6 application.
-
-=head1 ATTRIBUTES
-
-=head2 port
-
-The port attribute defaults to 179 (the IETF assigned port default), but can
-be set to any value between 0 and 65535.  It can also be set to Nil, meaning
-that it will be an ephimeral port that will be set once the listener is
-started.
-
-=head2 server-channel
-
-Returns the channel communicate to command the BGP server process.  This will
-not be defined until C<listen()> is executed.  It is intended that user code
-will send messages to the BGP server.
-
-=head2 user-channel
-
-Returns the channel communicate for the BGP server process to communicate to
-user code.
-
-=head1 METHODS
-
-=head2 listen
-
-  $bgp.listen();
-
-Starts BGP listener, on the port provided in the port attribute.
-
-For a given instance of the BGP class, only one listener can be active at any
-point in time.
-
-=head1 AUTHOR
-
-Joelle Maslak <jmaslak@antelope.net>
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2018 Joelle Maslak
-
-This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
-
-=end pod
 
