@@ -23,7 +23,7 @@ subtest 'Valid', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/01-noop-message.msg') );
+        $client.write( read-message('t/bgp-messages/noop-message.msg') );
 
         my $cr-bgp = $uc.receive;
         is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
@@ -58,7 +58,7 @@ subtest 'invalid-marker', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/02-test-invalid-marker.msg') );
+        $client.write( read-message('t/bgp-messages/test-invalid-marker.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
@@ -87,7 +87,7 @@ subtest 'invalid-length-short', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/03-test-invalid-length-short.msg') );
+        $client.write( read-message('t/bgp-messages/test-invalid-length-short.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
@@ -116,7 +116,7 @@ subtest 'invalid-length-long', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/04-test-invalid-length-long.msg') );
+        $client.write( read-message('t/bgp-messages/test-invalid-length-long.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
@@ -145,7 +145,7 @@ subtest 'OPEN', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/05-open-message.msg') );
+        $client.write( read-message('t/bgp-messages/open-message.msg') );
         
         my $cr-bgp = $uc.receive;
         is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';

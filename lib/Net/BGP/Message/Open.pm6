@@ -7,20 +7,15 @@ use v6;
 
 use Net::BGP::Message;
 
-class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message {
+class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message {
     method new() {
         die("Must use from-raw or from-hash to construct a new object");
     }
 
     has buf8 $.data is rw;
 
-    method message-type() {
-        return $.data[0];
-    }
-
-    method message-code() {
-        return "$.message-type";
-    }
+    method message-type() { 1 }
+    method message-code() { "OPEN" }
 
     method from-raw(buf8:D $raw) {
         return self.bless(:data( buf8.new($raw) ));
@@ -29,18 +24,18 @@ class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Mess
     method from-hash(%params)  {
         die("Not implemented for generic BGP messages");
     };
-
+    
     method raw() { return $.data; }
 }
 
 # Register handler
-Net::BGP::Message.register(Net::BGP::Message::Generic, Int, Str);
+Net::BGP::Message.register(Net::BGP::Message::Open, 1, 'OPEN');
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Message::Generic - BGP Generic Message
+Net::BGP::Message::Open - BGP OPEN Message
 
 =head1 SYNOPSIS
 
@@ -52,7 +47,7 @@ Net::BGP::Message::Generic - BGP Generic Message
 
 =head1 DESCRIPTION
 
-Generic (undefined) BGP message type
+OPEN BGP message type
 
 =head1 Constructors
 

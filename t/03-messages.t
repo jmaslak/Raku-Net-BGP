@@ -39,12 +39,13 @@ subtest 'Notify' => {
     };
 
     subtest 'BGP-Message' => {
-        my $bgp = Net::BGP::Message.from-raw( read-message('t/bgp-messages/05-open-message.msg')[18..*] );
+        my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message.msg') );
         my $msg = Net::BGP::Notify::BGP-Message.new(:message($bgp));
         ok $msg, "Created Notify Class";
         is $msg.message-type, 'BGP-Message', 'Message type has proper value';
         is $msg.is-error, False, 'Message is not an error';
         is $msg.message.message-type, 1, 'BGP message type is correct';
+        is $msg.message.message-code, 'OPEN', 'BGP message code is correct';
 
         done-testing;
     };
@@ -117,5 +118,9 @@ done-testing;
 
 sub read-message($filename -->buf8) {
     return slurp $filename, :bin;
+}
+
+sub read-message-nohead($filename -->buf8) {
+    return buf8.new(read-message($filename)[18..*]);
 }
 

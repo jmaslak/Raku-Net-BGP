@@ -8,6 +8,7 @@ use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
 use Net::BGP::Message;
 use Net::BGP::Message::Generic;
+use Net::BGP::Message::Open;
 use Net::BGP::Notify;
 use Net::BGP::Notify::BGP-Message;
 use Net::BGP::Notify::Closed-Connection;
@@ -169,7 +170,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
 
         # We delegate the hard work of parsing this message
-        my $bgp-msg = Net::BGP::Message.from-raw( $msg[18..*] );
+        my $bgp-msg = Net::BGP::Message.from-raw( buf8.new($msg[18..*]) );
 
         # Remove message
         $msg.splice: 0, $expected-len, ();

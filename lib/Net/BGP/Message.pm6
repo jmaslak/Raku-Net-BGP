@@ -19,35 +19,32 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
     }
 
-    has $!data;
-
     method new() {
         die("Must use from-raw or from-hash to construct a new object");
     }
 
     method raw() {
-        return $!data;
+        die("Not implemented for parent class");
     }
 
-    method from-raw($raw) {
-        # XXX: We should have a size check???
-        if %registrations{ ~$raw[0] }:exists {
-            !!!
+    method from-raw(buf8:D $raw) {
+        if %registrations{ $raw[0] }:exists {
+            return %registrations{ $raw[0] }.from-raw($raw);
         } else {
             return %registrations<default>.from-raw($raw);
         }
     };
 
     method from-hash(%params)  {
-        die("Not implemented for generic BGP messages");
+        die("Not implemented for parent class");
     };
 
     method message-code() {
-        die("Not implemented for generic BGP messages");
+        die("Not implemented for parent class");
     }
 
-    method octets() {
-        return $.raw.elems;
+    method message-type() {
+        die("Not implemented for parent class");
     }
 }
 
@@ -67,16 +64,6 @@ Net::BGP::Message - BGP Message Parent Class
 
 Parent class for messages.
 
-=head1 Attributes
-
-=head2 message-type
-
-Contains an integer that corresponds to the message-code.
-
-=head2 raw
-
-Contains the raw message (not including the BGP header).
-
 =head1 Constructors
 
 =head2 from-raw
@@ -91,20 +78,24 @@ which type of message should be returned.
 
 =head1 Methods
 
+=head2 message-type
+
+Contains an integer that corresponds to the message-code.
+
 =head2 message-code
 
 Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 octets
+=head2 message-type
 
-Returns the number of octets (not including the header) that this message
-will contain on the wire.
+Contains an integer that corresponds to the message-code.
 
 =head2 raw
 
-Returns the raw (wire format) data for this message.
+Contains the raw message (not including the BGP header).
+
 
 =head1 AUTHOR
 
