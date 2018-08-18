@@ -20,8 +20,9 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     has PortNum:D $.port is default(179);
 
-    has Channel $.listener-channel;     # Listener supply
-    has Channel $.user-channel;         # Channel to communicate to the user
+    has Channel  $.listener-channel;    # Listener channel
+    has Supplier $!user-supplier;       # Supplier object (to send events to the user)
+    has Channel  $.user-channel;        # User channel (for the user to receive the events)
 
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
@@ -31,7 +32,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             }
         }
 
-        $!user-channel = Channel.new;
+        $!user-supplier = Supplier.new;
+        $!user-channel  = $!user-supplier.Supply.Channel;
     }
 
     method listen-stop(--> Nil) {
@@ -59,7 +61,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                 my $listen-tap = do whenever $listen-socket -> $conn {
                     start {
                         my $msg = buf8.new;
-                        $.user-channel.send(
+                        $!user-supplier.emit(
                             Net::BGP::Notify::New-Connection.new(
                                 :client-ip( $conn.peer-host ),
                                 :client-port( $conn.peer-port ),
@@ -71,7 +73,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                 my $bgpmsg = self.pop_bgp_message($msg);
                                 if (defined($bgpmsg)) {
                                     # Send message to client
-                                    $.user-channel.send(
+                                    $!user-supplier.emit(
                                         Net::BGP::Notify::BGP-Message.new(
                                             :message( $bgpmsg )
                                         ),
@@ -79,13 +81,13 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                 }
                                 CATCH {
                                     when Net::BGP::Error {
-                                        $.user-channel.send( $_ );
+                                        $!user-supplier.emit( $_ );
                                         $conn.close;
                                     }
                                 }
 
                                 LAST {
-                                    $.user-channel.send(
+                                    $!user-supplier.emit(
                                         Net::BGP::Notify::Closed-Connection.new(
                                             :client-ip( $conn.peer-host ),
                                             :client-port( $conn.peer-port ),
@@ -94,7 +96,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                     $conn.close
                                 }
                                 QUIT {
-                                    $.user-channel.send(
+                                    $!user-supplier.emit(
                                         Net::BGP::Noitify::Closed-Connection.new(
                                             :client-ip( $conn.peer-host ),
                                             :client-port( $conn.peer-port ),
