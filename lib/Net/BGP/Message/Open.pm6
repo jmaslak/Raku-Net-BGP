@@ -5,6 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
+use Net::BGP::Conversions;
 use Net::BGP::Message;
 
 class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message {
@@ -17,7 +18,13 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
     method message-type() { 1 }
     method message-code() { "OPEN" }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 10) {
+    # Stuff unique to OPEN
+    method version()    { $.data[1] }
+    method asn()        { nuint16($.data.subbuf(2, 2)) };
+    method hold-time()  { nuint16($.data.subbuf(4, 2)) };
+    method identifier() { nuint32($.data.subbuf(6, 4)) };
+
+    method from-raw(buf8:D $raw where $raw.bytes ≥ 11) {
         return self.bless(:data( buf8.new($raw) ));
     };
 
@@ -71,6 +78,22 @@ Currently understood types include C<OPEN>.
 =head2 message-type
 
 Contains an integer that corresponds to the message-code.
+
+=head2 version
+
+Version field of the BGP message (currently this only supports version 4).
+
+=head2 asn
+
+The ASN field of the source of the OPEN message
+
+=head hold-time
+
+The hold time in seconds provided by the sender of the OPEN message
+
+=head identifier
+
+The BGP identifier of the sender.
 
 =head2 raw
 

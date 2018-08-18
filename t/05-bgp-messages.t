@@ -24,6 +24,10 @@ subtest 'Open Message', {
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-type, 1, 'Message type is correct';
     is $bgp.message-code, 'OPEN', 'Message code is correct';
+    is $bgp.version, 4, 'BGP version is correct';
+    is $bgp.asn, :16('1020'), 'ASN is correct';
+    is $bgp.hold-time, 3, 'Hold time is correct';
+    is $bgp.identifier, :16('01020304'), 'BGP identifier is correct';
     ok check-list($bgp.raw, read-message('open-message')), 'Message value correct';;
 
     done-testing;

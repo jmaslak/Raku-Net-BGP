@@ -1,5 +1,7 @@
 Todo Items:
 
   * Make it work!
-  * Notify upon invalid (too short) of message data
+  * OPEN:
+    * Notify upon invalid (too short) of message data
+    * Return an error on unsupported versions
 
