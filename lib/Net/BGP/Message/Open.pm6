@@ -17,7 +17,7 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
     method message-type() { 1 }
     method message-code() { "OPEN" }
 
-    method from-raw(buf8:D $raw) {
+    method from-raw(buf8:D $raw where $raw.bytes ≥ 10) {
         return self.bless(:data( buf8.new($raw) ));
     };
 
