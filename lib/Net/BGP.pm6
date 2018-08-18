@@ -2,6 +2,7 @@ use v6.c;
 
 use Net::BGP::Command;
 use Net::BGP::Command::Stop;
+use Net::BGP::Conversions;
 use Net::BGP::Error;
 use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
@@ -189,13 +190,5 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         return True;
     }
 
-}
-
-multi sub nuint16(@a --> Int) {
-    return nuint16(@a[0], @a[1]);
-}
-
-multi sub nuint16(byte $a, byte $b --> Int) {
-    return $a * 2⁸ + $b;
 }
 
