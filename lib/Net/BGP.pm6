@@ -61,13 +61,15 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             react {
                 my $listen-tap = do whenever $listen-socket -> $conn {
                     start {
-                        my $msg = buf8.new;
                         $!user-supplier.emit(
                             Net::BGP::Notify::New-Connection.new(
                                 :client-ip( $conn.peer-host ),
                                 :client-port( $conn.peer-port ),
                             ),
                         );
+
+                        my $msg = buf8.new;
+
                         react { 
                             whenever $conn.Supply(:bin).list -> $buf {
                                 $msg.append($buf);
