@@ -7,13 +7,13 @@ use v6;
 
 class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
     my %registrations;
-    my %message-codes;
+    my %message-types;
 
     # Message type Nil = handle all unhandled messages
     method register(Net::BGP::Message $class, Int $message-type, Str $message-code) {
         if defined $message-type {
             %registrations{ $message-type } = $class;
-            %message-codes{ $message-code } = $message-type;
+            %message-types{ $message-code } = $message-type;
         } else {
             %registrations<default> = $class;
         }
@@ -35,8 +35,39 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
     };
 
-    method from-hash(%params)  {
-        die("Not implemented for parent class");
+    method from-hash(%params is copy)  {
+        if %params<message-code>:!exists and %params<message-type>:!exists {
+            die "Could not determine message type";
+        }
+            
+        # Normalize message-code
+        if %params<message-code>:exists and %params<message-code> ~~ m/^ <[0..9]>+ $/ {
+            if %params<message-type>:exists and %params<message-type> ≠ %params<message-code> {
+                die("Message type and code don't agree");
+            } else {
+                %params<message-type> = Int(%params<message-code>);
+                %params<message-code>:delete;
+            }
+        }
+
+        # Fill in message type if needed
+        if %params<message-type>:!exists {
+            if %message-types{ %params<message-code> }:!exists {
+                die("Unknown message code: %params<message-code>");
+            }
+            %params<message-type> = %message-types{ %params<message-code> };
+        }
+
+        # Make sure we have agreement 
+        if %params<message-code>:exists and %params<message-type>:exists {
+            if %message-types{ %params<message-code> } ne %params<message-type> {
+                die("Message code and type don't agree");
+            }
+        }
+
+        %params<message-code>:delete; # We don't use this in children.
+
+        return %registrations{ %params<message-type> }.from-hash( %params );
     };
 
     method message-code() {

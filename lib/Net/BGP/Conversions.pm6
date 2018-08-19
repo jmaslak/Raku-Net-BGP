@@ -5,6 +5,8 @@ use v6;
 # All Rights Reserved - See License
 #
 
+use Net::BGP::IP;
+
 module Net::BGP::Conversions:ver<0.0.1>:auth<cpan:JMASLAK> {
 
     multi sub nuint16(@a where @a.elems == 2 --> Int) is export {
@@ -28,6 +30,19 @@ module Net::BGP::Conversions:ver<0.0.1>:auth<cpan:JMASLAK> {
         return $a × 2²⁴ + $b × 2¹⁶ + $c × 2⁸ + $d;
     }
 
+
+    sub nuint16-buf8(Int $n where * < 2¹⁶ --> buf8) is export {
+        return buf8.new($n +> 8, $n +& 255);
+    }
+
+
+    multi sub nuint32-buf8(Int $n where * < 2³² --> buf8) is export {
+        return buf8.new($n +> 24 +& 255, $n +> 16 +& 255, $n +> 8 +& 255, $n +& 255);
+    }
+    multi sub nuint32-buf8(Net::BGP::IP::ipv4 $ip --> buf8) is export {
+        return nuint32-buf8(ipv4-to-int($ip));
+    }
+
 };
 
 =begin pod
@@ -43,7 +58,10 @@ Net::BGP::Conversions - Convert between bytes and integer formats
   my $val1 = nuint16(10, 20);
   my $val2 = nuint32(10, 20, 30, 40);
 
-=head1 SUBROUTINES
+  my $buf1 = nuint16-buf8(1000);
+  my $buf2 = nuint32-buf8(1_000_000);
+
+=head1 ROUTINES
 
 =head2 nuint16
 
@@ -62,6 +80,20 @@ ordering (first byte is MSB).
 
 Converts the byte values in the parameter to a 32 bit UInt, assuming network
 ordering (first byte is MSB).
+
+=head2 nuint16-buf8
+
+  my $buf1 = nuint16-buf8(1000);
+
+Returns a C<buf8> object containing two bytes representing the network byte
+order value of the integer parameter.
+
+=head2 nuint32-buf8
+
+  my $buf2 = nuint32-buf8(1_000_000);
+
+Returns a C<buf8> object containing four bytes representing the network byte
+order value of the integer parameter.
 
 =head1 AUTHOR
 

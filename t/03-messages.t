@@ -112,6 +112,17 @@ subtest 'Error' => {
 
         done-testing;
     };
+
+    subtest 'Unknown-Version' => {
+        my $msg = Net::BGP::Error::Unknown-Version.new(:version(3));
+        ok $msg, "Created Error Class";
+        is $msg.message-type, 'Unknown-Version', 'Message type has proper value';
+        is $msg.is-error, True, 'Message is an error';
+        is $msg.message, 'BGP Version in OPEN is not supported', 'Human readable type';
+        is $msg.version, 3, 'Version is valid';
+
+        done-testing;
+    };
 };
 
 done-testing;

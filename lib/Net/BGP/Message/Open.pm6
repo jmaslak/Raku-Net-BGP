@@ -28,8 +28,48 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
         return self.bless(:data( buf8.new($raw) ));
     };
 
-    method from-hash(%params)  {
-        die("Not implemented for generic BGP messages");
+    method from-hash(%params is copy)  {
+        my @REQUIRED = «version asn hold-time identifier options»;
+
+        # Optional parameters
+        %params<version> //= 4;
+        %params<options> //= buf8.new();
+
+        # Delete unnecessary option
+        if %params<message-type>:exists {
+            if (%params<message-type> ≠ 1) { die("Invalid message type for OPEN"); }
+            %params<message-type>:delete
+        }
+
+        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+            die("Did not provide proper options"); # XXX Should this be a BGP::Error???
+                # XXX: I think not, because this is a programming error,
+                # not a data error.  But I'll need to stew on this a few
+                # days.
+        }
+
+        if %params<version> ≠ 4 {
+            die BGP::Notify::Error::Unknown-Version.new( :version(%params<version> ) );
+        }
+
+        if %params<hold-time> ≠ 0 and %params<hold-time> < 3 { die "Invalid hold time" }
+
+        if %params<options>.bytes > 255 { die("Options too long for BGP message") }
+
+        # Now we need to build the raw data.
+        my $data = buf8.new();
+
+        $data.append( 1 );   # Message type (OPEN)
+        $data.append( %params<version> );
+        $data.append( nuint16-buf8( %params<asn> ) );
+        $data.append( nuint16-buf8( %params<hold-time> ) );
+        $data.append( nuint32-buf8( %params<identifier>) );
+
+        # Options
+        $data.append( %params<options>.bytes );
+        $data.append( %params<options> );
+
+        return self.bless(:data( buf8.new($data) ));
     };
     
     method raw() { return $.data; }

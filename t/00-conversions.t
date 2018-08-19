@@ -29,6 +29,11 @@ subtest 'nuint16' => {
     is nuint16( ($b1,$b1)          ), 257;
     is nuint16( buf8.new(1,1)      ), 257;
 
+    is nuint16(nuint16-buf8(0)),     0;
+    is nuint16(nuint16-buf8(1)),     1;
+    is nuint16(nuint16-buf8(256)), 256;
+    is nuint16(nuint16-buf8(257)), 257;
+
     done-testing;
 }
 
@@ -52,6 +57,13 @@ subtest 'nunit32' => {
     is nuint32(               $b1, $b1, $b1, $b1 ), 16843009;
     is nuint32( ($b1,$b1,$b1,$b1)                ), 16843009;
     is nuint32( buf8.new(1,1,1,1)                ), 16843009;
+
+    is nuint32(nuint32-buf8(0)),               0;
+    is nuint32(nuint32-buf8(1)),               1;
+    is nuint32(nuint32-buf8(256)),           256;
+    is nuint32(nuint32-buf8(257)),           257;
+    is nuint32(nuint32-buf8(65536)),       65536;
+    is nuint32(nuint32-buf8(16843009)), 16843009;
 
     done-testing;
 }

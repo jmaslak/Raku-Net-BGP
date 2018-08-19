@@ -7,6 +7,7 @@ use Net::BGP::Error;
 use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
+use Net::BGP::Error::Unknown-Version;
 use Net::BGP::Message;
 use Net::BGP::Message::Generic;
 use Net::BGP::Message::Open;
