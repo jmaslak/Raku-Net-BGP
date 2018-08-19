@@ -6,6 +6,8 @@ use v6;
 #
 
 class Net::BGP::Notify:ver<0.0.0>:auth<cpan:JMASLAK> {
+    has Int $.connection-id;
+
     method message-type(-->Str) { 'NOOP' };
     method is-error(-->Bool)    { False  };
 }
@@ -26,6 +28,12 @@ Net::BGP::Notify - BGP Server Notify Superclass
 
 Parent class for messages (notifications) used for communication from the BGP
 server code to the user code.
+
+=head1 ATTRIBUTES
+
+=head2 connection-id
+
+This contains the appropriate connection ID associated with the notification.
 
 =head1 METHODS
 

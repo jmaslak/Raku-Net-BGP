@@ -6,6 +6,8 @@ use v6;
 #
 
 class Net::BGP::Command:ver<0.0.0>:auth<cpan:JMASLAK> {
+    has Int $.connection-id;
+
     method message-type(-->Str) { 'NOOP' };
 }
 
@@ -24,6 +26,12 @@ Net::BGP::Command - BGP Server Noitfy Superclass
 =head1 DESCRIPTION
 
 Parent class for messages (commands) from user code to BGP server code.
+
+=head1 ATTRIBUTES
+
+=head2 connection-id
+
+This contains the appropriate connection ID associated with the command.
 
 =head1 METHODS
 
