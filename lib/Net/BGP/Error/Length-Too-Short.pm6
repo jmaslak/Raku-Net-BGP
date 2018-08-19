@@ -18,11 +18,11 @@ class Net::BGP::Error::Length-Too-Short:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
 
 =head1 NAME
 
-Net::BGP::Notify::Length-Too-Short - BGP Length Field Too-Short Error
+Net::BGP::Error::Length-Too-Short - BGP Length Field Too-Short Error
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Notify::Length-Too-Short;
+  use Net::BGP::Error::Length-Too-Short;
 
   my $msg = Net::BGP::Error::Length-Too-Short.new(:length(10));
 

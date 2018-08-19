@@ -16,11 +16,11 @@ class Net::BGP::Error::Marker-Format:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::
 
 =head1 NAME
 
-Net::BGP::Notify::Marker-Format - BGP Marker Format Error
+Net::BGP::Error::Marker-Format - BGP Marker Format Error
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Notify::Marker-Format;
+  use Net::BGP::Error::Marker-Format;
 
   my $msg = Net::BGP::Error::Marker-Format.new();
 

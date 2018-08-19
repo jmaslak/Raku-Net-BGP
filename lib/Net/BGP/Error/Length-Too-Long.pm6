@@ -18,11 +18,11 @@ class Net::BGP::Error::Length-Too-Long:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP
 
 =head1 NAME
 
-Net::BGP::Notify::Length-Too-Long - BGP Length Field Too-Long Error
+Net::BGP::Error::Length-Too-Long - BGP Length Field Too-Long Error
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Notify::Length-Too-Long;
+  use Net::BGP::Error::Length-Too-Long;
 
   my $msg = Net::BGP::Error::Length-Too-Long.new(:length(8192));
 
