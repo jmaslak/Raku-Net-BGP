@@ -143,6 +143,35 @@ subtest 'invalid-length-long', {
     done-testing;
 };
 
+subtest 'invalid-version', {
+    if (check-compiler-version) {
+        my $bgp = Net::BGP.new( port => 0);
+        is $bgp.port, 0, 'BGP Port is 0';
+
+        $bgp.listen();
+        isnt $bgp.port, 0, 'BGP Port isnt 0';
+
+        diag "Port is: " ~ $bgp.port;
+
+        my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
+        my $uc = $bgp.user-channel;
+        my $cr = $uc.receive;
+        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+
+        $client.write( read-message('t/bgp-messages/test-invalid-version.msg') );
+        $client.close();
+
+        my $cr-bad = $uc.receive;
+        is $cr-bad.message-type, 'Unknown-Version', 'Error message type is as expected';
+        is $cr-bad.is-error, True, 'Is an error';
+        
+        $bgp.listen-stop();
+    } else {
+        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
+    }
+    done-testing;
+};
+
 subtest 'OPEN', {
     if (check-compiler-version) {
         my $bgp = Net::BGP.new( port => 0);

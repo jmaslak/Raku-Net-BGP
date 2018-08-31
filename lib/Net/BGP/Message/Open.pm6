@@ -6,6 +6,7 @@ use v6;
 #
 
 use Net::BGP::Conversions;
+use Net::BGP::Error::Unknown-Version;
 use Net::BGP::Message;
 
 class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message {
@@ -25,7 +26,9 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
     method identifier() { nuint32($.data.subbuf(6, 4)) };
 
     method from-raw(buf8:D $raw where $raw.bytes ≥ 11) {
-        return self.bless(:data( buf8.new($raw) ));
+        my $obj = self.bless(:data( buf8.new($raw) ));
+        if $obj.version ≠ 4 { die Net::BGP::Error::Unknown-Version.new(:version($obj.version)) }
+        return $obj;
     };
 
     method from-hash(%params is copy)  {
