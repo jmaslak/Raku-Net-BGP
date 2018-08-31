@@ -22,7 +22,7 @@ Net::BGP::Error::Unknown-Version - BGP Version field unsupported
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Version::Unknown-Version;
+  use Net::BGP::Error::Unknown-Version;
 
   my $msg = Net::BGP::Error::Unknown-Version.new(:version(3));
 
