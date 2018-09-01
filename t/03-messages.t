@@ -126,6 +126,19 @@ subtest 'Error' => {
 
         done-testing;
     };
+
+    subtest 'Hold-Time-Too-Short' => {
+        my $msg = Net::BGP::Error::Hold-Time-Too-Short.new(:hold-time(1), :connection-id(22));
+        ok $msg, "Created Error Class";
+        is $msg.message-type, 'Hold-Time-Too-Short', 'Message type has proper value';
+        is $msg.connection-id, 22, 'Connection ID is proper';
+        is $msg.is-error, True, 'Message is an error';
+        is $msg.message, 'Hold-Time in OPEN is too short (RFC4271)', 'Human readable type';
+        is $msg.hold-time, 1, 'Hold-Time is valid';
+
+        done-testing;
+    };
+
     subtest 'Length-Too-Short' => {
         my $msg = Net::BGP::Error::Length-Too-Short.new(:length(10), :connection-id(22));
         ok $msg, "Created Error Class";
