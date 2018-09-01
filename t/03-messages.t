@@ -115,6 +115,17 @@ subtest 'Error' => {
         done-testing;
     };
 
+    subtest 'Bad-Option-Length' => {
+        my $msg = Net::BGP::Error::Bad-Option-Length.new(:length(999), :connection-id(22));
+        ok $msg, "Created Error Class";
+        is $msg.message-type, 'Bad-Option-Length', 'Message type has proper value';
+        is $msg.connection-id, 22, 'Connection ID is proper';
+        is $msg.is-error, True, 'Message is an error';
+        is $msg.message, 'Option Length in OPEN is invalid', 'Human readable type';
+        is $msg.length, 999, 'Length is valid';
+
+        done-testing;
+    };
     subtest 'Length-Too-Short' => {
         my $msg = Net::BGP::Error::Length-Too-Short.new(:length(10), :connection-id(22));
         ok $msg, "Created Error Class";

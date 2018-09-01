@@ -9,4 +9,6 @@ RFC4271
 
 4.2 - Open Format
 4.2(a1) - Invalid Version t/04-basic-bgp.t (invalid-version)
+4.2(b1) - invalid Option Length t/04-basic-bgp.t (bad-option-length [1])
+4.2(b1) - invalid Option Length t/04-basic-bgp.t (bad-option-length [3])
 

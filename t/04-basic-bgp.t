@@ -172,6 +172,66 @@ subtest 'invalid-version', {
     done-testing;
 };
 
+subtest 'bad-option-length [1]', {
+    if (check-compiler-version) {
+        my $bgp = Net::BGP.new( port => 0);
+        is $bgp.port, 0, 'BGP Port is 0';
+
+        $bgp.listen();
+        isnt $bgp.port, 0, 'BGP Port isnt 0';
+
+        diag "Port is: " ~ $bgp.port;
+
+        my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
+        my $uc = $bgp.user-channel;
+        my $cr = $uc.receive;
+        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+
+        $client.write( read-message('t/bgp-messages/test-invalid-option-len-in-open-1.msg') );
+        $client.close();
+
+        my $cr-bad = $uc.receive;
+        is $cr-bad.message-type, 'Bad-Option-Length', 'Error message type is as expected';
+        is $cr-bad.is-error, True, 'Is an error';
+        is $cr-bad.length, 1, 'Length == 1';
+        
+        $bgp.listen-stop();
+    } else {
+        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
+    }
+    done-testing;
+};
+
+subtest 'bad-option-length [3]', {
+    if (check-compiler-version) {
+        my $bgp = Net::BGP.new( port => 0);
+        is $bgp.port, 0, 'BGP Port is 0';
+
+        $bgp.listen();
+        isnt $bgp.port, 0, 'BGP Port isnt 0';
+
+        diag "Port is: " ~ $bgp.port;
+
+        my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
+        my $uc = $bgp.user-channel;
+        my $cr = $uc.receive;
+        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+
+        $client.write( read-message('t/bgp-messages/test-invalid-option-len-in-open-3.msg') );
+        $client.close();
+
+        my $cr-bad = $uc.receive;
+        is $cr-bad.message-type, 'Bad-Option-Length', 'Error message type is as expected';
+        is $cr-bad.is-error, True, 'Is an error';
+        is $cr-bad.length, 3, 'Length == 3';
+        
+        $bgp.listen-stop();
+    } else {
+        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
+    }
+    done-testing;
+};
+
 subtest 'OPEN', {
     if (check-compiler-version) {
         my $bgp = Net::BGP.new( port => 0);
@@ -193,6 +253,8 @@ subtest 'OPEN', {
         is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
         is $cr-bgp.is-error, False, 'Is not an error';
         is $cr-bgp.message.message-type, 1, 'BGP Message is proper type';
+        is $cr-bgp.message.option-len, 0, 'Option length is zero';
+        is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
         
         $client.close();
 

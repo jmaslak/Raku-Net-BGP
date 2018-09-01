@@ -5,6 +5,7 @@ use Net::BGP::Command::BGP-Message;
 use Net::BGP::Command::Stop;
 use Net::BGP::Conversions;
 use Net::BGP::Error;
+use Net::BGP::Error::Bad-Option-Length;
 use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;

@@ -6,6 +6,7 @@ use v6;
 #
 
 use Net::BGP::Conversions;
+use Net::BGP::Error::Bad-Option-Length;
 use Net::BGP::Error::Unknown-Version;
 use Net::BGP::Message;
 
@@ -21,13 +22,28 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
 
     # Stuff unique to OPEN
     method version()    { $.data[1] }
-    method asn()        { nuint16($.data.subbuf(2, 2)) };
-    method hold-time()  { nuint16($.data.subbuf(4, 2)) };
-    method identifier() { nuint32($.data.subbuf(6, 4)) };
+    method asn()        { nuint16($.data.subbuf(2, 2)) }
+    method hold-time()  { nuint16($.data.subbuf(4, 2)) }
+    method identifier() { nuint32($.data.subbuf(6, 4)) }
+    method option-len() { $.data[10] }
+
+    method option(-->buf8) {
+        if $.data[10] {
+            return $.data.subbuf(11, $.data[10]);
+        } else {
+            return buf8.new();
+        }
+    }
 
     method from-raw(buf8:D $raw where $raw.bytes ≥ 11) {
         my $obj = self.bless(:data( buf8.new($raw) ));
         if $obj.version ≠ 4 { die Net::BGP::Error::Unknown-Version.new(:version($obj.version)) }
+        if $obj.option-len > 0 and $obj.option-len < 2 { # Too short for valid options
+            die Net::BGP::Error::Bad-Option-Length.new(:length($obj.option-len));
+        }
+        if (11 + $obj.option-len) > $raw.bytes {
+            die Net::BGP::Error::Bad-Option-Length.new(:length($obj.option-len));
+        }
         return $obj;
     };
 
