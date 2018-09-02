@@ -24,7 +24,7 @@ Net::BGP::Error::Bad-Option-Length - BGP Option Length in OPEN is invalid
 
   use Net::BGP::Error::Bad-Option-Length;
 
-  my $msg = Net::BGP::Error::Bad-Option-Length.new(:version(3));
+  my $msg = Net::BGP::Error::Bad-Option-Length.new(:length(1));
 
 =head1 DESCRIPTION
 
