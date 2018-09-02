@@ -104,7 +104,7 @@ Constructs a new object (likely in a subclass) for a given raw binary buffer.
 =head2 from-hash
 
 Constructs a new object (likely in a subclass) for a given hash buffer.  This
-module uses the C<messgae-type> or C<message-code> key of the hash to determine
+module uses the C<message-type> or C<message-code> key of the hash to determine
 which type of message should be returned.
 
 =head1 Methods
