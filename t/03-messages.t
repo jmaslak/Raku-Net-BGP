@@ -127,6 +127,18 @@ subtest 'Error' => {
         done-testing;
     };
 
+    subtest 'Bad-Parameter-Length' => {
+        my $msg = Net::BGP::Error::Bad-Parameter-Length.new(:length(999), :connection-id(22));
+        ok $msg, "Created Error Class";
+        is $msg.message-type, 'Bad-Parameter-Length', 'Message type has proper value';
+        is $msg.connection-id, 22, 'Connection ID is proper';
+        is $msg.is-error, True, 'Message is an error';
+        is $msg.message, 'Parameter Length in OPEN is invalid', 'Human readable type';
+        is $msg.length, 999, 'Length is valid';
+
+        done-testing;
+    };
+
     subtest 'Hold-Time-Too-Short' => {
         my $msg = Net::BGP::Error::Hold-Time-Too-Short.new(:hold-time(1), :connection-id(22));
         ok $msg, "Created Error Class";
