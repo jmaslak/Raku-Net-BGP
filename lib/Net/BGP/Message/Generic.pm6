@@ -71,7 +71,8 @@ is not designed.
 
 Returns a string that describes what message type the command represents.
 
-Currently understood types include C<OPEN>.
+For generic parameters, this is always a string representation of the
+value of C<message-type()>.
 
 =head2 message-type
 
