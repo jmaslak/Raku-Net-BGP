@@ -8,6 +8,7 @@ use Test;
 
 use Net::BGP;
 use Net::BGP::Message;
+use Net::BGP::Parameter;
 
 subtest 'Open Message', {
     my $bgp = Net::BGP::Message.from-raw( read-message('open-message') );
@@ -25,6 +26,16 @@ subtest 'Open Message', {
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => :16('01020304'),
+            parameters   => (
+                {
+                    parameter-type => 240,
+                    parameter-value => buf8.new() ,
+                },
+                {
+                    parameter-type => 241,
+                    parameter-value => buf8.new(255)
+                },
+            ),
         }
     );
     ok defined($from-hash), "FH BGP message is defined";
@@ -43,6 +54,16 @@ subtest 'Open Message', {
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
+            parameters   => (
+                {
+                    parameter-type => 240,
+                    parameter-value => buf8.new() ,
+                },
+                {
+                    parameter-type => 241,
+                    parameter-value => buf8.new(255)
+                },
+            ),
         }
     );
     ok check-list($from-hash2.raw, read-message('open-message')), 'can create with IP ID';
@@ -53,6 +74,16 @@ subtest 'Open Message', {
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
+            parameters   => (
+                {
+                    parameter-type => 240,
+                    parameter-value => buf8.new() ,
+                },
+                {
+                    parameter-type => 241,
+                    parameter-value => buf8.new(255)
+                },
+            ),
         }
     );
     ok check-list($from-hash3.raw, read-message('open-message')), 'can create with Int Message Code';
@@ -63,6 +94,16 @@ subtest 'Open Message', {
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
+            parameters   => (
+                {
+                    parameter-type => 240,
+                    parameter-value => buf8.new() ,
+                },
+                {
+                    parameter-type => 241,
+                    parameter-value => buf8.new(255)
+                },
+            ),
         }
     );
     ok check-list($from-hash4.raw, read-message('open-message')), 'can create with Message Type';
@@ -74,6 +115,16 @@ subtest 'Open Message', {
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
+            parameters   => (
+                {
+                    parameter-type => 240,
+                    parameter-value => buf8.new() ,
+                },
+                {
+                    parameter-type => 241,
+                    parameter-value => buf8.new(255)
+                },
+            ),
         }
     );
     ok check-list($from-hash5.raw, read-message('open-message')), 'can create with Message Typeand int Code';
@@ -85,6 +136,16 @@ subtest 'Open Message', {
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
+            parameters   => (
+                {
+                    parameter-type => 240,
+                    parameter-value => buf8.new() ,
+                },
+                {
+                    parameter-type => 241,
+                    parameter-value => buf8.new(255)
+                },
+            ),
         }
     );
     ok check-list($from-hash6.raw, read-message('open-message')), 'can create with Message Type and Code';

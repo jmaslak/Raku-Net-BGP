@@ -276,7 +276,7 @@ subtest 'OPEN', {
         my $cr = $uc.receive;
         is $cr.message-type, 'New-Connection', 'Message type is as expected';
 
-        $client.write( read-message('t/bgp-messages/open-message.msg') );
+        $client.write( read-message('t/bgp-messages/open-message-no-opt.msg') );
         
         my $cr-bgp = $uc.receive;
         is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';

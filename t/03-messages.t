@@ -56,7 +56,21 @@ subtest 'Notify' => {
         done-testing;
     };
 
-    subtest 'BGP-Message' => {
+    subtest 'BGP-Message-No-Opt' => {
+        my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message-no-opt.msg') );
+        my $msg = Net::BGP::Notify::BGP-Message.new(:message($bgp), :connection-id(22));
+        ok $msg, "Created Notify Class";
+        is $msg.message-type, 'BGP-Message', 'Message type has proper value';
+        is $msg.connection-id, 22, 'Connection ID is proper';
+        is $msg.is-error, False, 'Message is not an error';
+        is $msg.message.message-type, 1, 'BGP message type is correct';
+        is $msg.message.message-code, 'OPEN', 'BGP message code is correct';
+        is $msg.message.parameters.elems, 0, "Proper number of parameter elements";
+
+        done-testing;
+    };
+
+    subtest 'BGP-Message-With-Opt' => {
         my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message.msg') );
         my $msg = Net::BGP::Notify::BGP-Message.new(:message($bgp), :connection-id(22));
         ok $msg, "Created Notify Class";
@@ -65,6 +79,20 @@ subtest 'Notify' => {
         is $msg.is-error, False, 'Message is not an error';
         is $msg.message.message-type, 1, 'BGP message type is correct';
         is $msg.message.message-code, 'OPEN', 'BGP message code is correct';
+
+        my @p = $msg.message.parameters;
+        is @p.elems, 2, "Proper number of parameter elements";
+
+        is @p[0].parameter-type, 240, "240 Proper parameter-type";
+        is @p[0].parameter-code, "240", "240 Proper parameter-code";
+        is @p[0].parameter-length, 0, "240 Proper parameter-length";
+        is @p[0].parameter-value.bytes, 0, "240 Proper parameter-value length";
+
+        is @p[1].parameter-type, 241, "241 Proper parameter-type";
+        is @p[1].parameter-code, "241", "241 Proper parameter-code";
+        is @p[1].parameter-length, 1, "241 Proper parameter-length";
+        is @p[1].parameter-value.bytes, 1, "241 Proper parameter-value length";
+        is @p[1].parameter-value[0], 255, "241 Proper parameter-value";
 
         done-testing;
     };

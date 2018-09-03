@@ -10,6 +10,7 @@ use Net::BGP::Error::Bad-Option-Length;
 use Net::BGP::Error::Hold-Time-Too-Short;
 use Net::BGP::Error::Unknown-Version;
 use Net::BGP::Message;
+use Net::BGP::Parameter;
 
 class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message {
     method new() {
@@ -35,6 +36,24 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
             return buf8.new();
         }
     }
+    
+    method parameters() {
+        my $buf = self.option;
+
+        return gather {
+            while $buf.bytes {
+                my $opt = Net::BGP::Parameter.from-raw($buf);
+                take $opt;
+
+                my $len = $opt.parameter-length() + 2;
+                if $len < $buf.bytes {
+                    $buf = $buf.subbuf($len);
+                } else {
+                    $buf = buf8.new;
+                }
+            }
+        }
+    }
 
     method from-raw(buf8:D $raw where $raw.bytes ≥ 11) {
         my $obj = self.bless(:data( buf8.new($raw) ));
@@ -48,15 +67,21 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
         if (11 + $obj.option-len) > $raw.bytes {
             die Net::BGP::Error::Bad-Option-Length.new(:length($obj.option-len));
         }
+
+        # Validate the parameters parse.
+        # We could probably defer this - the controller will get to it,
+        # but this is safer.
+        $obj.parameters;
+
         return $obj;
     };
 
     method from-hash(%params is copy)  {
-        my @REQUIRED = «version asn hold-time identifier options»;
+        my @REQUIRED = «version asn hold-time identifier parameters»;
 
         # Optional parameters
-        %params<version> //= 4;
-        %params<options> //= buf8.new();
+        %params<version>    //= 4;
+        %params<parameters> //= [];
 
         # Delete unnecessary option
         if %params<message-type>:exists {
@@ -77,7 +102,11 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
 
         if %params<hold-time> ≠ 0 and %params<hold-time> < 3 { die "Invalid hold time" }
 
-        if %params<options>.bytes > 255 { die("Options too long for BGP message") }
+        my buf8 $options = buf8.new();
+        for |%params<parameters> -> $param-hash {
+            $options.append( Net::BGP::Parameter.from-hash( $param-hash ).raw );
+        }
+        if $options.bytes > 255 { die("Options too long for BGP message") }
 
         # Now we need to build the raw data.
         my $data = buf8.new();
@@ -89,8 +118,8 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Message
         $data.append( nuint32-buf8( %params<identifier>) );
 
         # Options
-        $data.append( %params<options>.bytes );
-        $data.append( %params<options> );
+        $data.append( $options.bytes );
+        $data.append( $options );
 
         return self.bless(:data( buf8.new($data) ));
     };

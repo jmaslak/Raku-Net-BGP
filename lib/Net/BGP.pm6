@@ -19,6 +19,8 @@ use Net::BGP::Notify;
 use Net::BGP::Notify::BGP-Message;
 use Net::BGP::Notify::Closed-Connection;
 use Net::BGP::Notify::New-Connection;
+use Net::BGP::Parameter;
+use Net::BGP::Parameter::Generic;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     our subset PortNum of Int where ^65536;
