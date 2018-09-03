@@ -7,9 +7,13 @@ use v6;
 
 module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
 
+    # IPv4
+    #
+    #
+
     our @octet = ^256;
-    our subset ipv4_int of UInt where * < 2³²;
     our subset ipv4 of Str where / ^ @octet**4 % '.' $ /;
+    our subset ipv4_int of UInt where * < 2³²;
 
     our sub ipv4-to-int(ipv4:D $ip) is export { # XXX We need to handle invalid IPs
         my int $ipval = 0;
@@ -24,6 +28,66 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         my uint32 $ip = $i;
         return join('.', $ip +> 24, $ip +> 16 +& 255, $ip +> 8 +& 255, $ip +& 255);
     }
+
+    # IPv6
+    #
+    #
+
+    # Take from Rosetacode
+    #   https://rosettacode.org/wiki/Parse_an_IP_Address#Perl_6
+    grammar IPv6 {
+        token TOP { ^ <IPv6Addr> $ }
+
+        token IPv6Addr {
+            | <h16> +% ':' <?{ $<h16> == 8}>
+                { @*by16 = @$<h16> }
+
+            | [ (<h16>) +% ':']? '::' (<h16>) +% ':' <?{ @$0 + @$1 ≤ 8 }>
+                { @*by16 = |@$0, |('0' xx 8 - (@$0 + @$1)), |@$1; }
+        }
+
+        token h16 { (<:hexdigit>+) <?{ @$0 ≤ 4 }> }
+    }
+
+    # Need to define @*by16 to use the IPv6.parse() routine
+    our subset ipv6 of Str where { my @*by16; IPv6.parse($_) };
+    our subset ipv6_int of UInt where * < 2¹²⁸;
+
+    our sub ipv6-to-int(ipv6:D $ip -->ipv6_int) is export {
+        my @*by16;
+        IPv6.parse($ip);
+        return :16(@*by16.map({:16(~$_)})».fmt("%04x").join);
+    }
+
+    our sub int-to-ipv6(ipv6_int:D $i -->ipv6:D) is export {
+        return ipv6-compact($i.fmt("%032x").comb(4).join(':'));
+    }
+
+    our sub ipv6-expand(ipv6:D $ip -->ipv6:D) is export {
+        my @*by16;
+        IPv6.parse($ip);
+        return @*by16.map({:16(~$_)})».fmt("%04x").join(':');
+    }
+
+    our sub ipv6-compact(ipv6:D $ip -->ipv6:D) is export {
+        my @*by16;
+        IPv6.parse($ip);
+        my $compact = @*by16.map({:16(~$_)})».fmt("%x").join(':');
+
+        # This looks weird - basically we try matching from most to
+        # least.
+        if $compact ~~ s/^ '0:0:0:0:0:0:0:0' $/ '::' / {
+        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0:0' [ ':' | $ ] /::/ {
+        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0' [ ':' | $ ] /::/ {
+        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0' [ ':' | $ ] /::/ {
+        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0' [ ':' | $ ] /::/ {
+        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0' [ ':' | $ ] /::/ {
+        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0' [ ':' | $ ] /::/ {
+        } elsif $compact ~~ s/ [ ^ || ':' ] '0' [ ':' | $ ] /::/ {
+        }
+
+        return $compact;
+    }
 };
 
 =begin pod
@@ -34,10 +98,28 @@ Net::BGP::IP - IP Address Handling Functionality
 
 =head1 SYNOPSIS
 
-  ues Net::BGP::IP;
+=head2 IPv4
 
-  my $ip = int-to-ipv4(1000);       # Converts 1000 to an IPv4 string
-  my $int = ipv4-to-int('1.2.3.4'); # Converts to an integer
+  use Net::BGP::IP;
+
+  my $ip = int-to-ipv4(1000);         # Converts 1000 to an IPv4 string
+  my $int = ipv4-to-int('192.0.2.4'); # Converts to an integer
+
+=head2 IPv6    
+
+  use Net::BGP::IP;
+
+  # Returns 2001:db8::1
+  my $ip = int-to-ipv6(42540766411282592856903984951653826561); # 2001:db8::1
+
+  # Returns the integer value of 2001:db8::1
+  my $int = ipv6-to-int('2001:db8::1');
+
+  # Will return: 2001:0db8:0000:0000:0000:0000:0000:0000
+  my $expanded = ipv6-expand('2001:db8::1');
+
+  # Will return 2001:db8::1
+  my $compact = ipv6-compact('2001:0db8:0:000:0::01');
 
 =head1 SUBROUTINES
 
@@ -48,6 +130,22 @@ Converts an integer into a string representation of an IPv4 address.
 =head2 ipv4-to-int
 
 Converts an IPv4 string into an integer.
+
+=head2 int-to-ipv6
+
+Converts an integer into a string representation of an IPv6 address.
+
+=head2 ipv6-to-int
+
+Converts an IPv6 string into an integer.
+
+=head2 ipv6-expand
+
+Expands an IPv6 address by expanding "::" and adding leading zeros.
+
+=head ipv6-compact
+
+Produces the shortest possible string representation of an IPv6 address.
 
 =head1 AUTHOR
 

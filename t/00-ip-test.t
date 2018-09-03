@@ -19,5 +19,34 @@ for @TESTS -> $test {
     is ipv4-to-int(int-to-ipv4($test<val>)), $test<val>, "$test<ip> int-to-ipv4-to-int";
 }
 
+my @TESTS6 := (
+    {
+        ip      => '2001:db8::1',
+        full    => '2001:0db8:0000:0000:0000:0000:0000:0001',
+        val     => 42540766411282592856903984951653826561,
+        compact => '2001:db8::1',
+    },
+    {
+        ip      => '2001:db8:0:2:3::1',
+        full    => '2001:0db8:0000:0002:0003:0000:0000:0001',
+        val     => 42540766411282592893798317524003061761,
+        compact => '2001:db8:0:2:3::1',
+    },
+    {
+        ip      => '2001:db8:0:002:03::1',
+        full    => '2001:0db8:0000:0002:0003:0000:0000:0001',
+        val     => 42540766411282592893798317524003061761,
+        compact => '2001:db8:0:2:3::1',
+    },
+);
+
+for @TESTS6 -> $test {
+    is ipv6-expand($test<ip>), $test<full>, "$test<ip> ipv6-expand";
+    is ipv6-expand($test<full>), $test<full>, "$test<ip> ipv6-expand (full)";
+    is ipv6-to-int($test<ip>), $test<val>, "$test<ip> ipv6-to-int";
+    is ipv6-compact($test<ip>), $test<compact>, "$test<ip> ipv6-compact";
+    is int-to-ipv6($test<val>), $test<compact>, "$test<ip> int-to-ipv6";
+}
+
 done-testing;
 
