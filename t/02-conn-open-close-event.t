@@ -10,7 +10,7 @@ use Net::BGP;
 
 subtest 'Event', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();

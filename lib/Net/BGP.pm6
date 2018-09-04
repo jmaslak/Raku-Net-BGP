@@ -12,6 +12,7 @@ use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
 use Net::BGP::Error::Unknown-Version;
+use Net::BGP::IP;
 use Net::BGP::Message;
 use Net::BGP::Message::Generic;
 use Net::BGP::Message::Open;
@@ -21,6 +22,7 @@ use Net::BGP::Notify::Closed-Connection;
 use Net::BGP::Notify::New-Connection;
 use Net::BGP::Parameter;
 use Net::BGP::Parameter::Generic;
+use Net::BGP::Peer;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     our subset PortNum of Int where ^65536;
@@ -34,10 +36,15 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     has %!connection;                   # Connections that are established
     has Lock $!connlock = Lock.new;     # Lock for the connections hash
 
+    has Int:D $.my-asn is required where ^65536;
+
+    has %.peers = Hash.new;             # Peer Objects
+
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
             given $k {
-                when 'port' { $!port = %args{$k} if defined %args{$k} }
+                when 'port'   { $!port   = %args{$k} if %args{$k}.defined }
+                when 'my-asn' { $!my-asn = %args{$k} }
                 default { die("Invalid attribute set in call to constructor: $k") }
             }
         }
@@ -276,5 +283,35 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         return True;
     }
 
+    method add-peer(
+        Int:D :$peer-asn,
+        Str:D :$peer-ip,
+        Int:D :$peer-port = 179,
+    ) {
+        my $key = self.peer-key($peer-ip, $peer-port);
+        if %.peers{$key}:exists {
+            die("Peer was already defined - IP: $peer-ip, Port: $peer-port");
+        }
+
+        %.peers{$key} = Net::BGP::Peer.new(
+            :peer-ip($peer-ip),
+            :peer-port($peer-port),
+            :peer-asn($peer-asn),
+            :my-asn($.my-asn)
+        );
+    }
+
+    method remove-peer( Str:D :$peer-ip, Int:D :$peer-port = 179 ) {
+        my $key = self.peer-key($peer-ip, $peer-port);
+        if %.peers{$key}:exists {
+            %.peers{$key}.destroy-peer();
+            %.peers{$key}:delete;
+        }
+    }
+
+    method peer-key(Str:D $peer-ip is copy, Int:D $peer-port = 179) {
+        $peer-ip = ip-cannonical($peer-ip);
+        return "$peer-ip $peer-port";
+    }
 }
 

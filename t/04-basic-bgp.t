@@ -10,46 +10,7 @@ use Net::BGP;
 
 subtest 'Valid', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
-        is $bgp.port, 0, 'BGP Port is 0';
-
-        $bgp.listen();
-        isnt $bgp.port, 0, 'BGP Port isnt 0';
-
-        diag "Port is: " ~ $bgp.port;
-
-        my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
-        my $uc = $bgp.user-channel;
-        my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
-        is $cr.connection-id, 0, 'Connection ID is as expected';
-
-        $client.write( read-message('t/bgp-messages/noop-message.msg') );
-
-        my $cr-bgp = $uc.receive;
-        is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
-        is $cr-bgp.is-error, False, 'Is not an error';
-        is $cr-bgp.message.message-type, 0, 'BGP Message is proper type';
-        is $cr-bgp.connection-id, 0, 'BGP Message connection ID is as expected';
-
-        my $open = Net::BGP::Message::Open.from-hash( {
-            :asn(65000),
-            :hold-time(0),
-            :identifier('1.2.3.4'),
-        } );
-        $bgp.send-bgp($cr-bgp.connection-id, $open);
-
-        my $get = $client.recv(:bin);
-        ok check-list($get.subbuf(18), $open.raw), "BGP message sent properly";
-
-        $client.close();
-
-        my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Closed-Connection', 'Close message type is as expected';
-        is $cr-bad.is-error, False, 'Is not an error';
-        is $cr-bad.connection-id, 0, 'Close message connection ID is as expected';
-        
-        $bgp.listen-stop();
+        test-valid();
     } else {
         skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
     }
@@ -58,13 +19,15 @@ subtest 'Valid', {
 
 subtest 'invalid-marker', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -87,13 +50,15 @@ subtest 'invalid-marker', {
 
 subtest 'invalid-length-short', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -116,13 +81,15 @@ subtest 'invalid-length-short', {
 
 subtest 'invalid-length-long', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -145,13 +112,15 @@ subtest 'invalid-length-long', {
 
 subtest 'invalid-version', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -174,13 +143,15 @@ subtest 'invalid-version', {
 
 subtest 'hold-time-too-short', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -203,13 +174,15 @@ subtest 'hold-time-too-short', {
 
 subtest 'bad-option-length [1]', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -233,13 +206,15 @@ subtest 'bad-option-length [1]', {
 
 subtest 'bad-option-length [3]', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -263,13 +238,15 @@ subtest 'bad-option-length [3]', {
 
 subtest 'OPEN', {
     if (check-compiler-version) {
-        my $bgp = Net::BGP.new( port => 0);
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         diag "Port is: " ~ $bgp.port;
+
+        is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
@@ -319,5 +296,53 @@ sub check-compiler-version(--> Bool) {
 sub check-list($a, $b -->Bool) {
     if $a.elems != $b.elems { return False; }
     return [&&] $a.values Z== $b.values;
+}
+
+sub test-valid() {
+    my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+    is $bgp.port, 0, 'BGP Port is 0';
+
+    $bgp.listen();
+    isnt $bgp.port, 0, 'BGP Port isnt 0';
+    diag "Port is: " ~ $bgp.port;
+
+    is $bgp.my-asn, 65000, "ASN is correct";
+
+    $bgp.add-peer(:peer-asn(65001), :peer-ip('192.0.2.1'));
+    dies-ok { $bgp.add-peer(:peer-asn(65001), :peer-ip('192.0.2.1')) },
+        "Cannot add a duplicate peer";
+
+    my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
+    my $uc = $bgp.user-channel;
+    my $cr = $uc.receive;
+    is $cr.message-type, 'New-Connection', 'Message type is as expected';
+    is $cr.connection-id, 0, 'Connection ID is as expected';
+
+    $client.write( read-message('t/bgp-messages/noop-message.msg') );
+
+    my $cr-bgp = $uc.receive;
+    is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
+    is $cr-bgp.is-error, False, 'Is not an error';
+    is $cr-bgp.message.message-type, 0, 'BGP Message is proper type';
+    is $cr-bgp.connection-id, 0, 'BGP Message connection ID is as expected';
+
+    my $open = Net::BGP::Message::Open.from-hash( {
+        :asn(65000),
+        :hold-time(0),
+        :identifier('1.2.3.4'),
+    } );
+    $bgp.send-bgp($cr-bgp.connection-id, $open);
+
+    my $get = $client.recv(:bin);
+    ok check-list($get.subbuf(18), $open.raw), "BGP message sent properly";
+
+    $client.close();
+
+    my $cr-bad = $uc.receive;
+    is $cr-bad.message-type, 'Closed-Connection', 'Close message type is as expected';
+    is $cr-bad.is-error, False, 'Is not an error';
+    is $cr-bad.connection-id, 0, 'Close message connection ID is as expected';
+    
+    $bgp.listen-stop();
 }
 
