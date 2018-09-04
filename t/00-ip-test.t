@@ -17,6 +17,7 @@ for @TESTS -> $test {
     is int-to-ipv4($test<val>), $test<ip>, "$test<ip> int-to-ipv4";
     is int-to-ipv4(ipv4-to-int($test<ip>)), $test<ip>, "$test<ip> ipv4-to-int-to-ipv4";
     is ipv4-to-int(int-to-ipv4($test<val>)), $test<val>, "$test<ip> int-to-ipv4-to-int";
+    is ip-valid($test<ip>), True, "$test<ip> ip-valid";
 }
 
 my @TESTS6 := (
@@ -39,6 +40,12 @@ my @TESTS6 := (
         compact => '2001:db8:0:2:3::1',
     },
     {
+        ip      => '2001:dB8:0:002:03::1',      # Note upper case B
+        full    => '2001:0db8:0000:0002:0003:0000:0000:0001',
+        val     => 42540766411282592893798317524003061761,
+        compact => '2001:db8:0:2:3::1',
+    },
+    {
         ip      => '2605:2700:0:3::4713:93e3',
         full    => '2605:2700:0000:0003:0000:0000:4713:93e3',
         val     => 50537416338094019778974086937420469219,
@@ -52,6 +59,7 @@ for @TESTS6 -> $test {
     is ipv6-to-int($test<ip>), $test<val>, "$test<ip> ipv6-to-int";
     is ipv6-compact($test<ip>), $test<compact>, "$test<ip> ipv6-compact";
     is int-to-ipv6($test<val>), $test<compact>, "$test<ip> int-to-ipv6";
+    is ip-valid($test<ip>), True, "$test<ip> ip-valid";
 }
 
 my @TESTS-CANNONICAL := (
@@ -68,6 +76,10 @@ my @TESTS-CANNONICAL := (
         cannonical => '192.0.2.1',
     },
     {
+        ip         => '::FFFF:192.0.2.1',
+        cannonical => '192.0.2.1',
+    },
+    {
         ip         => '192.0.2.1',
         cannonical => '192.0.2.1',
     },
@@ -76,6 +88,16 @@ my @TESTS-CANNONICAL := (
 for @TESTS-CANNONICAL -> $test {
     is ip-cannonical($test<ip>), $test<cannonical>, "$test<ip> ip-cannonical";
     is ip-cannonical(ip-cannonical($test<ip>)), $test<cannonical>, "$test<ip> ip-cannonical²";
+}
+
+my @TESTS-INVALID := (
+    '1920.0.2.1',
+    '1::2::3',
+    '2001:db8:g::1',
+);
+
+for @TESTS-INVALID -> $test {
+    is ip-valid($test), False, "$test ip-valid (invalid)";
 }
 
 done-testing;

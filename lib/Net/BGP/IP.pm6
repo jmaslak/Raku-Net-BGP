@@ -103,6 +103,12 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         return S:i/^ '::ffff:' // given $ip;
     }
 
+    our proto ip-valid(Str:D $ip -->Bool) is export {*};
+
+    multi ip-valid(ipv6:D $ip         -->Bool) { True }
+    multi ip-valid(ipv4:D $ip         -->Bool) { True }
+    multi ip-valid(ipv4_as_ipv6:D $ip -->Bool) { True }
+    multi ip-valid(Str:D $ip          -->Bool) { False }
 };
 
 =begin pod
@@ -173,6 +179,10 @@ Produces the shortest possible string representation of an IPv6 address.
 
 Returns the shortest possible string representation of an IPv4 or IPv6
 address.
+
+=head2 ip-valid
+
+Returns true if the IP address is a valid IPv4 or IPv6 address.
 
 =head1 IPv4 
 
