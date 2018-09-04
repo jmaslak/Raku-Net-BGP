@@ -54,5 +54,29 @@ for @TESTS6 -> $test {
     is int-to-ipv6($test<val>), $test<compact>, "$test<ip> int-to-ipv6";
 }
 
+my @TESTS-CANNONICAL := (
+    {
+        ip         => '2001:db8::1',
+        cannonical => '2001:db8::1',
+    },
+    {
+        ip         => '2001:db8:0::0:1',
+        cannonical => '2001:db8::1',
+    },
+    {
+        ip         => '::ffff:192.0.2.1',
+        cannonical => '192.0.2.1',
+    },
+    {
+        ip         => '192.0.2.1',
+        cannonical => '192.0.2.1',
+    },
+);
+
+for @TESTS-CANNONICAL -> $test {
+    is ip-cannonical($test<ip>), $test<cannonical>, "$test<ip> ip-cannonical";
+    is ip-cannonical(ip-cannonical($test<ip>)), $test<cannonical>, "$test<ip> ip-cannonical²";
+}
+
 done-testing;
 

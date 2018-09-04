@@ -88,6 +88,21 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
 
         return $compact;
     }
+
+    our subset ipv4_as_ipv6 of Str where m:i/ ^ '::ffff:' @octet**4 % '.' $ /;
+
+    our proto ip-cannonical(Str:D $ip -->Str) is export {*};
+
+    multi ip-cannonical(ipv6:D $ip -->Str) {
+        return ipv6-compact($ip);
+    }
+    multi ip-cannonical(ipv4:D $ip -->Str) {
+        return $ip;
+    }
+    multi ip-cannonical(ipv4_as_ipv6:D $ip -->Str) {
+        return S:i/^ '::ffff:' // given $ip;
+    }
+
 };
 
 =begin pod
@@ -104,6 +119,10 @@ Net::BGP::IP - IP Address Handling Functionality
 
   my $ip = int-to-ipv4(1000);         # Converts 1000 to an IPv4 string
   my $int = ipv4-to-int('192.0.2.4'); # Converts to an integer
+  
+  # Returns 192.0.2.1
+  my $cannonical = ip-cannonical('192.0.2.'1);
+  my $cannonical = ip-cannonical('::ffff:192.0.2.'1);
 
 =head2 IPv6    
 
@@ -120,6 +139,9 @@ Net::BGP::IP - IP Address Handling Functionality
 
   # Will return 2001:db8::1
   my $compact = ipv6-compact('2001:0db8:0:000:0::01');
+
+  # Returns 2001:db8::1
+  my $cannonical = ip-cannonical('2001:0db8:0::0:1');
 
 =head1 SUBROUTINES
 
@@ -143,9 +165,16 @@ Converts an IPv6 string into an integer.
 
 Expands an IPv6 address by expanding "::" and adding leading zeros.
 
-=head ipv6-compact
+=head2 ipv6-compact
 
 Produces the shortest possible string representation of an IPv6 address.
+
+=head2 ip-cannonical
+
+Returns the shortest possible string representation of an IPv4 or IPv6
+address.
+
+=head1 IPv4 
 
 =head1 AUTHOR
 
