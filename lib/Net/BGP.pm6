@@ -38,7 +38,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     has Int:D $.my-asn is required where ^65536;
 
-    has %.peers = Hash.new;             # Peer Objects
+    has Net::BGP::Peer %.peers = Hash[Net::BGP::Peer].new; # Peer Objects
 
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
