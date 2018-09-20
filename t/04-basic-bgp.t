@@ -8,17 +8,15 @@ use Test;
 
 use Net::BGP;
 
-subtest 'Valid', {
-    if (check-compiler-version) {
+if (!check-compiler-version) {
+    skip "Compiler doesn't support dynamic IO::Socket::Async port listening";
+} else {
+    subtest 'Valid', {
         test-valid();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
+        done-testing;
+    };
 
-subtest 'invalid-marker', {
-    if (check-compiler-version) {
+    subtest 'invalid-marker', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -42,14 +40,11 @@ subtest 'invalid-marker', {
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
 
-subtest 'invalid-length-short', {
-    if (check-compiler-version) {
+        done-testing;
+    };
+
+    subtest 'invalid-length-short', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -73,14 +68,11 @@ subtest 'invalid-length-short', {
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
 
-subtest 'invalid-length-long', {
-    if (check-compiler-version) {
+        done-testing;
+    };
+
+    subtest 'invalid-length-long', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -104,14 +96,11 @@ subtest 'invalid-length-long', {
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
 
-subtest 'invalid-version', {
-    if (check-compiler-version) {
+        done-testing;
+    };
+
+    subtest 'invalid-version', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -135,14 +124,11 @@ subtest 'invalid-version', {
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
 
-subtest 'hold-time-too-short', {
-    if (check-compiler-version) {
+        done-testing;
+    };
+
+    subtest 'hold-time-too-short', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -166,14 +152,11 @@ subtest 'hold-time-too-short', {
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
 
-subtest 'bad-option-length [1]', {
-    if (check-compiler-version) {
+        done-testing;
+    };
+
+    subtest 'bad-option-length [1]', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -198,14 +181,11 @@ subtest 'bad-option-length [1]', {
         is $cr-bad.length, 1, 'Length == 1';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
 
-subtest 'bad-option-length [3]', {
-    if (check-compiler-version) {
+        done-testing;
+    };
+
+    subtest 'bad-option-length [3]', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -230,14 +210,11 @@ subtest 'bad-option-length [3]', {
         is $cr-bad.length, 3, 'Length == 3';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
 
-subtest 'OPEN', {
-    if (check-compiler-version) {
+        done-testing;
+    };
+
+    subtest 'OPEN', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
@@ -269,11 +246,9 @@ subtest 'OPEN', {
         is $cr-bad.is-error, False, 'Is not an error';
         
         $bgp.listen-stop();
-    } else {
-        skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;
-    }
-    done-testing;
-};
+        done-testing;
+    };
+}
 
 done-testing;
 
