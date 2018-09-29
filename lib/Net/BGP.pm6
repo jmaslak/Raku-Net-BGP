@@ -6,13 +6,19 @@ use Net::BGP::Command::Stop;
 use Net::BGP::Connection;
 use Net::BGP::Conversions;
 use Net::BGP::IP;
+use Net::BGP::Notify::New-Connection;
+use Net::BGP::Peer;
+
+# We need to register all the parameter types, which happens when the
+# module is loaded.
+use Net::BGP::Parameter;
+use Net::BGP::Parameter::Generic;
+
+# We need to register all the message types, which happens when the
+# module is loaded.
 use Net::BGP::Message;
 use Net::BGP::Message::Generic;
 use Net::BGP::Message::Open;
-use Net::BGP::Notify::New-Connection;
-use Net::BGP::Parameter;
-use Net::BGP::Parameter::Generic;
-use Net::BGP::Peer;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     our subset PortNum of Int where ^65536;
