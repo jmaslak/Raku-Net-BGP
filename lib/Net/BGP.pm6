@@ -8,10 +8,6 @@ use Net::BGP::Conversions;
 use Net::BGP::Error;
 use Net::BGP::Error::Bad-Option-Length;
 use Net::BGP::Error::Bad-Parameter-Length;
-use Net::BGP::Error::Hold-Time-Too-Short;
-use Net::BGP::Error::Length-Too-Long;
-use Net::BGP::Error::Length-Too-Short;
-use Net::BGP::Error::Marker-Format;
 use Net::BGP::Error::Unknown-Version;
 use Net::BGP::IP;
 use Net::BGP::Message;
@@ -108,12 +104,10 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                             ),
                         );
 
-                        my $msg = buf8.new;
-
                         react {
                             whenever $socket.Supply(:bin).list -> $buf {
-                                $msg.append($buf);
-                                my $bgpmsg = self.pop-bgp-message($msg);
+                                $conn.buffer.append($buf);
+                                my $bgpmsg = $conn.pop-bgp-message();
                                 if (defined($bgpmsg)) {
                                     # Send message to client
                                     $!user-supplier.emit(
@@ -215,59 +209,6 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         await $listen-promise;
 
         return;
-    }
-
-    # WARNING - THIS METHOD HAS SIDE EFFECTS!
-    #
-    # Side Effect 1 - It will REMOVE the message from the buffer!
-    #
-    # Side Effect 2 - Will throw on BGP message error
-    #
-    method pop-bgp-message(buf8 $msg is rw --> Net::BGP::Message) {
-        # We need at least 19 bytes to have a BGP message (RFC4271 4.1)
-        if $msg.bytes < 19 {
-            return 0;  # We don't have a message
-        }
-
-        # Check for valid marker
-        if !self.valid-marker($msg) {
-            die Net::BGP::Error::Marker-Format.new();
-        }
-
-        # Parse length
-        my $expected-len = nuint16($msg[16..17]);
-
-        if $expected-len < 19 {
-            # Too short - RFC4271 4.1
-            die Net::BGP::Error::Length-Too-Short.new(:length($expected-len));
-        }
-        if $expected-len > 4096 {
-            # Too long - RFC4271 4.1
-            die Net::BGP::Error::Length-Too-Long.new(:length($expected-len));
-        }
-
-        if $msg.bytes < $expected-len {
-            return; # We don't yet have the full message
-        }
-
-        # We delegate the hard work of parsing this message
-        my $bgp-msg = Net::BGP::Message.from-raw( buf8.new($msg[18..*]) );
-
-        # Remove message
-        $msg.splice: 0, $expected-len, ();
-
-        # Here we go - hand back parsed hash
-        return $bgp-msg;
-    }
-
-    method valid-marker(buf8 $msg -->Bool) {
-        if $msg.bytes < 16 { return False; }
-
-        for ^16 -> $i {
-            if $msg[$i] != 255 { return False; }
-        }
-
-        return True;
     }
 
     method add-peer(
