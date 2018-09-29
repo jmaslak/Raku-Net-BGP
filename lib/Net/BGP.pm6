@@ -3,6 +3,7 @@ use v6.c;
 use Net::BGP::Command;
 use Net::BGP::Command::BGP-Message;
 use Net::BGP::Command::Stop;
+use Net::BGP::Controller;
 use Net::BGP::Connection;
 use Net::BGP::Conversions;
 use Net::BGP::IP;
@@ -29,13 +30,9 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Supplier $!user-supplier;       # Supplier object (to send events to the user)
     has Channel  $.user-channel;        # User channel (for the user to receive the events)
 
-    has Net::BGP::Connection %!connection; # Connections that are established
-    has Lock $!connlock = Lock.new;        # Lock for the connections hash
+    has Net::BGP::Controller $.controller is rw;
 
     has Int:D $.my-asn is required where ^65536;
-
-    has Net::BGP::Peer %.peers = Hash[Net::BGP::Peer].new; # Peer Objects
-    has Lock $!peerlock = Lock.new;
 
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
@@ -48,6 +45,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
         $!user-supplier = Supplier.new;
         $!user-channel  = $!user-supplier.Supply.Channel;
+        $!controller    = Net::BGP::Controller.new(:my-asn($!my-asn));
     }
 
     method listen-stop(--> Nil) {
@@ -62,15 +60,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             :message($bgp),
         );
 
-        $!connlock.protect(
-            {
-                if %!connection{ $connection-id }:!exists {
-                    die("Command sent to non-existant ID");
-                };
-
-                %!connection{$connection-id}.command.send($msg);
-            }
-        );
+        $!controller.connection($connection-id).command.send($msg);
     }
 
     method listen(--> Nil) {
@@ -97,7 +87,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                     );
 
                     # Set up connection object
-                    $!connlock.protect( { %!connection{$conn.id} = $conn; } );
+                    $!controller.connection-add($conn);
                     $!user-supplier.emit(
                         Net::BGP::Notify::New-Connection.new(
                             :client-ip( $socket.peer-host ),
@@ -133,7 +123,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                         done();
                         # XXX Do we need to kill the children?
                     } elsif $msg.message-type eq "Dead-Child" {
-                        $!connlock.protect( { %!connection{$msg.connection-id}:delete } );
+                        $!controller.connection-remove($msg.connection-id);
                     } else {
                         !!!;
                     }
@@ -158,41 +148,26 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         return;
     }
 
+    method peer-get (
+        Int:D :$peer-asn,
+        Str:D :$peer-ip,
+        Int:D :$peer-port? = 179
+        -->Net::BGP::Peer
+    ) {
+        return $.controller.peer-get(:$peer-asn, :$peer-ip, :$peer-port);
+    }
+
     method peer-add (
         Int:D :$peer-asn,
         Str:D :$peer-ip,
-        Int:D :$peer-port = 179,
+        Int:D :$peer-port? = 179,
     ) {
-        my $key = self.peer-key($peer-ip, $peer-port);
-
-        $!peerlock.protect( {
-            if %.peers{$key}:exists {
-                die("Peer was already defined - IP: $peer-ip, Port: $peer-port");
-            }
-
-            %.peers{$key} = Net::BGP::Peer.new(
-                :peer-ip($peer-ip),
-                :peer-port($peer-port),
-                :peer-asn($peer-asn),
-                :my-asn($.my-asn)
-            );
-        } );
+        $.controller.peer-add(:$peer-asn, :$peer-ip, :$peer-port);
     }
 
-    method peer-remove ( Str:D :$peer-ip, Int:D :$peer-port = 179 ) {
-        my $key = self.peer-key($peer-ip, $peer-port);
-        
-        $!peerlock.protect( {
-            if %.peers{$key}:exists {
-                %.peers{$key}.destroy-peer();
-                %.peers{$key}:delete;
-            }
-        } );
+    method peer-remove ( Str:D :$peer-ip, Int:D :$peer-port? = 179 ) {
+        $.controller.peer-remove(:$peer-ip, :$peer-port);
     }
 
-    method peer-key(Str:D $peer-ip is copy, Int:D $peer-port = 179) {
-        $peer-ip = ip-cannonical($peer-ip);
-        return "$peer-ip $peer-port";
-    }
 }
 
