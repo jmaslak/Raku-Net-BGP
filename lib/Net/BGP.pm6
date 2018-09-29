@@ -113,7 +113,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                         react {
                             whenever $socket.Supply(:bin).list -> $buf {
                                 $msg.append($buf);
-                                my $bgpmsg = self.pop_bgp_message($msg);
+                                my $bgpmsg = self.pop-bgp-message($msg);
                                 if (defined($bgpmsg)) {
                                     # Send message to client
                                     $!user-supplier.emit(
@@ -223,7 +223,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     #
     # Side Effect 2 - Will throw on BGP message error
     #
-    method pop_bgp_message(buf8 $msg is rw --> Net::BGP::Message) {
+    method pop-bgp-message(buf8 $msg is rw --> Net::BGP::Message) {
         # We need at least 19 bytes to have a BGP message (RFC4271 4.1)
         if $msg.bytes < 19 {
             return 0;  # We don't have a message
