@@ -194,7 +194,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                     }
                 }
 
-                await $listen-tap.socket-port;
+                await $listen-tap.socket-port;      # make sure the socket is ready
                 $!port = $listen-tap.socket-port.result;
                 $listen-promise.keep($.port);
 
