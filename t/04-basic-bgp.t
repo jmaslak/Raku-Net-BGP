@@ -283,8 +283,8 @@ sub test-valid() {
 
     is $bgp.my-asn, 65000, "ASN is correct";
 
-    $bgp.add-peer(:peer-asn(65001), :peer-ip('192.0.2.1'));
-    dies-ok { $bgp.add-peer(:peer-asn(65001), :peer-ip('192.0.2.1')) },
+    $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1'));
+    dies-ok { $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1')) },
         "Cannot add a duplicate peer";
 
     my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));

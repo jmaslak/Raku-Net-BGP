@@ -35,6 +35,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D $.my-asn is required where ^65536;
 
     has Net::BGP::Peer %.peers = Hash[Net::BGP::Peer].new; # Peer Objects
+    has Lock $!peerlock = Lock.new;
 
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
@@ -157,30 +158,36 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         return;
     }
 
-    method add-peer(
+    method peer-add (
         Int:D :$peer-asn,
         Str:D :$peer-ip,
         Int:D :$peer-port = 179,
     ) {
         my $key = self.peer-key($peer-ip, $peer-port);
-        if %.peers{$key}:exists {
-            die("Peer was already defined - IP: $peer-ip, Port: $peer-port");
-        }
 
-        %.peers{$key} = Net::BGP::Peer.new(
-            :peer-ip($peer-ip),
-            :peer-port($peer-port),
-            :peer-asn($peer-asn),
-            :my-asn($.my-asn)
-        );
+        $!peerlock.protect( {
+            if %.peers{$key}:exists {
+                die("Peer was already defined - IP: $peer-ip, Port: $peer-port");
+            }
+
+            %.peers{$key} = Net::BGP::Peer.new(
+                :peer-ip($peer-ip),
+                :peer-port($peer-port),
+                :peer-asn($peer-asn),
+                :my-asn($.my-asn)
+            );
+        } );
     }
 
-    method remove-peer( Str:D :$peer-ip, Int:D :$peer-port = 179 ) {
+    method peer-remove ( Str:D :$peer-ip, Int:D :$peer-port = 179 ) {
         my $key = self.peer-key($peer-ip, $peer-port);
-        if %.peers{$key}:exists {
-            %.peers{$key}.destroy-peer();
-            %.peers{$key}:delete;
-        }
+        
+        $!peerlock.protect( {
+            if %.peers{$key}:exists {
+                %.peers{$key}.destroy-peer();
+                %.peers{$key}:delete;
+            }
+        } );
     }
 
     method peer-key(Str:D $peer-ip is copy, Int:D $peer-port = 179) {
