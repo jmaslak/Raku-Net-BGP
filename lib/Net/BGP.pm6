@@ -3,6 +3,7 @@ use v6.c;
 use Net::BGP::Command;
 use Net::BGP::Command::BGP-Message;
 use Net::BGP::Command::Stop;
+use Net::BGP::Connection;
 use Net::BGP::Conversions;
 use Net::BGP::Error;
 use Net::BGP::Error::Bad-Option-Length;
@@ -33,8 +34,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Supplier $!user-supplier;       # Supplier object (to send events to the user)
     has Channel  $.user-channel;        # User channel (for the user to receive the events)
 
-    has %!connection;                   # Connections that are established
-    has Lock $!connlock = Lock.new;     # Lock for the connections hash
+    has Net::BGP::Connection %!connection; # Connections that are established
+    has Lock $!connlock = Lock.new;        # Lock for the connections hash
 
     has Int:D $.my-asn is required where ^65536;
 
@@ -71,7 +72,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                     die("Command sent to non-existant ID");
                 };
 
-                %!connection{$connection-id}<command>.send($msg);
+                %!connection{$connection-id}.command.send($msg);
             }
         );
     }
@@ -92,36 +93,25 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             $listen-socket = IO::Socket::Async.listen("::", $.port);
 
             react {
-                my $listen-tap = do whenever $listen-socket -> $conn {
+                my $listen-tap = do whenever $listen-socket -> $socket {
                     start {
-                        my %connhash;
-                        my $id;
-                        %connhash<socket>  = $conn;
-                        %connhash<command> = Channel.new();  # Command channel
+                        my $conn = Net::BGP::Connection.new(:socket($socket));
 
                         # Set up connection object
-                        $!connlock.protect(
-                            {
-                                # Get conn number
-                                $id = %!connection.elems ?? %!connection.elems.max + 1 !! 0;
-
-                                %connhash<id> = $id;
-                                %!connection{$id} = %connhash;
-                            }
-                        );
+                        $!connlock.protect( { %!connection{$conn.id} = $conn; } );
 
                         $!user-supplier.emit(
                             Net::BGP::Notify::New-Connection.new(
-                                :client-ip( $conn.peer-host ),
-                                :client-port( $conn.peer-port ),
-                                :connection-id( $id ),
+                                :client-ip( $socket.peer-host ),
+                                :client-port( $socket.peer-port ),
+                                :connection-id( $conn.id ),
                             ),
                         );
 
                         my $msg = buf8.new;
 
                         react {
-                            whenever $conn.Supply(:bin).list -> $buf {
+                            whenever $socket.Supply(:bin).list -> $buf {
                                 $msg.append($buf);
                                 my $bgpmsg = self.pop_bgp_message($msg);
                                 if (defined($bgpmsg)) {
@@ -129,49 +119,46 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                     $!user-supplier.emit(
                                         Net::BGP::Notify::BGP-Message.new(
                                             :message( $bgpmsg ),
-                                            :connection-id( $id ),
+                                            :connection-id( $conn.id ),
                                         ),
                                     );
                                 }
                                 CATCH {
                                     when Net::BGP::Error {
                                         $!user-supplier.emit( $_ );
-                                        $conn.close;
+                                        $socket.close;
 
-                                        $!connlock.protect( { %!connection{$id}:delete } );
-                                        %connhash = Hash.new();
+                                        $!connlock.protect( { %!connection{$conn.id}:delete } );
                                     }
                                 }
 
                                 LAST {
                                     $!user-supplier.emit(
                                         Net::BGP::Notify::Closed-Connection.new(
-                                            :client-ip( $conn.peer-host ),
-                                            :client-port( $conn.peer-port ),
-                                            :connection-id( $id ),
+                                            :client-ip( $socket.peer-host ),
+                                            :client-port( $socket.peer-port ),
+                                            :connection-id( $conn.id ),
                                         ),
                                     );
-                                    $conn.close;
+                                    $socket.close;
 
-                                    $!connlock.protect( { %!connection{$id}:delete } );
-                                    %connhash = Hash.new();
+                                    $!connlock.protect( { %!connection{$conn.id}:delete } );
                                 }
                                 QUIT {
                                     $!user-supplier.emit(
                                         Net::BGP::Notify::Closed-Connection.new(
-                                            :client-ip( $conn.peer-host ),
-                                            :client-port( $conn.peer-port ),
-                                            :connection-id( $id ),
+                                            :client-ip( $socket.peer-host ),
+                                            :client-port( $socket.peer-port ),
+                                            :connection-id( $conn.id ),
                                         ),
                                     );
-                                    $conn.close;
+                                    $socket.close;
 
-                                    $!connlock.protect( { %!connection{$id}:delete } );
-                                    %connhash = Hash.new();
+                                    $!connlock.protect( { %!connection{$conn.id}:delete } );
                                 }
                             }
 
-                            whenever %connhash<command> -> Net::BGP::Command $msg {
+                            whenever $conn.command -> Net::BGP::Command $msg {
                                 if $msg.message-type eq 'BGP-Message' {
                                     my $outbuf = buf8.new();
 
@@ -188,7 +175,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                                     $outbuf.append( $msg.message.raw );
 
                                     # Actually send them.
-                                    $conn.write($outbuf);
+                                    $socket.write($outbuf);
                                 } else {
                                     die("Received an unexpected message type: " ~ $msg.message-type);
                                 }
