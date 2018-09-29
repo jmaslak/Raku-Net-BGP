@@ -5,11 +5,14 @@ use v6;
 # All Rights Reserved - See License
 #
 
+use Net::BGP::Command::Dead-Child;
 use Net::BGP::Conversions;
-use Net::BGP::Message;
 use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
+use Net::BGP::Message;
+use Net::BGP::Notify::BGP-Message;
+use Net::BGP::Notify::Closed-Connection;
 
 class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
 
@@ -17,8 +20,87 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     has IO::Socket::Async $.socket;
     has Channel           $.command = Channel.new;
+    has Channel           $.listener-channel;       # To communicate with listener
+    has Supplier          $.user-supplier;          # To communicate with user
     has Int               $.id      = $last_id++;
     has buf8              $.buffer  = buf8.new;
+
+    method handle-messages(-->Nil) {
+        react {
+            whenever self.socket.Supply(:bin).list -> $buf {
+                self.buffer.append($buf);
+                my $bgpmsg = self.pop-bgp-message();
+                if (defined($bgpmsg)) {
+                    # Send message to client
+                    $.user-supplier.emit(
+                        Net::BGP::Notify::BGP-Message.new(
+                            :message( $bgpmsg ),
+                            :connection-id( self.id ),
+                        ),
+                    );
+                }
+                CATCH {
+                    when Net::BGP::Error {
+                        $.user-supplier.emit( $_ );
+                        self.socket.close;
+
+                        my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
+                        $.listener-channel.send($dc);
+                    }
+                }
+
+                LAST {
+                    $.user-supplier.emit(
+                        Net::BGP::Notify::Closed-Connection.new(
+                            :client-ip( self.socket.peer-host ),
+                            :client-port( self.socket.peer-port ),
+                            :connection-id( self.id ),
+                        ),
+                    );
+                    self.socket.close;
+
+                    my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
+                    $.listener-channel.send($dc);
+                }
+                QUIT {
+                    $.user-supplier.emit(
+                        Net::BGP::Notify::Closed-Connection.new(
+                            :client-ip( self.socket.peer-host ),
+                            :client-port( self.socket.peer-port ),
+                            :connection-id( self.id ),
+                        ),
+                    );
+                    self.socket.close;
+
+                    my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
+                    $.listener-channel.send($dc);
+                }
+            }
+
+            whenever self.command -> Net::BGP::Command $msg {
+                if $msg.message-type eq 'BGP-Message' {
+                    my $outbuf = buf8.new();
+
+                    # Marker
+                    $outbuf.append( 255, 255, 255, 255 );
+                    $outbuf.append( 255, 255, 255, 255 );
+                    $outbuf.append( 255, 255, 255, 255 );
+                    $outbuf.append( 255, 255, 255, 255 );
+
+                    # Length
+                    $outbuf.append( nuint16-buf8( 18 + $msg.message.raw.bytes ) );
+
+                    # Message
+                    $outbuf.append( $msg.message.raw );
+
+                    # Actually send them.
+                    self.socket.write($outbuf);
+                } else {
+                    die("Received an unexpected message type: " ~ $msg.message-type);
+                }
+            }
+        }
+    }
 
     # WARNING - THIS METHOD HAS SIDE EFFECTS!
     #
@@ -85,7 +167,11 @@ Net::BGP::Connection - BGP Server Connection Class
 
   use Net::BGP::Connection;
 
-  my $conn    = Net::BGP::Connection.new(:socket($socket));
+  my $conn    = Net::BGP::Connection.new(
+                    :socket($socket),
+                    :listener-channel($listener),
+                    :user-supplier($user),
+                );
   my $id      = $conn.id;
 
   $conn.command.send($msg);
@@ -100,6 +186,16 @@ connection.
 =head2 socket
 
 The socket associated with this connection.
+
+=head2 listener-channel
+
+A channel used to send information back up to the listener (for instance,
+to remove a connection from the connection hash).
+
+=head2 user-supplier
+
+A supplier used to send information back up to the user (for instance, upon
+receipt of a BGP message.
 
 =head2 command
 

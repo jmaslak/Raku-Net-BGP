@@ -5,17 +5,10 @@ use Net::BGP::Command::BGP-Message;
 use Net::BGP::Command::Stop;
 use Net::BGP::Connection;
 use Net::BGP::Conversions;
-use Net::BGP::Error;
-use Net::BGP::Error::Bad-Option-Length;
-use Net::BGP::Error::Bad-Parameter-Length;
-use Net::BGP::Error::Unknown-Version;
 use Net::BGP::IP;
 use Net::BGP::Message;
 use Net::BGP::Message::Generic;
 use Net::BGP::Message::Open;
-use Net::BGP::Notify;
-use Net::BGP::Notify::BGP-Message;
-use Net::BGP::Notify::Closed-Connection;
 use Net::BGP::Notify::New-Connection;
 use Net::BGP::Parameter;
 use Net::BGP::Parameter::Generic;
@@ -90,91 +83,25 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
             react {
                 my $listen-tap = do whenever $listen-socket -> $socket {
+                    my $conn = Net::BGP::Connection.new(
+                        :socket($socket),
+                        :listener-channel($!listener-channel),
+                        :user-supplier($!user-supplier),
+                    );
+
+                    # Set up connection object
+                    $!connlock.protect( { %!connection{$conn.id} = $conn; } );
+                    $!user-supplier.emit(
+                        Net::BGP::Notify::New-Connection.new(
+                            :client-ip( $socket.peer-host ),
+                            :client-port( $socket.peer-port ),
+                            :connection-id( $conn.id ),
+                        ),
+                    );
+
+                    # Do this in a child process.
                     start {
-                        my $conn = Net::BGP::Connection.new(:socket($socket));
-
-                        # Set up connection object
-                        $!connlock.protect( { %!connection{$conn.id} = $conn; } );
-
-                        $!user-supplier.emit(
-                            Net::BGP::Notify::New-Connection.new(
-                                :client-ip( $socket.peer-host ),
-                                :client-port( $socket.peer-port ),
-                                :connection-id( $conn.id ),
-                            ),
-                        );
-
-                        react {
-                            whenever $socket.Supply(:bin).list -> $buf {
-                                $conn.buffer.append($buf);
-                                my $bgpmsg = $conn.pop-bgp-message();
-                                if (defined($bgpmsg)) {
-                                    # Send message to client
-                                    $!user-supplier.emit(
-                                        Net::BGP::Notify::BGP-Message.new(
-                                            :message( $bgpmsg ),
-                                            :connection-id( $conn.id ),
-                                        ),
-                                    );
-                                }
-                                CATCH {
-                                    when Net::BGP::Error {
-                                        $!user-supplier.emit( $_ );
-                                        $socket.close;
-
-                                        $!connlock.protect( { %!connection{$conn.id}:delete } );
-                                    }
-                                }
-
-                                LAST {
-                                    $!user-supplier.emit(
-                                        Net::BGP::Notify::Closed-Connection.new(
-                                            :client-ip( $socket.peer-host ),
-                                            :client-port( $socket.peer-port ),
-                                            :connection-id( $conn.id ),
-                                        ),
-                                    );
-                                    $socket.close;
-
-                                    $!connlock.protect( { %!connection{$conn.id}:delete } );
-                                }
-                                QUIT {
-                                    $!user-supplier.emit(
-                                        Net::BGP::Notify::Closed-Connection.new(
-                                            :client-ip( $socket.peer-host ),
-                                            :client-port( $socket.peer-port ),
-                                            :connection-id( $conn.id ),
-                                        ),
-                                    );
-                                    $socket.close;
-
-                                    $!connlock.protect( { %!connection{$conn.id}:delete } );
-                                }
-                            }
-
-                            whenever $conn.command -> Net::BGP::Command $msg {
-                                if $msg.message-type eq 'BGP-Message' {
-                                    my $outbuf = buf8.new();
-
-                                    # Marker
-                                    $outbuf.append( 255, 255, 255, 255 );
-                                    $outbuf.append( 255, 255, 255, 255 );
-                                    $outbuf.append( 255, 255, 255, 255 );
-                                    $outbuf.append( 255, 255, 255, 255 );
-
-                                    # Length
-                                    $outbuf.append( nuint16-buf8( 18 + $msg.message.raw.bytes ) );
-
-                                    # Message
-                                    $outbuf.append( $msg.message.raw );
-
-                                    # Actually send them.
-                                    $socket.write($outbuf);
-                                } else {
-                                    die("Received an unexpected message type: " ~ $msg.message-type);
-                                }
-                            }
-                        }
+                        $conn.handle-messages;
 
                         CATCH {
                             default {
@@ -194,10 +121,12 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
                 whenever $!listener-channel -> Net::BGP::Command $msg {
                     if $msg.message-type eq "Stop" {
-                        $listen-socket.close();
+                        $listen-socket = Nil;
                         $promise.keep();
                         done();
                         # XXX Do we need to kill the children?
+                    } elsif $msg.message-type eq "Dead-Child" {
+                        $!connlock.protect( { %!connection{$msg.connection-id}:delete } );
                     } else {
                         !!!;
                     }
@@ -205,6 +134,17 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             }
 
             await $promise;
+
+            CATCH {
+                default {
+                    # We should log better
+                    $*ERR.say("Error in child process!");
+                    $*ERR.say(.message);
+                    $*ERR.say(.backtrace.join);
+                    .rethrow;
+                }
+            }
+
         }
         await $listen-promise;
 
