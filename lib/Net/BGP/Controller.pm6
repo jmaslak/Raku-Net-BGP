@@ -21,23 +21,21 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Net::BGP::Connection %!connections;
 
     method connection(Int:D $id) {
-        $!connlock.protect( {
+        $!connlock.protect: {
             if %!connections{$id}:exists {
                 return %!connections{$id};
             } else {
                 die("Command sent to non-existant ID");
             }
-        } );
+        };
     }
 
     method connection-add(Net::BGP::Connection:D $connection) {
-        $!connlock.protect( {
-            %!connections{ $connection.id } = $connection;
-        } );
+        $!connlock.protect: { %!connections{ $connection.id } = $connection; };
     }
 
     method connection-remove(Int:D $id) {
-        $!connlock.protect( { %!connections{ $id }:delete } );
+        $!connlock.protect: { %!connections{ $id }:delete };
     }
 
     method peer-get(
@@ -48,19 +46,19 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
     ) {
         my $key = self.peer-key($peer-ip, $peer-port);
           
-        $!peerlock.protect( {
+        $!peerlock.protect: {
             if %!peers{$key}:exists {
                 return %!peers{$key};
             } else {
                 return;
             }
-        } );
+        };
     }
 
     method peer-add(Int:D :$peer-asn, Str:D :$peer-ip, Int:D :$peer-port? = 179) {
         my $key = self.peer-key($peer-ip, $peer-port);
 
-          $!peerlock.protect( {
+          $!peerlock.protect: {
               if %!peers{$key}:exists {
                   die("Peer was already defined - IP: $peer-ip, Port: $peer-port");
               }
@@ -71,18 +69,18 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
                   :peer-asn($peer-asn),
                   :my-asn($.my-asn)
               );
-          } );
+          };
       }
 
       method peer-remove ( Str:D :$peer-ip, Int:D :$peer-port? = 179 ) {
           my $key = self.peer-key($peer-ip, $peer-port);
 
-          $!peerlock.protect( {
+          $!peerlock.protect: {
               if %!peers{$key}:exists {
                   %!peers{$key}.destroy-peer();
                   %!peers{$key}:delete;
               }
-          } );
+          }
       }
 
       method peer-key(Str:D $peer-ip is copy, Int:D $peer-port? = 179) {
