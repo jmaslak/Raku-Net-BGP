@@ -48,8 +48,9 @@ subtest 'Command' => {
 
 subtest 'Notify' => {
     subtest 'Parent Class' => {
-        my $msg = Net::BGP::Notify.new();
+        my $msg = Net::BGP::Notify.new(:connection-id(1));
         ok $msg, "Created BGP Class";
+        is $msg.connection-id, 1, 'Connection ID is proper';
         is $msg.message-type, 'NOOP', 'Message type has proper default';
         is $msg.is-error, False, 'Message is not an error';
 
@@ -134,7 +135,7 @@ subtest 'Notify' => {
 
 subtest 'Error' => {
     subtest 'Parent Class' => {
-        my $msg = Net::BGP::Error.new();
+        my $msg = Net::BGP::Error.new(:connection-id(1));
         ok $msg, "Created BGP Class";
         is $msg.message-type, 'NOOP', 'Message type has proper value';
         is $msg.is-error, True, 'Message is an error';

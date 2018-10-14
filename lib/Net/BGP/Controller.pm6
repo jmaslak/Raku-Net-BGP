@@ -14,11 +14,11 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D $.my-asn is required where ^65537;
 
     # Private Attributes
-    has Lock           $!peerlock = Lock.new;
-    has Net::BGP::Peer %!peers;
+    has Lock:D           $!peerlock = Lock.new;
+    has Net::BGP::Peer:D %!peers;
 
-    has Lock                 $!connlock     = Lock.new;
-    has Net::BGP::Connection %!connections;
+    has Lock:D                 $!connlock     = Lock.new;
+    has Net::BGP::Connection:D %!connections;
 
     method connection(Int:D $id) {
         $!connlock.protect: {

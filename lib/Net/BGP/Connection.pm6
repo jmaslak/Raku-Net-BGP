@@ -18,12 +18,12 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     my Int $last_id = 0;
 
-    has IO::Socket::Async $.socket;
-    has Channel           $.command = Channel.new;
-    has Channel           $.listener-channel;       # To communicate with listener
-    has Supplier          $.user-supplier;          # To communicate with user
-    has Int               $.id      = $last_id++;
-    has buf8              $.buffer  = buf8.new;
+    has IO::Socket::Async:D $.socket           is required;
+    has Channel:D           $.command = Channel.new;
+    has Channel:D           $.listener-channel is required; # To communicate with listener
+    has Supplier:D          $.user-supplier    is required; # To communicate with user
+    has Int:D               $.id      = $last_id++;
+    has buf8:D              $.buffer  = buf8.new;
 
     method handle-messages(-->Nil) {
         react {
