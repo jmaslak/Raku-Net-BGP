@@ -84,6 +84,9 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                         :socket($socket),
                         :listener-channel($!listener-channel),
                         :user-supplier($!user-supplier),
+                        :bgp-handler($.controller),
+                        :remote-ip($socket.peer-host),
+                        :remote-port($socket.peer-port),
                     );
 
                     # Set up connection object

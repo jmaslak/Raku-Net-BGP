@@ -13,3 +13,7 @@ RFC4271
 4.2(c1) - invalid Option Length t/04-basic-bgp.t (bad-option-length [1])
 4.2(c2) - invalid Option Length t/04-basic-bgp.t (bad-option-length [3])
 
+Skipping 4.3+
+
+
+

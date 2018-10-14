@@ -6,6 +6,7 @@ use v6;
 #
 
 use Net::BGP::Command::Dead-Child;
+use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Conversions;
 use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
@@ -25,6 +26,11 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D               $.id      = $last_id++;
     has buf8:D              $.buffer  = buf8.new;
 
+    has Str:D               $.remote-ip        is required;
+    has Int:D               $.remote-port      is required where ^65536;
+
+    has Net::BGP::Controller-Handle-BGP:D $.bgp-handler is required;
+
     method handle-messages(-->Nil) {
         react {
             whenever self.socket.Supply(:bin).list -> $buf {
@@ -38,6 +44,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
                             :connection-id( self.id ),
                         ),
                     );
+                    $.bgp-handler.receive-bgp(self.id, $bgpmsg);
                 }
                 CATCH {
                     when Net::BGP::Error {

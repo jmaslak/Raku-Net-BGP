@@ -1,17 +1,20 @@
 use v6;
 
 #
-# Copyright (C) 2018 Joelle Maslak
+# Copyright © 2018 Joelle Maslak
 # All Rights Reserved - See License
 #
 
 use Net::BGP::Connection;
+use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Peer;
 use Net::BGP::IP;
 
-class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
+class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
+    does Net::BGP::Controller-Handle-BGP
+{
 
-    has Int:D $.my-asn is required where ^65537;
+    has Int:D $.my-asn is required where ^65536;
 
     # Private Attributes
     has Lock:D           $!peerlock = Lock.new;
@@ -38,13 +41,32 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
         $!connlock.protect: { %!connections{ $id }:delete };
     }
 
+    # Handle open messages
+    multi method receive-bgp(Int:D $connection-id, Net::BGP::Message::Open:D $msg) {
+        # Does the peer exist?
+        my $c = self.connection($connection-id);
+        if ! $c.defined {
+            die("Connection ID not found");
+        }
+        my $p = self.peer-get(:peer-ip($c.remote-ip));
+        if ! $p.defined {
+            # XXX We should handle a bad peer
+            return;
+        }
+        if $p.asn ≠ $msg.peer-asn {
+            # XXX We should handle a bad peer ASN
+            return;
+        }
+    }
+    multi method receive-bgp(Int:D $connection-id, Net::BGP::Message:D $msg) {
+        return; # XXX We don't do anything for most messages right now
+    }
+
     method peer-get(
-        Int:D :$peer-asn,
         Str:D :$peer-ip,
-        Int:D :$peer-port? = 179
         -->Net::BGP::Peer
     ) {
-        my $key = self.peer-key($peer-ip, $peer-port);
+        my $key = self.peer-key($peer-ip);
           
         $!peerlock.protect: {
             if %!peers{$key}:exists {
@@ -56,11 +78,11 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
     }
 
     method peer-add(Int:D :$peer-asn, Str:D :$peer-ip, Int:D :$peer-port? = 179) {
-        my $key = self.peer-key($peer-ip, $peer-port);
+        my $key = self.peer-key($peer-ip);
 
           $!peerlock.protect: {
               if %!peers{$key}:exists {
-                  die("Peer was already defined - IP: $peer-ip, Port: $peer-port");
+                  die("Peer was already defined - IP: $peer-ip");
               }
 
               %!peers{$key} = Net::BGP::Peer.new(
@@ -72,8 +94,8 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
           };
       }
 
-      method peer-remove ( Str:D :$peer-ip, Int:D :$peer-port? = 179 ) {
-          my $key = self.peer-key($peer-ip, $peer-port);
+      method peer-remove ( Str:D :$peer-ip ) {
+          my $key = self.peer-key($peer-ip);
 
           $!peerlock.protect: {
               if %!peers{$key}:exists {
@@ -83,9 +105,8 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK> {
           }
       }
 
-      method peer-key(Str:D $peer-ip is copy, Int:D $peer-port? = 179) {
-          $peer-ip = ip-cannonical($peer-ip);
-          return "$peer-ip $peer-port";
+      method peer-key(Str:D $peer-ip is copy -->Str:D) {
+          return ip-cannonical($peer-ip);
       }
 }
 
