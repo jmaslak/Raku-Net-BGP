@@ -6,16 +6,22 @@ use v6;
 #
 
 class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
-    my %registrations;
-    my %message-types;
+    use Net::BGP::Message::Creation-Role;
+
+    my %registrations := Hash[Net::BGP::Message::Creation-Role:U,Int].new;
+    my %message-types := Hash[Int:D,Str:D].new;
 
     # Message type Nil = handle all unhandled messages
-    method register(Net::BGP::Message $class, Int $message-type, Str $message-code) {
+    method register(
+        Net::BGP::Message::Creation-Role:U $class,
+        Int $message-type,
+        Str $message-code
+    ) {
         if defined $message-type {
             %registrations{ $message-type } = $class;
             %message-types{ $message-code } = $message-type;
         } else {
-            %registrations<default> = $class;
+            %registrations{Int} = $class;
         }
     }
 
@@ -31,7 +37,7 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
         if %registrations{ $raw[0] }:exists {
             return %registrations{ $raw[0] }.from-raw($raw);
         } else {
-            return %registrations<default>.from-raw($raw);
+            return %registrations{Int}.from-raw($raw);
         }
     };
 
