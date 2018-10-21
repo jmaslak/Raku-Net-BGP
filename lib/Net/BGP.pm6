@@ -78,10 +78,9 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
         start {
             $listen-socket = IO::Socket::Async.listen("::", $.port);
-            my $listen-tap = $listen-socket.tap;
 
             react {
-                do whenever $listen-socket -> $socket {
+                my $listen-tap = do whenever $listen-socket -> $socket {
                     my $conn = Net::BGP::Connection.new(
                         :socket($socket),
                         :listener-channel($!listener-channel),
