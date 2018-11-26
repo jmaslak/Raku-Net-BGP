@@ -41,8 +41,6 @@ subtest 'Listener', {
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
-        diag "Port is: " ~ $bgp.port;
-
         $bgp.listen-stop();
     } else {
         skip "Compiler doesn't support dynamic IO::Socket::Async port listening" unless check-compiler-version;

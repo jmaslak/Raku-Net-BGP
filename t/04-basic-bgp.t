@@ -23,8 +23,6 @@ if (!check-compiler-version) {
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
-        diag "Port is: " ~ $bgp.port;
-
         is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
@@ -50,8 +48,6 @@ if (!check-compiler-version) {
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
-
-        diag "Port is: " ~ $bgp.port;
 
         is $bgp.my-asn, 65000, "ASN is correct";
 
@@ -79,8 +75,6 @@ if (!check-compiler-version) {
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
-        diag "Port is: " ~ $bgp.port;
-
         is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
@@ -106,8 +100,6 @@ if (!check-compiler-version) {
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
-
-        diag "Port is: " ~ $bgp.port;
 
         is $bgp.my-asn, 65000, "ASN is correct";
 
@@ -135,8 +127,6 @@ if (!check-compiler-version) {
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
-        diag "Port is: " ~ $bgp.port;
-
         is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
@@ -162,8 +152,6 @@ if (!check-compiler-version) {
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
-
-        diag "Port is: " ~ $bgp.port;
 
         is $bgp.my-asn, 65000, "ASN is correct";
 
@@ -192,8 +180,6 @@ if (!check-compiler-version) {
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
-        diag "Port is: " ~ $bgp.port;
-
         is $bgp.my-asn, 65000, "ASN is correct";
 
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
@@ -220,8 +206,6 @@ if (!check-compiler-version) {
 
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
-
-        diag "Port is: " ~ $bgp.port;
 
         is $bgp.my-asn, 65000, "ASN is correct";
 
@@ -279,7 +263,6 @@ sub test-valid() {
 
     $bgp.listen();
     isnt $bgp.port, 0, 'BGP Port isnt 0';
-    diag "Port is: " ~ $bgp.port;
 
     is $bgp.my-asn, 65000, "ASN is correct";
 

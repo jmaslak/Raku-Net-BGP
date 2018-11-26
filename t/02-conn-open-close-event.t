@@ -16,8 +16,6 @@ subtest 'Event', {
         $bgp.listen();
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
-        diag "Port is: " ~ $bgp.port;
-
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
