@@ -5,7 +5,6 @@ use v6;
 # All Rights Reserved - See License
 #
 
-use Net::BGP::Connection;
 use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Peer;
