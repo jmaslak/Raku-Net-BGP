@@ -61,7 +61,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             :message($bgp),
         );
 
-        $!controller.connection($connection-id).command.send($msg);
+        $!controller.connections.get($connection-id).command.send($msg);
     }
 
     method listen(--> Nil) {
@@ -91,7 +91,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                     );
 
                     # Set up connection object
-                    $!controller.connection-add($conn);
+                    $!controller.connections.add($conn);
                     $!user-supplier.emit(
                         Net::BGP::Notify::New-Connection.new(
                             :client-ip( $socket.peer-host ),
@@ -127,7 +127,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                         done();
                         # XXX Do we need to kill the children?
                     } elsif $msg.message-type eq "Dead-Child" {
-                        $!controller.connection-remove($msg.connection-id);
+                        $!controller.connections.remove($msg.connection-id);
                     } else {
                         !!!;
                     }

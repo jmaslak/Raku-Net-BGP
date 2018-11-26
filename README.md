@@ -47,6 +47,13 @@ Starts BGP listener, on the port provided in the port attribute.
 
 For a given instance of the BGP class, only one listener can be active at any point in time.
 
+add-peer
+--------
+
+    $bgp.add-peer(:peer-ip("192.0.2.1"), :peer-port(179), :peer-asn(65001));
+
+Add a new peer to the BGP server.
+
 AUTHOR
 ======
 

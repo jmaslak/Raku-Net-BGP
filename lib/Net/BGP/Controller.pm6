@@ -6,6 +6,7 @@ use v6;
 #
 
 use Net::BGP::Connection;
+use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Peer;
 use Net::BGP::IP;
@@ -20,32 +21,14 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     has Lock:D           $!peerlock = Lock.new;
     has Net::BGP::Peer:D %!peers;
 
-    has Lock:D                 $!connlock     = Lock.new;
-    has Net::BGP::Connection:D %!connections;
-
-    method connection(Int:D $id) {
-        $!connlock.protect: {
-            if %!connections{$id}:exists {
-                return %!connections{$id};
-            } else {
-                die("Command sent to non-existant ID");
-            }
-        };
-    }
-
-    method connection-add(Net::BGP::Connection:D $connection) {
-        $!connlock.protect: { %!connections{ $connection.id } = $connection; };
-    }
-
-    method connection-remove(Int:D $id) {
-        $!connlock.protect: { %!connections{ $id }:delete };
-    }
+    has Net::BGP::Connection-List:D $.connections = Net::BGP::Connection-List.new;
 
     # Handle open messages
     multi method receive-bgp(Int:D $connection-id, Net::BGP::Message::Open:D $msg) {
         # Does the peer exist?
-        my $c = self.connection($connection-id);
+        my $c = $!connections.get($connection-id);
         if ! $c.defined {
+            ### XXX Likely unreachable
             die("Connection ID not found");
         }
         my $p = self.peer-get(:peer-ip($c.remote-ip));
