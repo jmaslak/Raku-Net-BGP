@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
-use Net::BGP::Peer;
+use Net::BGP::Peer-List;
 use Net::BGP::IP;
 
 class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
@@ -16,10 +16,7 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
     has Int:D $.my-asn is required where ^65536;
 
-    # Private Attributes
-    has Lock:D           $!peerlock = Lock.new;
-    has Net::BGP::Peer:D %!peers;
-
+    has Net::BGP::Peer-List:D       $.peers       = Net::BGP::Peer-List.new(:$!my-asn);
     has Net::BGP::Connection-List:D $.connections = Net::BGP::Connection-List.new;
 
     # Handle open messages
@@ -30,7 +27,7 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             ### XXX Likely unreachable
             die("Connection ID not found");
         }
-        my $p = self.peer-get(:peer-ip($c.remote-ip));
+        my $p = self.peers.get($c.remote-ip);
         if ! $p.defined {
             # XXX We should handle a bad peer
             return;
@@ -43,53 +40,6 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     multi method receive-bgp(Int:D $connection-id, Net::BGP::Message:D $msg) {
         return; # XXX We don't do anything for most messages right now
     }
-
-    method peer-get(
-        Str:D :$peer-ip,
-        -->Net::BGP::Peer
-    ) {
-        my $key = self.peer-key($peer-ip);
-          
-        $!peerlock.protect: {
-            if %!peers{$key}:exists {
-                return %!peers{$key};
-            } else {
-                return;
-            }
-        };
-    }
-
-    method peer-add(Int:D :$peer-asn, Str:D :$peer-ip, Int:D :$peer-port? = 179) {
-        my $key = self.peer-key($peer-ip);
-
-          $!peerlock.protect: {
-              if %!peers{$key}:exists {
-                  die("Peer was already defined - IP: $peer-ip");
-              }
-
-              %!peers{$key} = Net::BGP::Peer.new(
-                  :peer-ip($peer-ip),
-                  :peer-port($peer-port),
-                  :peer-asn($peer-asn),
-                  :my-asn($.my-asn)
-              );
-          };
-      }
-
-      method peer-remove ( Str:D :$peer-ip ) {
-          my $key = self.peer-key($peer-ip);
-
-          $!peerlock.protect: {
-              if %!peers{$key}:exists {
-                  %!peers{$key}.destroy-peer();
-                  %!peers{$key}:delete;
-              }
-          }
-      }
-
-      method peer-key(Str:D $peer-ip is copy -->Str:D) {
-          return ip-cannonical($peer-ip);
-      }
 }
 
 =begin pod

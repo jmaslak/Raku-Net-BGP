@@ -153,12 +153,10 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     }
 
     method peer-get (
-        Int:D :$peer-asn,
         Str:D :$peer-ip,
-        Int:D :$peer-port? = 179
         -->Net::BGP::Peer
     ) {
-        return $.controller.peer-get(:$peer-asn, :$peer-ip, :$peer-port);
+        return $.controller.peers.get($peer-ip);
     }
 
     method peer-add (
@@ -166,11 +164,11 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         Str:D :$peer-ip,
         Int:D :$peer-port? = 179,
     ) {
-        $.controller.peer-add(:$peer-asn, :$peer-ip, :$peer-port);
+        $.controller.peers.add(:$peer-asn, :$peer-ip, :$peer-port);
     }
 
     method peer-remove ( Str:D :$peer-ip, Int:D :$peer-port? = 179 ) {
-        $.controller.peer-remove(:$peer-ip, :$peer-port);
+        $.controller.peers.remove(:$peer-ip, :$peer-port);
     }
 
 }
