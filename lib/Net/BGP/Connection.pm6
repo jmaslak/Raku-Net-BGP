@@ -26,6 +26,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D               $.id      = $last_id++;
     has buf8:D              $.buffer  = buf8.new;
 
+    has Bool:D              $.inbound          is required; # Inbound connection?
     has Str:D               $.remote-ip        is required;
     has Int:D               $.remote-port      is required where ^65536;
 
