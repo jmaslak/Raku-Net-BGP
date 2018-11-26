@@ -16,7 +16,7 @@ monitor Net::BGP::Connection-List:ver<0.0.0>:auth<cpan:JMASLAK> {
         if %!connections{$id}:exists {
             return %!connections{$id};
         } else {
-            die("Invalid connection ID");
+            return;
         }
     }
 

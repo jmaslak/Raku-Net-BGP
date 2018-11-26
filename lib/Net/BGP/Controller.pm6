@@ -24,7 +24,6 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         # Does the peer exist?
         my $c = $!connections.get($connection-id);
         if ! $c.defined {
-            ### XXX Likely unreachable
             die("Connection ID not found");
         }
         my $p = self.peers.get($c.remote-ip);
