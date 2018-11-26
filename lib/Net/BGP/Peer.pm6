@@ -7,6 +7,7 @@ use v6;
 
 class Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
 
+    use Net::BGP::Connection;
     use Net::BGP::IP;
 
     # We need to track state of the connection.
@@ -17,12 +18,16 @@ class Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Str:D $.peer-ip is required where { ip-valid($^a) };
     has Int:D $.peer-port where ^65536 = 179;
     has Int:D $.peer-asn is required where ^65536;
+    has Int   $.peer-identifier is rw where ^(2³²);
 
     # My side
     has Int:D $.my-asn is required where ^65536;
 
     # Channel from server component
     has Channel $.channel is rw;
+
+    # Current "up" connection - in OpenConfirm or Established
+    has Net::BGP::Connection $.connection is rw;
 
     method set-channel($channel) {
         if $.channel.defined { die("A channel is already defined for peer") }

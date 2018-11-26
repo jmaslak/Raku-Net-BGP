@@ -42,7 +42,7 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
             | <h16> +% ':' <?{ $<h16> == 8}>
                 { @*by16 = @$<h16> }
 
-            | [ (<h16>) +% ':']? '::' (<h16>) +% ':' <?{ @$0 + @$1 ≤ 8 }>
+            | [ (<h16>) +% ':']? '::' [ (<h16>) +% ':' ]? <?{ @$0 + @$1 ≤ 8 }>
                 { @*by16 = |@$0, |('0' xx 8 - (@$0 + @$1)), |@$1; }
         }
 
@@ -76,7 +76,7 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
 
         # This looks weird - basically we try matching from most to
         # least.
-        if $compact ~~ s/^ '0:0:0:0:0:0:0:0' $/ '::' / {
+        if $compact ~~ s/^ '0:0:0:0:0:0:0:0' $/::/ {
         } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0:0' [ ':' | $ ] /::/ {
         } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0' [ ':' | $ ] /::/ {
         } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0' [ ':' | $ ] /::/ {

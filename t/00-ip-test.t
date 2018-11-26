@@ -83,6 +83,18 @@ my @TESTS-CANNONICAL := (
         ip         => '192.0.2.1',
         cannonical => '192.0.2.1',
     },
+    {
+        ip         => '::',
+        cannonical => '::',
+    },
+    {
+        ip         => '127.0.0.1',
+        cannonical => '127.0.0.1',
+    },
+    {
+        ip         => '::ffff:127.0.0.1',
+        cannonical => '127.0.0.1',
+    },
 );
 
 for @TESTS-CANNONICAL -> $test {
