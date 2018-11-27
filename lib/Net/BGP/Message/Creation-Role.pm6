@@ -6,6 +6,8 @@ use v6;
 #
 
 role Net::BGP::Message::Creation-Role:ver<0.0.0>:auth<cpan:JMASLAK> {
-    method from-raw(buf8:D $raw)      { … }
-    method from-hash(%params is copy) { … }
+    method from-raw(buf8:D $raw)             { … }
+    method from-hash(%params is copy)        { … }
+    method implemented-message-code(--> Int) { … }
+    method implemented-message-name(--> Str) { … }
 }

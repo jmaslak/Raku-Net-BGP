@@ -16,6 +16,9 @@ class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
         die("Must use from-raw or from-hash to construct a new object");
     }
 
+    method implemented-message-code(--> Int) { Int }
+    method implemented-message-name(--> Str) { Str }
+
     has buf8 $.data is rw;
 
     method message-type() {
@@ -38,7 +41,7 @@ class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
 }
 
 # Register handler
-Net::BGP::Message.register(Net::BGP::Message::Generic, Int, Str);
+Net::BGP::Message.register: Net::BGP::Message::Generic;
 
 =begin pod
 

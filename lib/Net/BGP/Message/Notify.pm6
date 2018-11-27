@@ -17,6 +17,9 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
         die("Must use from-raw or from-hash to construct a new object");
     }
 
+    method implemented-message-code(--> Int) { 4 }
+    method implemented-message-name(--> Str) { "NOTIFY" }
+
     has buf8 $.data is rw;
 
     method message-type() { 4 }
@@ -76,7 +79,7 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
 }
 
 # Register handler
-Net::BGP::Message.register(Net::BGP::Message::Notify, 4, 'NOTIFY');
+Net::BGP::Message.register: Net::BGP::Message::Notify;
 
 =begin pod
 

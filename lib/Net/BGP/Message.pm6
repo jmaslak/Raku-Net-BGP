@@ -9,20 +9,12 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
     use Net::BGP::Message::Creation-Role;
 
     my %registrations := Hash[Net::BGP::Message::Creation-Role:U,Int].new;
-    my %message-types := Hash[Int:D,Str:D].new;
+    my %message-types := Hash[Net::BGP::Message::Creation-Role:U,Str].new;
 
     # Message type Nil = handle all unhandled messages
-    method register(
-        Net::BGP::Message::Creation-Role:U $class,
-        Int $message-type,
-        Str $message-code
-    ) {
-        if defined $message-type {
-            %registrations{ $message-type } = $class;
-            %message-types{ $message-code } = $message-type;
-        } else {
-            %registrations{Int} = $class;
-        }
+    method register( Net::BGP::Message::Creation-Role:U $class ) {
+        %registrations{ $class.implemented-message-code } = $class;
+        %message-types{ $class.implemented-message-name } = $class;
     }
 
     method new() {
@@ -32,6 +24,9 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
     method raw() {
         die("Not implemented for parent class");
     }
+
+    method implemented-message-code(--> Int) { … }
+    method implemented-message-name(--> Str) { … }
 
     method from-raw(buf8:D $raw) {
         if %registrations{ $raw[0] }:exists {
@@ -61,12 +56,12 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
             if %message-types{ %params<message-code> }:!exists {
                 die("Unknown message code: %params<message-code>");
             }
-            %params<message-type> = %message-types{ %params<message-code> };
+            %params<message-type> = %message-types{ %params<message-code> }.implemented-message-code;
         }
 
         # Make sure we have agreement 
         if %params<message-code>:exists and %params<message-type>:exists {
-            if %message-types{ %params<message-code> } ne %params<message-type> {
+            if %message-types{ %params<message-code> }.implemented-message-name ne %params<message-code> {
                 die("Message code and type don't agree");
             }
         }
