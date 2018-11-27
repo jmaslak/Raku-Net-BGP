@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright (C) 2018 Joelle Maslak
+# Copyright © 2018 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -101,7 +101,7 @@ Joelle Maslak <jmaslak@antelope.net>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2018 Joelle Maslak
+Copyright © 2018 Joelle Maslak
 
 This library is free software; you can redistribute it and/or modify it under the Artisitc License 2.0.
 

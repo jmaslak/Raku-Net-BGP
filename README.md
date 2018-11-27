@@ -62,7 +62,7 @@ Joelle Maslak <jmaslak@antelope.net>
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright (C) 2018 Joelle Maslak
+Copyright © 2018 Joelle Maslak
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 

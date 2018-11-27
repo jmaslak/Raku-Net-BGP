@@ -1,5 +1,10 @@
 use v6.c;
 
+#
+# Copyright © 2018 Joelle Maslak
+# All Rights Reserved - See License
+#
+
 use Net::BGP::Command;
 use Net::BGP::Command::BGP-Message;
 use Net::BGP::Command::Stop;
