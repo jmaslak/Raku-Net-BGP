@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Notify:ver<0.0.0>:auth<cpan:JMASLAK> {
+class Net::BGP::Event:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int $.connection-id;
 
     method message-type(-->Str) { 'NOOP' };
@@ -16,13 +16,13 @@ class Net::BGP::Notify:ver<0.0.0>:auth<cpan:JMASLAK> {
 
 =head1 NAME
 
-Net::BGP::Notify - BGP Server Notify Superclass
+Net::BGP::Event - BGP Server Event Superclass
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Notify;
+  use Net::BGP::Event;
 
-  my $msg = Net::BGP::Notify.new( :message-type<NOOP> );
+  my $msg = Net::BGP::Event.new( :message-type<NOOP> );
 
 =head1 DESCRIPTION
 

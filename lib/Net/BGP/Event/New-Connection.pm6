@@ -5,9 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-use Net::BGP::Notify;
+use Net::BGP::Event;
 
-class Net::BGP::Notify::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Notify {
+class Net::BGP::Event::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Event {
     has Str $.client-ip;
     has Int $.client-port;
 
@@ -18,13 +18,13 @@ class Net::BGP::Notify::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP
 
 =head1 NAME
 
-Net::BGP::Notify::New-Connection - BGP New Connection Notification
+Net::BGP::Event::New-Connection - BGP New Connection Notification
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Notify::New-Connection;
+  use Net::BGP::Event::New-Connection;
 
-  my $msg = Net::BGP::Notify::New-Connection.new();
+  my $msg = Net::BGP::Event::New-Connection.new();
 
 =head1 DESCRIPTION
 

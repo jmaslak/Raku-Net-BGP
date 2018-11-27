@@ -5,9 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-use Net::BGP::Notify;
+use Net::BGP::Event;
 
-class Net::BGP::Error:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Notify is Exception {
+class Net::BGP::Error:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Event is Exception {
     method message-type(-->Str) { 'NOOP'  };
     method is-error(-->Bool)    { True    };
     method message(-->Str)      { 'No-Op' };

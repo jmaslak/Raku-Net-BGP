@@ -12,8 +12,8 @@ use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
 use Net::BGP::Message;
-use Net::BGP::Notify::BGP-Message;
-use Net::BGP::Notify::Closed-Connection;
+use Net::BGP::Event::BGP-Message;
+use Net::BGP::Event::Closed-Connection;
 
 class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
 
@@ -40,7 +40,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
                 if (defined($bgpmsg)) {
                     # Send message to client
                     $.user-supplier.emit(
-                        Net::BGP::Notify::BGP-Message.new(
+                        Net::BGP::Event::BGP-Message.new(
                             :message( $bgpmsg ),
                             :connection-id( self.id ),
                         ),
@@ -59,7 +59,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
 
                 LAST {
                     $.user-supplier.emit(
-                        Net::BGP::Notify::Closed-Connection.new(
+                        Net::BGP::Event::Closed-Connection.new(
                             :client-ip( self.socket.peer-host ),
                             :client-port( self.socket.peer-port ),
                             :connection-id( self.id ),
@@ -72,7 +72,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
                 }
                 QUIT {
                     $.user-supplier.emit(
-                        Net::BGP::Notify::Closed-Connection.new(
+                        Net::BGP::Event::Closed-Connection.new(
                             :client-ip( self.socket.peer-host ),
                             :client-port( self.socket.peer-port ),
                             :connection-id( self.id ),

@@ -101,7 +101,7 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
         }
 
         if %params<version> ≠ 4 {
-            die BGP::Notify::Error::Unknown-Version.new( :version(%params<version> ) );
+            die BGP::Event::Error::Unknown-Version.new( :version(%params<version> ) );
         }
 
         if %params<hold-time> ≠ 0 and %params<hold-time> < 3 { die "Invalid hold time" }

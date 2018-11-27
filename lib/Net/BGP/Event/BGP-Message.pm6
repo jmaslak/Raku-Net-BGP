@@ -6,9 +6,9 @@ use v6;
 #
 
 use Net::BGP::Message;
-use Net::BGP::Notify;
+use Net::BGP::Event;
 
-class Net::BGP::Notify::BGP-Message:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Notify {
+class Net::BGP::Event::BGP-Message:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Event {
     has Net::BGP::Message $.message;
 
     method message-type(-->Str) { 'BGP-Message' };
@@ -18,13 +18,13 @@ class Net::BGP::Notify::BGP-Message:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::N
 
 =head1 NAME
 
-Net::BGP::Notify::BGP-Message - BGP Message Received Notification
+Net::BGP::Event::BGP-Message - BGP Message Received Notification
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Notify::BGP-Message;
+  use Net::BGP::Event::BGP-Message;
 
-  my $msg = Net::BGP::Notify::BGP-Message.new();
+  my $msg = Net::BGP::Event::BGP-Message.new();
 
 =head1 DESCRIPTION
 

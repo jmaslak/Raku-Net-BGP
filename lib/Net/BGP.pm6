@@ -7,7 +7,7 @@ use Net::BGP::Controller;
 use Net::BGP::Connection;
 use Net::BGP::Conversions;
 use Net::BGP::IP;
-use Net::BGP::Notify::New-Connection;
+use Net::BGP::Event::New-Connection;
 use Net::BGP::Peer;
 
 # We need to register all the parameter types, which happens when the
@@ -94,7 +94,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                     # Set up connection object
                     $!controller.connections.add($conn);
                     $!user-supplier.emit(
-                        Net::BGP::Notify::New-Connection.new(
+                        Net::BGP::Event::New-Connection.new(
                             :client-ip( $socket.peer-host ),
                             :client-port( $socket.peer-port ),
                             :connection-id( $conn.id ),
