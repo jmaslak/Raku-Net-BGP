@@ -6,11 +6,9 @@ use v6;
 #
 
 use Net::BGP::Message;
-use Net::BGP::Message::Creation-Role;
 
 class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
-    does Net::BGP::Message::Creation-Role
 {
     method new() {
         die("Must use from-raw or from-hash to construct a new object");

@@ -10,12 +10,10 @@ use Net::BGP::Error::Bad-Option-Length;
 use Net::BGP::Error::Hold-Time-Too-Short;
 use Net::BGP::Error::Unknown-Version;
 use Net::BGP::Message;
-use Net::BGP::Message::Creation-Role;
 use Net::BGP::Parameter;
 
 class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
-    does Net::BGP::Message::Creation-Role
 {
     method new() {
         die("Must use from-raw or from-hash to construct a new object");

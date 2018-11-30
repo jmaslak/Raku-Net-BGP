@@ -6,13 +6,11 @@ use v6;
 #
 
 class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
-    use Net::BGP::Message::Creation-Role;
-
-    my %registrations := Hash[Net::BGP::Message::Creation-Role:U,Int].new;
-    my %message-types := Hash[Net::BGP::Message::Creation-Role:U,Str].new;
+    my %registrations := Hash[Net::BGP::Message:U,Int].new;
+    my %message-types := Hash[Net::BGP::Message:U,Str].new;
 
     # Message type Nil = handle all unhandled messages
-    method register( Net::BGP::Message::Creation-Role:U $class ) {
+    method register( Net::BGP::Message:U $class ) {
         %registrations{ $class.implemented-message-code } = $class;
         %message-types{ $class.implemented-message-name } = $class;
     }
