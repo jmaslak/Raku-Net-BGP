@@ -133,7 +133,7 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
 }
 
 # Register handler
-Net::BGP::Message.register: Net::BGP::Message::Open;
+INIT { Net::BGP::Message.register: Net::BGP::Message::Open }
 
 =begin pod
 

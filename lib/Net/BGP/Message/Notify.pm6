@@ -77,7 +77,7 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
 }
 
 # Register handler
-Net::BGP::Message.register: Net::BGP::Message::Notify;
+INIT { Net::BGP::Message.register: Net::BGP::Message::Notify }
 
 =begin pod
 

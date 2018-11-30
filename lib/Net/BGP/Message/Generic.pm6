@@ -39,7 +39,7 @@ class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
 }
 
 # Register handler
-Net::BGP::Message.register: Net::BGP::Message::Generic;
+INIT { Net::BGP::Message.register: Net::BGP::Message::Generic }
 
 =begin pod
 
