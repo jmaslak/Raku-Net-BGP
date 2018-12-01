@@ -20,16 +20,15 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     has Net::BGP::Connection-List:D $.connections = Net::BGP::Connection-List.new;
 
     # Handle open messages
-    multi method receive-bgp(Int:D $connection-id, Net::BGP::Message::Open:D $open) {
+    multi method receive-bgp(
+        Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Message::Open:D $open
+    ) {
         # Does the peer exist?
-        my $c = $!connections.get($connection-id);
-        if ! $c.defined {
-            die("Connection ID not found");
-        }
-        my $p = self.peers.get($c.remote-ip);
+        my $p = self.peers.get($connection.remote-ip);
         if ! $p.defined {
             # XXX We should handle a bad peer
-            die("Peer not defined: " ~ $c.remote-ip);
+            die("Peer not defined: " ~ $connection.remote-ip);
             !!!;
         }
         if $open.asn ≠ $p.peer-asn {
@@ -47,17 +46,20 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
         # So we know we're the best connection to be active
         $p.peer-identifier = $open.identifier;
-        $p.connection      = $c;
-        if $c.inbound {
+        $p.connection      = $connection;
+        if $connection.inbound {
             # XXX Send an Open
         }
         $p.state = Net::BGP::Peer::OpenConfirm;
 
         # Add the connection to the connection table
-        $!connections.add: $c;
+        $!connections.add: $connection;
     }
 
-    multi method receive-bgp(Int:D $connection-id, Net::BGP::Message:D $msg) {
+    multi method receive-bgp(
+        Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Message:D $msg
+    ) {
         return; # XXX We don't do anything for most messages right now
     }
 }

@@ -6,6 +6,7 @@ use v6;
 #
 
 use Net::BGP::Command::Dead-Child;
+use Net::BGP::Connection-Role;
 use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Conversions;
 use Net::BGP::Error::Length-Too-Long;
@@ -15,20 +16,15 @@ use Net::BGP::Message;
 use Net::BGP::Event::BGP-Message;
 use Net::BGP::Event::Closed-Connection;
 
-class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
-
-    my Int $last_id = 0;
+class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
+    does Net::BGP::Connection-Role
+{
 
     has IO::Socket::Async:D $.socket           is required;
     has Channel:D           $.command = Channel.new;
     has Channel:D           $.listener-channel is required; # To communicate with listener
     has Supplier:D          $.user-supplier    is required; # To communicate with user
-    has Int:D               $.id      = $last_id++;
     has buf8:D              $.buffer  = buf8.new;
-
-    has Bool:D              $.inbound          is required; # Inbound connection?
-    has Str:D               $.remote-ip        is required;
-    has Int:D               $.remote-port      is required where ^65536;
 
     has Net::BGP::Controller-Handle-BGP:D $.bgp-handler is required;
 
@@ -45,7 +41,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK> {
                             :connection-id( self.id ),
                         ),
                     );
-                    $.bgp-handler.receive-bgp(self.id, $bgpmsg);
+                    $.bgp-handler.receive-bgp(self, $bgpmsg);
                 }
                 CATCH {
                     when Net::BGP::Error {
@@ -217,6 +213,18 @@ A unique ID number associated with this connection.
 =head2 buffer
 
 A C<buf8> buffer representing outstanding (unparsed) bytes.
+
+=head2 inbound
+
+True if the connection is an inbound connection.
+
+=head2 remote-ip
+
+The IP of the remote end of the connection.
+
+=head2 remote-port
+
+The port of the remote end of the connection.
 
 =head1 METHODS
 
