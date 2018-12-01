@@ -254,6 +254,12 @@ It modifies the buffer when it removes the message.
 
 This method also will throw BGP message errors if encountered.
 
+=head2 send-bgp(Net::BGP::Message:D $msg -->Nil)
+
+  $conn.send-bgp($msg)
+
+Sends a BGP message to the remote peer.
+
 =head2 valid-marker
 
   say "Valid marker received" if $conn.valid-marker;

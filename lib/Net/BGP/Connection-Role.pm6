@@ -6,6 +6,7 @@ use v6;
 #
 
 role Net::BGP::Connection-Role:ver<0.0.0>:auth<cpan:JMASLAK> {
+    use Net::BGP::Message;
 
     my Int $last_id = 0;
 
@@ -15,6 +16,7 @@ role Net::BGP::Connection-Role:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D  $.remote-port is required where ^65536;
 
     method close(-->Nil) { … }
+    method send-bgp(Net::BGP::Message:D $msg -->Nil) { … }
 }
 
 =begin pod
@@ -50,6 +52,12 @@ The port of the remote end of the connection.
 =head2 close(-->Nil)
 
 Close the connection.
+
+=head2 send-bgp(Net::BGP::Message:D $msg -->Nil)
+
+  $conn.send-bgp($msg)
+
+Sends a BGP message to the remote peer.
 
 =head1 AUTHOR
 
