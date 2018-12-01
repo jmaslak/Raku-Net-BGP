@@ -11,12 +11,23 @@ use Net::BGP::Message;
 class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
 {
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
-    }
+    my %error-codes := Hash[Net::BGP::Message::Notify:U,Int].new;
+    my %error-names := Hash[Net::BGP::Message::Notify:U,Str].new;
 
     method implemented-message-code(--> Int) { 4 }
     method implemented-message-name(--> Str) { "NOTIFY" }
+
+    method implemented-error-code(--> Int) { … }
+    method implemented-error-name(--> Str) { … }
+
+    method register( Net::BGP::Message::Notify:U $class -->Nil) {
+        %error-codes{ $class.implemented-error-code } = $class;
+        %error-names{ $class.implemented-error-name } = $class;
+    }
+
+    method new() {
+        die("Must use from-raw or from-hash to construct a new object");
+    }
 
     has buf8 $.data is rw;
 
@@ -36,41 +47,40 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     }
     
     method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
-        my $obj = self.bless(:data( buf8.new($raw) ));
+        if $raw[0] ≠ 4 { # Not notify
+            die("Can only build a notification message");
+        }
 
-        # Validate the parameters parse.
-        # We could probably defer this - the controller will get to it,
-        # but this is safer.
-        # $obj.parameters;
-
-        return $obj;
+        if %error-codes{ $raw[1] }:exists {
+            return %error-codes{ $raw[1] }.from-raw($raw);
+        } else {
+            return %error-codes{ Int }.from-raw($raw);
+        }
     };
 
     method from-hash(%params is copy)  {
-        my @REQUIRED = «error-code error-subcode raw-data»;
+        # Get code from name
+        if %params<error-name>:exists {
+            if %error-names{ %params<error-name> }:!exists {
+                die("error-name does not exist");
+            }
 
-        # Optional parameters
-        %params<raw-data> //= buf8.new;
+            if %params<error-code>:exists {
+                if %params<error-code> ≠ %error-names{ %params<error-names> }.implemented-error-code {
+                    die("Message code and name do not agree");
+                }
+            } else {
+                %params<error-code> = %error-names{ %params<error-name> }.implemented-error-code;
+            }
 
-        # Delete unnecessary option
-        if %params<message-type>:exists {
-            if (%params<message-type> ≠ 4) { die("Invalid message type for NOTIFY"); }
-            %params<message-type>:delete
+            %params<error-name>:delete;
         }
 
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
+        if %error-codes{ %params<error-code> }:exists {
+            return %error-codes{ %params<error-code> }.from-hash(%params);
+        } else {
+            return %error-codes{ Int }.from-hash(%params);
         }
-
-        # Now we need to build the raw data.
-        my $data = buf8.new();
-
-        $data.append( 4 );   # Message type (NOTIFY)
-        $data.append( %params<error-code> );
-        $data.append( %params<error-type> );
-        $data.append( %params<raw-data> );
-
-        return self.bless(:data( buf8.new($data) ));
     };
     
     method raw() { return $.data; }
