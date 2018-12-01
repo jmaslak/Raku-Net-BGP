@@ -5,7 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
+use OO::Monitors;
+
+monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     use Net::BGP::Connection;
     use Net::BGP::IP;
