@@ -44,6 +44,22 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                     $.bgp-handler.receive-bgp(self, $bgpmsg);
                 }
                 CATCH {
+                    when Net::BGP::Error::Unknown-Version {
+                        $.user-supplier.emit( $_ );
+
+                        my $msg = Net::BGP::Message.from-hash(
+                            %{
+                                message-name  => 'NOTIFY',
+                                error-name    => 'Open',
+                                error-subname => 'Unsupported-Version',
+                            }
+                        );
+                        self.send-bgp($msg);
+                        self.close;
+
+                        my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
+                        $.listener-channel.send($dc);
+                    }
                     when Net::BGP::Error {
                         $.user-supplier.emit( $_ );
                         self.close;
@@ -86,10 +102,10 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
             }
 
             whenever self.command -> Net::BGP::Command $msg {
-                if $msg.message-type eq 'BGP-Message' {
+                if $msg.message-name eq 'BGP-Message' {
                     self.send-bgp($msg.message);
                 } else {
-                    die("Received an unexpected message type: " ~ $msg.message-type);
+                    die("Received an unexpected message type: " ~ $msg.message-name);
                 }
             }
         }

@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Command;
 
 class Net::BGP::Command::Stop:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Command {
-    method message-type(-->Str) { 'Stop' };
+    method message-name(-->Str) { 'Stop' };
 }
 
 =begin pod
@@ -32,7 +32,7 @@ the BGP server to shut down all the connections.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Stop>.
 

@@ -10,7 +10,7 @@ use Net::BGP::Error;
 class Net::BGP::Error::Length-Too-Long:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.length;  # Set to the length value in the header
 
-    method message-type(-->Str) { 'Length-Too-Long' };
+    method message-name(-->Str) { 'Length-Too-Long' };
     method message(-->Str)      { 'Length field in header is impossibly long (RFC4271)' };
 }
 
@@ -36,7 +36,7 @@ error is triggered when a message is received that has a length greater than
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Length-Too-Long>.
 

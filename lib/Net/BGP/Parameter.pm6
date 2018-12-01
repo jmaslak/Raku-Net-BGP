@@ -1,19 +1,19 @@
 use v6;
 
 #
-# Copyright © 2018 Joelle Maslak
+# Copyright (C) 2018 Joelle Maslak
 # All Rights Reserved - See License
 #
 
 class Net::BGP::Parameter:ver<0.0.0>:auth<cpan:JMASLAK> {
     my %registrations;
-    my %parameter-types;
+    my %parameter-codes;
 
     # Parameter type Nil = handle all unhandled parameters
-    method register(Net::BGP::Parameter $class, Int $parameter-type, Str $parameter-code) {
-        if defined $parameter-type {
-            %registrations{ $parameter-type } = $class;
-            %parameter-types{ $parameter-code } = $parameter-type;
+    method register(Net::BGP::Parameter $class, Int $parameter-code, Str $parameter-name) {
+        if defined $parameter-code {
+            %registrations{ $parameter-code } = $class;
+            %parameter-codes{ $parameter-name } = $parameter-code;
         } else {
             %registrations<default> = $class;
         }
@@ -36,49 +36,49 @@ class Net::BGP::Parameter:ver<0.0.0>:auth<cpan:JMASLAK> {
     };
 
     method from-hash(%params is copy)  {
-        if %params<parameter-code>:!exists and %params<parameter-type>:!exists {
+        if %params<parameter-name>:!exists and %params<parameter-code>:!exists {
             die "Could not determine parameter type";
         }
             
-        # Normalize parameter-code
-        if %params<parameter-code>:exists and %params<parameter-code> ~~ m/^ <[0..9]>+ $/ {
-            if %params<parameter-type>:exists and %params<parameter-type> ≠ %params<parameter-code> {
+        # Normalize parameter-name
+        if %params<parameter-name>:exists and %params<parameter-name> ~~ m/^ <[0..9]>+ $/ {
+            if %params<parameter-code>:exists and %params<parameter-code> ≠ %params<parameter-name> {
                 die("Parameter type and code don't agree");
             } else {
-                %params<parameter-type> = Int(%params<parameter-code>);
-                %params<parameter-code>:delete;
+                %params<parameter-code> = Int(%params<parameter-name>);
+                %params<parameter-name>:delete;
             }
         }
 
         # Fill in parameter type if needed
-        if %params<parameter-type>:!exists {
-            if %parameter-types{ %params<parameter-code> }:!exists {
-                die("Unknown parameter code: %params<parameter-code>");
+        if %params<parameter-code>:!exists {
+            if %parameter-codes{ %params<parameter-name> }:!exists {
+                die("Unknown parameter code: %params<parameter-name>");
             }
-            %params<parameter-type> = %parameter-types{ %params<parameter-code> };
+            %params<parameter-code> = %parameter-codes{ %params<parameter-name> };
         }
 
         # Make sure we have agreement 
-        if %params<parameter-code>:exists and %params<parameter-type>:exists {
-            if %parameter-types{ %params<parameter-code> } ne %params<parameter-type> {
+        if %params<parameter-name>:exists and %params<parameter-code>:exists {
+            if %parameter-codes{ %params<parameter-name> } ne %params<parameter-code> {
                 die("Parameter code and type don't agree");
             }
         }
 
-        %params<parameter-code>:delete; # We don't use this in children.
+        %params<parameter-name>:delete; # We don't use this in children.
 
-        if %registrations{ %params<parameter-type> }:exists {
-            return %registrations{ %params<parameter-type> }.from-hash( %params );
+        if %registrations{ %params<parameter-code> }:exists {
+            return %registrations{ %params<parameter-code> }.from-hash( %params );
         } else {
             return %registrations<default>.from-hash( %params );
         }
     };
 
-    method parameter-code() {
+    method parameter-name() {
         die("Not implemented for parent class");
     }
 
-    method parameter-type() {
+    method parameter-code() {
         die("Not implemented for parent class");
     }
 
@@ -116,16 +116,16 @@ Constructs a new object (likely in a subclass) for a given raw buffer.
 =head2 from-hash
 
 Constructs a new object (likely in a subclass) for a given hash buffer.  This
-module uses the C<parameter-type> or C<parameter-code> key of the hash to determine
+module uses the C<parameter-code> or C<parameter-name> key of the hash to determine
 which type of parameter should be returned.
 
 =head1 Methods
 
-=head2 parameter-type
-
-Contains an integer that corresponds to the parameter-code.
-
 =head2 parameter-code
+
+Contains an integer that corresponds to the parameter-name.
+
+=head2 parameter-name
 
 Returns a string that describes what parameter type the command represents.
 
@@ -149,7 +149,7 @@ Joelle Maslak <jmaslak@antelope.net>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2018 Joelle Maslak
+Copyright (C) 2018 Joelle Maslak
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 

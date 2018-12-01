@@ -132,12 +132,12 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                 $listen-promise.keep($.port);
 
                 whenever $!listener-channel -> Net::BGP::Command $msg {
-                    if $msg.message-type eq "Stop" {
+                    if $msg.message-name eq "Stop" {
                         $listen-socket = Nil;
                         $promise.keep();
                         done();
                         # XXX Do we need to kill the children?
-                    } elsif $msg.message-type eq "Dead-Child" {
+                    } elsif $msg.message-name eq "Dead-Child" {
                         $!controller.connections.remove($msg.connection-id);
                     } else {
                         !!!;

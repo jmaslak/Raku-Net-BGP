@@ -10,7 +10,7 @@ use Net::BGP::Command;
 class Net::BGP::Command::Dead-Child:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Command {
     has Int $.connection-id;
 
-    method message-type(-->Str) { 'Dead-Child' };
+    method message-name(-->Str) { 'Dead-Child' };
 }
 
 =begin pod
@@ -34,7 +34,7 @@ The server will erase the connection ID indicated from all connection tables.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Dead-Child>.
 

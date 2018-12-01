@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Event;
 
 class Net::BGP::Error:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Event is Exception {
-    method message-type(-->Str) { 'NOOP'  };
+    method message-name(-->Str) { 'NOOP'  };
     method is-error(-->Bool)    { True    };
     method message(-->Str)      { 'No-Op' };
 }
@@ -23,7 +23,7 @@ Net::BGP::Error - BGP Server Error Superclass
 
   use Net::BGP::Error;
 
-  my $msg = Net::BGP::Error.new( :message-type<NOOP> );
+  my $msg = Net::BGP::Error.new( :message-name<NOOP> );
 
 =head1 DESCRIPTION
 
@@ -32,7 +32,7 @@ server code to the user code.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains a string that describes what message type the error represents.
 

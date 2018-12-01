@@ -15,12 +15,12 @@ class Net::BGP::Parameter::Generic:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Pa
 
     has buf8 $.data is rw;
 
-    method parameter-type() {
+    method parameter-code() {
         return $.data[0];
     }
 
-    method parameter-code() {
-        return "$.parameter-type";
+    method parameter-name() {
+        return "$.parameter-code";
     }
 
     method from-raw(buf8:D $raw) {
@@ -36,15 +36,15 @@ class Net::BGP::Parameter::Generic:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Pa
     };
 
     method from-hash(%params)  {
-        my @REQUIRED = «parameter-type parameter-value»;
+        my @REQUIRED = «parameter-code parameter-value»;
 
         # Delete unnecessary option
-        if %params<parameter-code>:exists {
-            if %params<parameter-type>.Str ≠ %params<parameter-code> {
+        if %params<parameter-name>:exists {
+            if %params<parameter-code>.Str ≠ %params<parameter-name> {
                 die("Parameter type and code don't match");
             }
-            %params<parameter-type> = %params<parameter-code>.Int;
-            %params<parameter-code>:delete
+            %params<parameter-code> = %params<parameter-name>.Int;
+            %params<parameter-name>:delete
         }
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
@@ -55,7 +55,7 @@ class Net::BGP::Parameter::Generic:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Pa
         if %params<parameter-value>.bytes > 253 { die("Parameter too long"); }
 
         my buf8 $parameter = buf8.new();
-        $parameter.append( %params<parameter-type> );
+        $parameter.append( %params<parameter-code> );
         $parameter.append( %params<parameter-value>.bytes );
         $parameter.append( %params<parameter-value> );
 
@@ -107,15 +107,15 @@ is not designed.
 
 =head1 Methods
 
-=head2 parameter-code
+=head2 parameter-name
 
 Returns a string that describes what parameter type the command represents.
 
-This is the string representation of C<parameter-type()>.
+This is the string representation of C<parameter-code()>.
 
-=head2 parameter-type
+=head2 parameter-code
 
-Contains an integer that corresponds to the parameter-code.
+Contains an integer that corresponds to the parameter-name.
 
 =head2 parameter-length
 

@@ -43,12 +43,27 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
     };
 
     method from-hash(%params is copy)  {
+        # Delete unnecessary options
+        if %params<message-code>:exists {
+            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            %params<message-code>:delete
+        }
+        if %params<error-code>:exists {
+            if (%params<error-code> ≠ 2) { die("Invalid error type for Open"); }
+            %params<error-code>:delete
+        }
+        if %params<error-subcode>:exists {
+            if (%params<error-subcode> ≠ 1) { die("Invalid error type for Unsupported Version"); }
+            %params<error-subcode>:delete
+        }
+
         my @REQUIRED = «max-supported-version»;
 
         # Optional parameters
         %params<max-supported-version> //= 4;
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+            die %params.keys.sort.list.join(" - ");
             die("Did not provide proper options");
         }
 
@@ -102,13 +117,13 @@ key isn't provided or is not defined, a max version of 4 is used.
 
 =head1 Methods
 
-=head2 message-code
+=head2 message-name
 
 Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 

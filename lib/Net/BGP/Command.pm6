@@ -8,7 +8,7 @@ use v6;
 class Net::BGP::Command:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int $.connection-id;
 
-    method message-type(-->Str) { 'NOOP' };
+    method message-name(-->Str) { 'NOOP' };
 }
 
 =begin pod
@@ -21,7 +21,7 @@ Net::BGP::Command - BGP Server Noitfy Superclass
 
   use Net::BGP::Command;
 
-  my $msg = Net::BGP::Command.new( :message-type<NOOP> );
+  my $msg = Net::BGP::Command.new( :message-name<NOOP> );
 
 =head1 DESCRIPTION
 
@@ -35,7 +35,7 @@ This contains the appropriate connection ID associated with the command.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains a string that describes what message type the command represents.
 

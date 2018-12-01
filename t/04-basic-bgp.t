@@ -7,6 +7,7 @@ use Test;
 #
 
 use Net::BGP;
+use Net::BGP::Conversions;
 
 if (!check-compiler-version) {
     skip "Compiler doesn't support dynamic IO::Socket::Async port listening";
@@ -29,13 +30,13 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/test-invalid-marker.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Marker-Format', 'Error message type is as expected';
+        is $cr-bad.message-name, 'Marker-Format', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
@@ -56,13 +57,13 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/test-invalid-length-short.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Length-Too-Short', 'Error message type is as expected';
+        is $cr-bad.message-name, 'Length-Too-Short', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
@@ -83,13 +84,13 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/test-invalid-length-long.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Length-Too-Long', 'Error message type is as expected';
+        is $cr-bad.message-name, 'Length-Too-Long', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
@@ -110,15 +111,22 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/test-invalid-version.msg') );
-        $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Unknown-Version', 'Error message type is as expected';
+        is $cr-bad.message-name, 'Unknown-Version', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
-        
+       
+        my $pkt = $client.read(16); # Read (and silently discard) header
+        my $raw = $client.read(nuint16($client.read(2))); # Read appropriate length
+        my $msg = Net::BGP::Message.from-raw($raw);
+        ok $msg ~~ Net::BGP::Message::Notify::Open::Unsupported-Version, "Message is proper type";
+        is $msg.max-supported-version, 4, "Max supported version is valid";
+
+        $client.close();
+
         $bgp.listen-stop();
 
         done-testing;
@@ -137,13 +145,13 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/test-invalid-hold-time.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Hold-Time-Too-Short', 'Error message type is as expected';
+        is $cr-bad.message-name, 'Hold-Time-Too-Short', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
         
         $bgp.listen-stop();
@@ -164,13 +172,13 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/test-invalid-option-len-in-open-1.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Bad-Option-Length', 'Error message type is as expected';
+        is $cr-bad.message-name, 'Bad-Option-Length', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
         is $cr-bad.length, 1, 'Length == 1';
         
@@ -192,13 +200,13 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/test-invalid-option-len-in-open-3.msg') );
         $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Bad-Option-Length', 'Error message type is as expected';
+        is $cr-bad.message-name, 'Bad-Option-Length', 'Error message type is as expected';
         is $cr-bad.is-error, True, 'Is an error';
         is $cr-bad.length, 3, 'Length == 3';
         
@@ -220,14 +228,15 @@ if (!check-compiler-version) {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
 
         $client.write( read-message('t/bgp-messages/open-message-no-opt.msg') );
         
         my $cr-bgp = $uc.receive;
-        is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
+        is $cr-bgp.message-name, 'BGP-Message', 'BGP message type is as expected';
         is $cr-bgp.is-error, False, 'Is not an error';
-        is $cr-bgp.message.message-type, 1, 'BGP Message is proper type';
+        is $cr-bgp.message.message-name, 'OPEN', 'BGP Message is proper name';
+        is $cr-bgp.message.message-code, 1, 'BGP Message is proper type';
         is $cr-bgp.message.option-len, 0, 'Option length is zero';
         is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
 
@@ -237,7 +246,7 @@ if (!check-compiler-version) {
         $client.close();
 
         my $cr-bad = $uc.receive;
-        is $cr-bad.message-type, 'Closed-Connection', 'Close message type is as expected';
+        is $cr-bad.message-name, 'Closed-Connection', 'Close message type is as expected';
         is $cr-bad.is-error, False, 'Is not an error';
         
         is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::Idle, 'Peer is idle';
@@ -286,15 +295,15 @@ sub test-valid() {
     my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
     my $uc = $bgp.user-channel;
     my $cr = $uc.receive;
-    is $cr.message-type, 'New-Connection', 'Message type is as expected';
+    is $cr.message-name, 'New-Connection', 'Message type is as expected';
     is $cr.connection-id, 0, 'Connection ID is as expected';
 
     $client.write( read-message('t/bgp-messages/noop-message.msg') );
 
     my $cr-bgp = $uc.receive;
-    is $cr-bgp.message-type, 'BGP-Message', 'BGP message type is as expected';
+    is $cr-bgp.message-name, 'BGP-Message', 'BGP message type is as expected';
     is $cr-bgp.is-error, False, 'Is not an error';
-    is $cr-bgp.message.message-type, 0, 'BGP Message is proper type';
+    is $cr-bgp.message.message-name, 0, 'BGP Message is proper type';
     is $cr-bgp.connection-id, 0, 'BGP Message connection ID is as expected';
 
     my $open = Net::BGP::Message::Open.from-hash( {
@@ -310,7 +319,7 @@ sub test-valid() {
     $client.close();
 
     my $cr-bad = $uc.receive;
-    is $cr-bad.message-type, 'Closed-Connection', 'Close message type is as expected';
+    is $cr-bad.message-name, 'Closed-Connection', 'Close message type is as expected';
     is $cr-bad.is-error, False, 'Is not an error';
     is $cr-bad.connection-id, 0, 'Close message connection ID is as expected';
     

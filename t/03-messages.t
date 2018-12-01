@@ -12,7 +12,7 @@ subtest 'Command' => {
     subtest 'Parent Class' => {
         my $msg = Net::BGP::Command.new();
         ok $msg, "Created BGP Class";
-        is $msg.message-type, 'NOOP', 'Message type has proper default';
+        is $msg.message-name, 'NOOP', 'Message type has proper default';
 
         done-testing;
     };
@@ -29,7 +29,7 @@ subtest 'Command' => {
             :message($bgp),
         );
         ok $msg, "Created BGP Class";
-        is $msg.message-type, 'BGP-Message', 'Proper BGP-Message message';
+        is $msg.message-name, 'BGP-Message', 'Proper BGP-Message message';
         is $msg.message, $bgp, 'Payload is correct';
 
         done-testing;
@@ -38,7 +38,7 @@ subtest 'Command' => {
     subtest 'Stop' => {
         my $msg = Net::BGP::Command::Stop.new();
         ok $msg, "Created BGP Class";
-        is $msg.message-type, 'Stop', 'Proper Stop message';
+        is $msg.message-name, 'Stop', 'Proper Stop message';
 
         done-testing;
     };
@@ -51,7 +51,7 @@ subtest 'Event' => {
         my $msg = Net::BGP::Event.new(:connection-id(1));
         ok $msg, "Created BGP Class";
         is $msg.connection-id, 1, 'Connection ID is proper';
-        is $msg.message-type, 'NOOP', 'Message type has proper default';
+        is $msg.message-name, 'NOOP', 'Message type has proper default';
         is $msg.is-error, False, 'Message is not an error';
 
         done-testing;
@@ -61,11 +61,11 @@ subtest 'Event' => {
         my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message-no-opt.msg') );
         my $msg = Net::BGP::Event::BGP-Message.new(:message($bgp), :connection-id(22));
         ok $msg, "Created Event Class";
-        is $msg.message-type, 'BGP-Message', 'Message type has proper value';
+        is $msg.message-name, 'BGP-Message', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, False, 'Message is not an error';
-        is $msg.message.message-type, 1, 'BGP message type is correct';
-        is $msg.message.message-code, 'OPEN', 'BGP message code is correct';
+        is $msg.message.message-code, 1, 'BGP message type is correct';
+        is $msg.message.message-name, 'OPEN', 'BGP message code is correct';
         is $msg.message.parameters.elems, 0, "Proper number of parameter elements";
 
         done-testing;
@@ -75,22 +75,22 @@ subtest 'Event' => {
         my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message.msg') );
         my $msg = Net::BGP::Event::BGP-Message.new(:message($bgp), :connection-id(22));
         ok $msg, "Created Event Class";
-        is $msg.message-type, 'BGP-Message', 'Message type has proper value';
+        is $msg.message-name, 'BGP-Message', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, False, 'Message is not an error';
-        is $msg.message.message-type, 1, 'BGP message type is correct';
-        is $msg.message.message-code, 'OPEN', 'BGP message code is correct';
+        is $msg.message.message-code, 1, 'BGP message type is correct';
+        is $msg.message.message-name, 'OPEN', 'BGP message code is correct';
 
         my @p = $msg.message.parameters;
         is @p.elems, 2, "Proper number of parameter elements";
 
-        is @p[0].parameter-type, 240, "240 Proper parameter-type";
-        is @p[0].parameter-code, "240", "240 Proper parameter-code";
+        is @p[0].parameter-code, 240, "240 Proper parameter-code";
+        is @p[0].parameter-name, "240", "240 Proper parameter-name";
         is @p[0].parameter-length, 0, "240 Proper parameter-length";
         is @p[0].parameter-value.bytes, 0, "240 Proper parameter-value length";
 
-        is @p[1].parameter-type, 241, "241 Proper parameter-type";
-        is @p[1].parameter-code, "241", "241 Proper parameter-code";
+        is @p[1].parameter-code, 241, "241 Proper parameter-code";
+        is @p[1].parameter-name, "241", "241 Proper parameter-name";
         is @p[1].parameter-length, 1, "241 Proper parameter-length";
         is @p[1].parameter-value.bytes, 1, "241 Proper parameter-value length";
         is @p[1].parameter-value[0], 255, "241 Proper parameter-value";
@@ -105,7 +105,7 @@ subtest 'Event' => {
             :connection-id(22),
         );
         ok $msg, "Created BGP Class";
-        is $msg.message-type, 'Closed-Connection', 'Proper Closed-Connection message';
+        is $msg.message-name, 'Closed-Connection', 'Proper Closed-Connection message';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.client-ip, '192.0.2.1', 'Client IP address';
         is $msg.client-port, 1500, 'Client IP port';
@@ -121,7 +121,7 @@ subtest 'Event' => {
             :connection-id(22),
         );
         ok $msg, "Created BGP Class";
-        is $msg.message-type, 'New-Connection', 'Proper New-Connection message';
+        is $msg.message-name, 'New-Connection', 'Proper New-Connection message';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.client-ip, '192.0.2.1', 'Client IP address';
         is $msg.client-port, 1500, 'Client IP port';
@@ -137,7 +137,7 @@ subtest 'Error' => {
     subtest 'Parent Class' => {
         my $msg = Net::BGP::Error.new(:connection-id(1));
         ok $msg, "Created BGP Class";
-        is $msg.message-type, 'NOOP', 'Message type has proper value';
+        is $msg.message-name, 'NOOP', 'Message type has proper value';
         is $msg.is-error, True, 'Message is an error';
         is $msg.message, 'No-Op', 'Human readable type';
 
@@ -147,7 +147,7 @@ subtest 'Error' => {
     subtest 'Bad-Option-Length' => {
         my $msg = Net::BGP::Error::Bad-Option-Length.new(:length(999), :connection-id(22));
         ok $msg, "Created Error Class";
-        is $msg.message-type, 'Bad-Option-Length', 'Message type has proper value';
+        is $msg.message-name, 'Bad-Option-Length', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, True, 'Message is an error';
         is $msg.message, 'Option Length in OPEN is invalid', 'Human readable type';
@@ -159,7 +159,7 @@ subtest 'Error' => {
     subtest 'Bad-Parameter-Length' => {
         my $msg = Net::BGP::Error::Bad-Parameter-Length.new(:length(999), :connection-id(22));
         ok $msg, "Created Error Class";
-        is $msg.message-type, 'Bad-Parameter-Length', 'Message type has proper value';
+        is $msg.message-name, 'Bad-Parameter-Length', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, True, 'Message is an error';
         is $msg.message, 'Parameter Length in OPEN is invalid', 'Human readable type';
@@ -171,7 +171,7 @@ subtest 'Error' => {
     subtest 'Hold-Time-Too-Short' => {
         my $msg = Net::BGP::Error::Hold-Time-Too-Short.new(:hold-time(1), :connection-id(22));
         ok $msg, "Created Error Class";
-        is $msg.message-type, 'Hold-Time-Too-Short', 'Message type has proper value';
+        is $msg.message-name, 'Hold-Time-Too-Short', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, True, 'Message is an error';
         is $msg.message, 'Hold-Time in OPEN is too short (RFC4271)', 'Human readable type';
@@ -183,7 +183,7 @@ subtest 'Error' => {
     subtest 'Length-Too-Short' => {
         my $msg = Net::BGP::Error::Length-Too-Short.new(:length(10), :connection-id(22));
         ok $msg, "Created Error Class";
-        is $msg.message-type, 'Length-Too-Short', 'Message type has proper value';
+        is $msg.message-name, 'Length-Too-Short', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, True, 'Message is an error';
         is $msg.message, 'Length field in header is impossibly short (RFC4271)', 'Human readable type';
@@ -195,7 +195,7 @@ subtest 'Error' => {
     subtest 'Marker-Format' => {
         my $msg = Net::BGP::Error::Marker-Format.new(:connection-id(22));
         ok $msg, "Created Error Class";
-        is $msg.message-type, 'Marker-Format', 'Message type has proper value';
+        is $msg.message-name, 'Marker-Format', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, True, 'Message is an error';
         is $msg.message, 'Invalid header marker format (RFC4271)', 'Human readable type';
@@ -206,7 +206,7 @@ subtest 'Error' => {
     subtest 'Unknown-Version' => {
         my $msg = Net::BGP::Error::Unknown-Version.new(:version(3), :connection-id(22));
         ok $msg, "Created Error Class";
-        is $msg.message-type, 'Unknown-Version', 'Message type has proper value';
+        is $msg.message-name, 'Unknown-Version', 'Message type has proper value';
         is $msg.connection-id, 22, 'Connection ID is proper';
         is $msg.is-error, True, 'Message is an error';
         is $msg.message, 'BGP Version in OPEN is not supported', 'Human readable type';

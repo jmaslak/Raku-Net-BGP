@@ -47,6 +47,16 @@ class Net::BGP::Message::Notify::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy)  {
+        # Delete unnecessary options
+        if %params<message-code>:exists {
+            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            %params<message-code>:delete
+        }
+        if %params<error-code>:exists {
+            if (%params<error-code> ≠ 2) { die("Invalid error type for Open"); }
+            %params<error-code>:delete
+        }
+
         # Get code from name
         if %params<error-subname>:exists {
             if %error-subnames{ %params<error-subname> }:!exists {
@@ -54,7 +64,7 @@ class Net::BGP::Message::Notify::Open:ver<0.0.0>:auth<cpan:JMASLAK>
             }
 
             if %params<error-subcode>:exists {
-                if %params<error-subcode> ≠ %error-subnames{ %params<error-nsubames> }.implemented-error-subcode {
+                if %params<error-subcode> ≠ %error-subnames{ %params<error-subnames> }.implemented-error-subcode {
                     die("Message subcode and name do not agree");
                 }
             } else {
@@ -106,13 +116,13 @@ is not designed.
 
 =head1 Methods
 
-=head2 message-code
+=head2 message-name
 
 Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 

@@ -11,7 +11,7 @@ class Net::BGP::Event::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP:
     has Str $.client-ip;
     has Int $.client-port;
 
-    method message-type(-->Str) { 'New-Connection' };
+    method message-name(-->Str) { 'New-Connection' };
 }
 
 =begin pod
@@ -36,7 +36,7 @@ is received.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<New-Connection>.
 

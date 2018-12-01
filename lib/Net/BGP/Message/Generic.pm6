@@ -17,12 +17,12 @@ class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-message-code(--> Int) { Int }
     method implemented-message-name(--> Str) { Str }
 
-    method message-type() {
+    method message-code() {
         return $.data[0];
     }
 
-    method message-code() {
-        return "$.message-type";
+    method message-name() {
+        return "$.message-code";
     }
 
     method from-raw(buf8:D $raw) {
@@ -70,14 +70,14 @@ is not designed.
 
 =head1 Methods
 
-=head2 message-code
+=head2 message-name
 
 Returns a string that describes what message type the command represents.
 
 For generic parameters, this is always a string representation of the
-value of C<message-type()>.
+value of C<message-code()>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 

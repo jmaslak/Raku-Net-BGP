@@ -10,7 +10,7 @@ use Net::BGP::Error;
 class Net::BGP::Error::Hold-Time-Too-Short:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.hold-time;  # Set to the hold-time value in the OPEN message
 
-    method message-type(-->Str) { 'Hold-Time-Too-Short' };
+    method message-name(-->Str) { 'Hold-Time-Too-Short' };
     method message(-->Str)      { 'Hold-Time in OPEN is too short (RFC4271)' };
 }
 
@@ -37,7 +37,7 @@ that isn't zero and is less than three seconds, as described in RFC4271 4.1.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Hold-Time-Too-Short>.
 

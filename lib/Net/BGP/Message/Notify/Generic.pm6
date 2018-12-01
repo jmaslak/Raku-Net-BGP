@@ -40,6 +40,12 @@ class Net::BGP::Message::Notify::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy)  {
+        # Delete unnecessary option
+        if %params<message-code>:exists {
+            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            %params<message-code>:delete
+        }
+
         my @REQUIRED = «error-code error-subcode raw-data»;
 
         # Optional parameters
@@ -97,13 +103,13 @@ is not designed.
 
 =head1 Methods
 
-=head2 message-code
+=head2 message-type
 
 Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 

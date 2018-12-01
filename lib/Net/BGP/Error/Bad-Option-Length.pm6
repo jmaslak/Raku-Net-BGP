@@ -10,7 +10,7 @@ use Net::BGP::Error;
 class Net::BGP::Error::Bad-Option-Length:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.length;  # Set to the length in the OPEN message
 
-    method message-type(-->Str) { 'Bad-Option-Length' };
+    method message-name(-->Str) { 'Bad-Option-Length' };
     method message(-->Str)      { 'Option Length in OPEN is invalid' };
 }
 
@@ -36,7 +36,7 @@ that does not fit within the message (it's too long or is implausable).
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Bad-Option-Length>.
 

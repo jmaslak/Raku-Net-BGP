@@ -12,8 +12,8 @@ use Net::BGP::Message;
 subtest 'Generic', {
     my $bgp = Net::BGP::Message.from-raw( read-message('noop-message') );
     ok defined($bgp), "BGP message is defined";
-    is $bgp.message-type, 0, 'Message type is correct';
-    is $bgp.message-code, '0', 'Message code is correct';
+    is $bgp.message-code, 0, 'Message type is correct';
+    is $bgp.message-name, '0', 'Message code is correct';
     ok check-list($bgp.raw, read-message('noop-message')), 'Message value correct';;
 
     done-testing;
@@ -22,8 +22,8 @@ subtest 'Generic', {
 subtest 'Open Message', {
     my $bgp = Net::BGP::Message.from-raw( read-message('open-message') );
     ok defined($bgp), "BGP message is defined";
-    is $bgp.message-type, 1, 'Message type is correct';
-    is $bgp.message-code, 'OPEN', 'Message code is correct';
+    is $bgp.message-code, 1, 'Message type is correct';
+    is $bgp.message-name, 'OPEN', 'Message code is correct';
     is $bgp.version, 4, 'BGP version is correct';
     is $bgp.asn, :16('1020'), 'ASN is correct';
     is $bgp.hold-time, 3, 'Hold time is correct';

@@ -19,14 +19,14 @@ subtest 'Event', {
         my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
         my $uc = $bgp.user-channel;
         my $cr = $uc.receive;
-        is $cr.message-type, 'New-Connection', 'Message type is as expected';
+        is $cr.message-name, 'New-Connection', 'Message type is as expected';
         is normalize-ip($cr.client-ip), '127.0.0.1', 'Client IP is as expected';
         ok $cr.client-port > 0, 'Client port is as expected';
 
         $client.close();
         
         my $cr-close = $uc.receive;
-        is $cr-close.message-type, 'Closed-Connection', 'Close message type is as expected';
+        is $cr-close.message-name, 'Closed-Connection', 'Close message type is as expected';
         is normalize-ip($cr-close.client-ip), '127.0.0.1', 'Close client IP is as expected';
         is $cr-close.client-port, $cr.client-port, 'Close client port is as expected';
 

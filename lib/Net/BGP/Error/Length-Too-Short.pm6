@@ -10,7 +10,7 @@ use Net::BGP::Error;
 class Net::BGP::Error::Length-Too-Short:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.length;  # Set to the length value in the header
 
-    method message-type(-->Str) { 'Length-Too-Short' };
+    method message-name(-->Str) { 'Length-Too-Short' };
     method message(-->Str)      { 'Length field in header is impossibly short (RFC4271)' };
 }
 
@@ -36,7 +36,7 @@ octets long in the header as described in RFC4271 4.1.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Length-Too-Short>.
 

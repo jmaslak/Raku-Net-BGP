@@ -33,8 +33,8 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
 
     has buf8 $.data is rw;
 
-    method message-type() { 4 }
-    method message-code() { "NOTIFY" }
+    method message-code() { 4 }
+    method message-name() { "NOTIFY" }
 
     # Stuff unique to NOTIFY
     method error-code(-->Int)    { $.data[1] }
@@ -63,6 +63,12 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy)  {
+        # Delete unnecessary option
+        if %params<message-code>:exists {
+            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            %params<message-code>:delete
+        }
+
         # Get code from name
         if %params<error-name>:exists {
             if %error-names{ %params<error-name> }:!exists {
@@ -124,13 +130,13 @@ is not designed.
 
 =head1 Methods
 
-=head2 message-code
+=head2 message-name
 
 Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 

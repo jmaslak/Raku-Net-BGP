@@ -13,8 +13,8 @@ use Net::BGP::Parameter;
 subtest 'Open Message', {
     my $bgp = Net::BGP::Message.from-raw( read-message('open-message') );
     ok defined($bgp), "BGP message is defined";
-    is $bgp.message-type, 1, 'Message type is correct';
-    is $bgp.message-code, 'OPEN', 'Message code is correct';
+    is $bgp.message-code, 1, 'Message type is correct';
+    is $bgp.message-name, 'OPEN', 'Message code is correct';
     is $bgp.version, 4, 'BGP version is correct';
     is $bgp.asn, :16('1020'), 'ASN is correct';
     is $bgp.hold-time, 3, 'Hold time is correct';
@@ -22,25 +22,25 @@ subtest 'Open Message', {
 
     my $from-hash = Net::BGP::Message.from-hash(
         {
-            message-code => 'OPEN',
+            message-name => 'OPEN',
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => :16('01020304'),
             parameters   => (
                 {
-                    parameter-type => 240,
+                    parameter-code  => 240,
                     parameter-value => buf8.new() ,
                 },
                 {
-                    parameter-type => 241,
+                    parameter-code  => 241,
                     parameter-value => buf8.new(255)
                 },
             ),
         }
     );
     ok defined($from-hash), "FH BGP message is defined";
-    is $from-hash.message-type, 1, 'FH Message type is correct';
-    is $from-hash.message-code, 'OPEN', 'FH Message code is correct';
+    is $from-hash.message-code, 1, 'FH Message type is correct';
+    is $from-hash.message-name, 'OPEN', 'FH Message code is correct';
     is $from-hash.version, 4, 'BGP version is correct';
     is $from-hash.asn, :16('1020'), 'FH ASN is correct';
     is $from-hash.hold-time, 3, 'FH Hold time is correct';
@@ -50,17 +50,17 @@ subtest 'Open Message', {
 
     my $from-hash2 = Net::BGP::Message.from-hash(
         {
-            message-code => 'OPEN',
+            message-name => 'OPEN',
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
             parameters   => (
                 {
-                    parameter-type => 240,
+                    parameter-code  => 240,
                     parameter-value => buf8.new() ,
                 },
                 {
-                    parameter-type => 241,
+                    parameter-code  => 241,
                     parameter-value => buf8.new(255)
                 },
             ),
@@ -70,17 +70,17 @@ subtest 'Open Message', {
 
     my $from-hash3 = Net::BGP::Message.from-hash(
         {
-            message-code => '1',
+            message-name => '1',
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
             parameters   => (
                 {
-                    parameter-type => 240,
+                    parameter-code  => 240,
                     parameter-value => buf8.new() ,
                 },
                 {
-                    parameter-type => 241,
+                    parameter-code  => 241,
                     parameter-value => buf8.new(255)
                 },
             ),
@@ -90,17 +90,17 @@ subtest 'Open Message', {
 
     my $from-hash4 = Net::BGP::Message.from-hash(
         {
-            message-type => 1,
+            message-code => 1,
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
             parameters   => (
                 {
-                    parameter-type => 240,
+                    parameter-code => 240,
                     parameter-value => buf8.new() ,
                 },
                 {
-                    parameter-type => 241,
+                    parameter-code => 241,
                     parameter-value => buf8.new(255)
                 },
             ),
@@ -110,18 +110,18 @@ subtest 'Open Message', {
 
     my $from-hash5 = Net::BGP::Message.from-hash(
         {
-            message-type => 1,
-            message-code => '1',
+            message-code => 1,
+            message-name => '1',
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
             parameters   => (
                 {
-                    parameter-type => 240,
+                    parameter-code => 240,
                     parameter-value => buf8.new() ,
                 },
                 {
-                    parameter-type => 241,
+                    parameter-code => 241,
                     parameter-value => buf8.new(255)
                 },
             ),
@@ -131,18 +131,18 @@ subtest 'Open Message', {
 
     my $from-hash6 = Net::BGP::Message.from-hash(
         {
-            message-type => 1,
-            message-code => 'OPEN',
+            message-code => 1,
+            message-name => 'OPEN',
             asn          => :16('1020'),
             hold-time    => 3,
             identifier   => '1.2.3.4',
             parameters   => (
                 {
-                    parameter-type => 240,
+                    parameter-code => 240,
                     parameter-value => buf8.new() ,
                 },
                 {
-                    parameter-type => 241,
+                    parameter-code => 241,
                     parameter-value => buf8.new(255)
                 },
             ),

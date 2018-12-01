@@ -10,7 +10,7 @@ use Net::BGP::Error;
 class Net::BGP::Error::Unknown-Version:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.version;  # Set to the version in the OPEN message
 
-    method message-type(-->Str) { 'Unknown-Version' };
+    method message-name(-->Str) { 'Unknown-Version' };
     method message(-->Str)      { 'BGP Version in OPEN is not supported' };
 }
 
@@ -36,7 +36,7 @@ than 4, which is documented in current RFCs such as RFC4271.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Unknown-Version>.
 

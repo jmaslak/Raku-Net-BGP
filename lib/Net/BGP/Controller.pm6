@@ -35,9 +35,9 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         }
 
         if $open.asn ≠ $p.peer-asn {
-            my $msg = Net::BGP::Message.from_hash(
+            my $msg = Net::BGP::Message.from-hash(
                 %{
-                    message-type  => 'Notify',
+                    message-name  => 'NOTIFY',
                     error-name    => 'Open',
                     error-subname => 'Bad-Peer-AS',
                 }

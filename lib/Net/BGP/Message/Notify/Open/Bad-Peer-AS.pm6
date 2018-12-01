@@ -43,6 +43,20 @@ class Net::BGP::Message::Notify::Open::Bad-Peer-AS:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy)  {
+        # Delete unnecessary options
+        if %params<message-code>:exists {
+            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            %params<message-code>:delete
+        }
+        if %params<error-code>:exists {
+            if (%params<error-code> ≠ 2) { die("Invalid error type for Open"); }
+            %params<error-code>:delete
+        }
+        if %params<error-subcode>:exists {
+            if (%params<error-subcode> ≠ 2) { die("Invalid error type for Bad Peer AS"); }
+            %params<error-subcode>:delete
+        }
+
         my @REQUIRED = «»;
 
         # Optional parameters
@@ -100,13 +114,13 @@ Takes a hash with a no keys.
 
 =head1 Methods
 
-=head2 message-code
+=head2 message-name
 
 Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 

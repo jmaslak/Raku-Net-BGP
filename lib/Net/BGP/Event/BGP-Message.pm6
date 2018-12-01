@@ -11,7 +11,7 @@ use Net::BGP::Event;
 class Net::BGP::Event::BGP-Message:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Event {
     has Net::BGP::Message $.message;
 
-    method message-type(-->Str) { 'BGP-Message' };
+    method message-name(-->Str) { 'BGP-Message' };
 }
 
 =begin pod

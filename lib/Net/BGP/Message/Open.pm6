@@ -22,8 +22,8 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-message-code(--> Int) { 1 }
     method implemented-message-name(--> Str) { "OPEN" }
 
-    method message-type() { 1 }
-    method message-code() { "OPEN" }
+    method message-code() { 1 }
+    method message-name() { "OPEN" }
 
     # Stuff unique to OPEN
     method version()    { $.data[1] }
@@ -87,9 +87,9 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
         %params<parameters> //= [];
 
         # Delete unnecessary option
-        if %params<message-type>:exists {
-            if (%params<message-type> ≠ 1) { die("Invalid message type for OPEN"); }
-            %params<message-type>:delete
+        if %params<message-code>:exists {
+            if (%params<message-code> ≠ 1) { die("Invalid message type for OPEN"); }
+            %params<message-code>:delete
         }
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
@@ -164,13 +164,13 @@ is not designed.
 
 =head1 Methods
 
-=head2 message-code
+=head2 message-name
 
 Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 

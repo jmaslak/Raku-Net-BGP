@@ -8,7 +8,7 @@ use v6;
 class Net::BGP::Event:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int $.connection-id;
 
-    method message-type(-->Str) { 'NOOP' };
+    method message-name(-->Str) { 'NOOP' };
     method is-error(-->Bool)    { False  };
 }
 
@@ -22,7 +22,7 @@ Net::BGP::Event - BGP Server Event Superclass
 
   use Net::BGP::Event;
 
-  my $msg = Net::BGP::Event.new( :message-type<NOOP> );
+  my $msg = Net::BGP::Event.new( :message-name<NOOP> );
 
 =head1 DESCRIPTION
 
@@ -37,7 +37,7 @@ This contains the appropriate connection ID associated with the notification.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains a string that describes what message type the notification represents.
 

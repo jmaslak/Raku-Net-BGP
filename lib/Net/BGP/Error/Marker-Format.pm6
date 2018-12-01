@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Error;
 
 class Net::BGP::Error::Marker-Format:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
-    method message-type(-->Str) { 'Marker-Format' };
+    method message-name(-->Str) { 'Marker-Format' };
     method message(-->Str)      { 'Invalid header marker format (RFC4271)' };
 }
 
@@ -34,7 +34,7 @@ BGP header as described in RFC4271.
 
 =head1 METHODS
 
-=head2 message-type
+=head2 message-name
 
 Contains the string C<Marker-Format>.
 

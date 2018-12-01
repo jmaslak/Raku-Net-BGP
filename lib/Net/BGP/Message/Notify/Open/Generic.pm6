@@ -40,6 +40,16 @@ class Net::BGP::Message::Notify::Open::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy)  {
+        # Delete unnecessary options
+        if %params<message-code>:exists {
+            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            %params<message-code>:delete
+        }
+        if %params<error-code>:exists {
+            if (%params<error-code> ≠ 2) { die("Invalid error type for Open"); }
+            %params<error-code>:delete
+        }
+
         my @REQUIRED = «error-subcode raw-data»;
 
         # Optional parameters
@@ -103,11 +113,11 @@ Returns a string that describes what message type the command represents.
 
 Currently understood types include C<OPEN>.
 
-=head2 message-type
+=head2 message-code
 
 Contains an integer that corresponds to the message-code.
 
-=head2 error-code
+=head2 error-type
 
 Error code of the notification.
 
