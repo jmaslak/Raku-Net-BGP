@@ -14,8 +14,9 @@ subtest 'Open Notification Bad Version', {
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-type, 4, 'Message type is correct';
     is $bgp.message-code, 'NOTIFY', 'Message code is correct';
-    is $bgp.error-code, 1, 'Error code is correct';
+    is $bgp.error-code, 2, 'Error code is correct';
     is $bgp.error-subcode, 1, 'Error subtype is correct';
+    ok $bgp ~~ Net::BGP::Message::Notify::Open::Generic, 'Class is correct';
     ok check-list($bgp.payload, buf8.new(0,4)), 'Version is correct';
     ok check-list($bgp.raw, read-message('notify-open-bad-version')), 'Message value correct';
 

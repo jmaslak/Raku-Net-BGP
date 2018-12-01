@@ -16,8 +16,10 @@ class Net::BGP::Message::Notify::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     # Generic Types
-    method implemented-error-code(-->Int) { Int }
-    method implemented-error-name(-->Str) { Str }
+    method implemented-error-code\  (-->Int) { Int }
+    method implemented-error-name\  (-->Str) { Str }
+    method implemented-error-subcode(-->Int) { Int }
+    method implemented-error-subname(-->Str) { Str }
 
     method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
         my $obj = self.bless(:data( buf8.new($raw) ));

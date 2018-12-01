@@ -17,8 +17,10 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-message-code(--> Int) { 4 }
     method implemented-message-name(--> Str) { "NOTIFY" }
 
-    method implemented-error-code(--> Int) { … }
-    method implemented-error-name(--> Str) { … }
+    method implemented-error-code\  (--> Int) { … }
+    method implemented-error-name\  (--> Str) { … }
+    method implemented-error-subcode(--> Int) { … }
+    method implemented-error-subname(--> Str) { … }
 
     method register( Net::BGP::Message::Notify:U $class -->Nil) {
         %error-codes{ $class.implemented-error-code } = $class;

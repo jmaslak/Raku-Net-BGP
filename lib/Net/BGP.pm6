@@ -27,6 +27,8 @@ use Net::BGP::Message::Generic;
 use Net::BGP::Message::Open;
 use Net::BGP::Message::Notify;
 use Net::BGP::Message::Notify::Generic;
+use Net::BGP::Message::Notify::Open;
+use Net::BGP::Message::Notify::Open::Generic;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     our subset PortNum of Int where ^65536;
