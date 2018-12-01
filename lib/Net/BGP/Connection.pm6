@@ -83,27 +83,31 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
 
             whenever self.command -> Net::BGP::Command $msg {
                 if $msg.message-type eq 'BGP-Message' {
-                    my $outbuf = buf8.new();
-
-                    # Marker
-                    $outbuf.append( 255, 255, 255, 255 );
-                    $outbuf.append( 255, 255, 255, 255 );
-                    $outbuf.append( 255, 255, 255, 255 );
-                    $outbuf.append( 255, 255, 255, 255 );
-
-                    # Length
-                    $outbuf.append( nuint16-buf8( 18 + $msg.message.raw.bytes ) );
-
-                    # Message
-                    $outbuf.append( $msg.message.raw );
-
-                    # Actually send them.
-                    self.socket.write($outbuf);
+                    self.send-bgp($msg.message);
                 } else {
                     die("Received an unexpected message type: " ~ $msg.message-type);
                 }
             }
         }
+    }
+
+    method send-bgp(Net::BGP::Message:D $msg -->Nil) {
+        my $outbuf = buf8.new();
+
+        # Marker
+        $outbuf.append( 255, 255, 255, 255 );
+        $outbuf.append( 255, 255, 255, 255 );
+        $outbuf.append( 255, 255, 255, 255 );
+        $outbuf.append( 255, 255, 255, 255 );
+
+        # Length
+        $outbuf.append( nuint16-buf8( 18 + $msg.raw.bytes ) );
+
+        # Message
+        $outbuf.append( $msg.raw );
+
+        # Actually send them.
+        self.socket.write($outbuf);
     }
 
     # WARNING - THIS METHOD HAS SIDE EFFECTS!

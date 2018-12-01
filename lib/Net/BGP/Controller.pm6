@@ -10,10 +10,11 @@ use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Peer-List;
 use Net::BGP::IP;
 
+# NOTE: The controller is running on the connection thread.
+
 class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     does Net::BGP::Controller-Handle-BGP
 {
-
     has Int:D $.my-asn is required where ^65536;
 
     has Net::BGP::Peer-List:D       $.peers       = Net::BGP::Peer-List.new(:$!my-asn);
@@ -27,30 +28,33 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         # Does the peer exist?
         my $p = self.peers.get($connection.remote-ip);
         if ! $p.defined {
-            # XXX We should handle a bad peer
+            # Bad peer
+            # XXX
             die("Peer not defined: " ~ $connection.remote-ip);
-            !!!;
         }
+
         if $open.asn ≠ $p.peer-asn {
             # XXX We should handle a bad peer ASN
             !!!;
         }
 
-        # We know we have a connection from a peer that is valid. So
-        # lets see if we have a connection to that peer already
-        if $p.connection.defined {
-            # So we have a connection already to this peer.
-            # We would do our collision detection here.
-            !!!;
-        }
+        $p.lock.protect: {
+            # We know we have a connection from a peer that is valid. So
+            # lets see if we have a connection to that peer already
+            if $p.connection.defined {
+                # So we have a connection already to this peer.
+                # We would do our collision detection here.
+                !!!;
+            }
 
-        # So we know we're the best connection to be active
-        $p.peer-identifier = $open.identifier;
-        $p.connection      = $connection;
-        if $connection.inbound {
-            # XXX Send an Open
+            # So we know we're the best connection to be active
+            $p.peer-identifier = $open.identifier;
+            $p.connection      = $connection;
+            if $connection.inbound {
+                # XXX Send an Open
+            }
+            $p.state = Net::BGP::Peer::OpenConfirm;
         }
-        $p.state = Net::BGP::Peer::OpenConfirm;
 
         # Add the connection to the connection table
         $!connections.add: $connection;
@@ -64,19 +68,21 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) {
-        my $p = self.peers.get($connection.remote-ip);
         if $!connections.exists($connection.id) {
             $!connections.remove($connection.id);
         }
 
+        my $p = self.peers.get($connection.remote-ip);
         if ! $p.defined {
             # Do nothing;
             return;
         }
 
-        if $p.connection.defined && $p.connection.id == $connection.id {
-            $p.connection.undefine;
-            $p.state = Net::BGP::Peer::Idle;  # XXX This might not be right
+        $p.lock.protect: {
+            if $p.connection.defined && $p.connection.id == $connection.id {
+                $p.connection.undefine;
+                $p.state = Net::BGP::Peer::Idle;  # XXX This might not be right
+            }
         }
     }
 }

@@ -12,6 +12,8 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     use Net::BGP::Connection;
     use Net::BGP::IP;
 
+    has Lock:D $.lock is rw = Lock.new;
+
     # We need to track state of the connection.
     enum PeerState is export «Idle Connect Active OpenSent OpenConfirm Established»;
     has PeerState $.state is rw = Idle;
