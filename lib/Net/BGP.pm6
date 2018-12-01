@@ -28,6 +28,7 @@ use Net::BGP::Message::Open;
 use Net::BGP::Message::Notify;
 use Net::BGP::Message::Notify::Generic;
 use Net::BGP::Message::Notify::Open;
+use Net::BGP::Message::Notify::Open::Unsupported-Version;
 use Net::BGP::Message::Notify::Open::Generic;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
