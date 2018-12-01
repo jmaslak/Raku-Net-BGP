@@ -37,8 +37,10 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     method message-code() { "NOTIFY" }
 
     # Stuff unique to NOTIFY
-    method error-code()    { $.data[1] }
-    method error-subcode() { $.data[2] }
+    method error-code(-->Int)    { $.data[1] }
+    method erorr-name(-->Str)    { … }
+    method error-subcode(-->Int) { $.data[2] }
+    method erorr-subname(-->Str) { … }
 
     method payload(-->buf8) {
         if $.data.bytes > 3 {

@@ -19,6 +19,8 @@ class Net::BGP::Message::Notify::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-error-name\  (-->Str) { "Open" }
     method implemented-error-subcode(-->Int) { … }
     method implemented-error-subname(-->Str) { … }
+    
+    method error-name(-->Str) { "Open" }
 
     method register( Net::BGP::Message::Notify::Open:U $class -->Nil) {
         %error-subcodes{ $class.implemented-error-subcode } = $class;

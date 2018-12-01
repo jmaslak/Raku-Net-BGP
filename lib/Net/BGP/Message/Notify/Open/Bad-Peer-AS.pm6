@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify::Open;
 
-class Net::BGP::Message::Notify::Open::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Message::Notify::Open::Bad-Peer-AS:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify::Open
 {
     method new() {
@@ -16,12 +16,12 @@ class Net::BGP::Message::Notify::Open::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     # Generic Types
-    method implemented-error-subcode(-->Int) { Int }
-    method implemented-error-subname(-->Str) { Str }
+    method implemented-error-subcode(-->Int) { 2 }
+    method implemented-error-subname(-->Str) { "Bad-Peer-AS" }
 
-    method error-subname(-->Str) { Str } # Undefined
+    method error-subname(-->Str) { "Bad-Peer-AS" }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
+    method from-raw(buf8:D $raw where $raw.bytes == 3) {
         my $obj = self.bless(:data( buf8.new($raw) ));
 
         if $raw[0] ≠ 4 { # Not a notify
@@ -29,6 +29,9 @@ class Net::BGP::Message::Notify::Open::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
         }
         if $raw[1] ≠ 2 { # Not an Open error
             die("Can only build an Open error notification message");
+        }
+        if $raw[2] ≠ 2 { # Not a bad peer AS
+            die("Can only build an Open Bad Peer AS error notification message");
         }
 
         # Validate the parameters parse.
@@ -40,10 +43,10 @@ class Net::BGP::Message::Notify::Open::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy)  {
-        my @REQUIRED = «error-subcode raw-data»;
+        my @REQUIRED = «»;
 
         # Optional parameters
-        %params<raw-data> //= buf8.new;
+        %params<max-supported-version> //= 4;
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
             die("Did not provide proper options");
@@ -54,23 +57,24 @@ class Net::BGP::Message::Notify::Open::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
 
         $data.append( 4 );   # Message type (NOTIFY)
         $data.append( 2 );   # Error code (OPEN)
-        $data.append( %params<error-subcode> );
-        $data.append( %params<raw-data> );
+        $data.append( 2 );   # Bad Peer AS
 
         return self.bless(:data( buf8.new($data) ));
     };
-    
-    method raw() { return $.data; }
+
+    method max-supported-version(-->Int) {
+        return nuint16(self.data[2..3]);
+    }
 }
 
 # Register handler
-INIT { Net::BGP::Message::Notify::Open.register(Net::BGP::Message::Notify::Open::Generic) }
+INIT { Net::BGP::Message::Notify::Open.register(Net::BGP::Message::Notify::Open::Bad-Peer-AS) }
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Message::Notify::Open::Generic - Generic Open Error BGP Notify Message
+Net::BGP::Message::Notify::Open::Bad-Peer-AS - Bad Peer AS Open Error BGP Notify Message
 
 =head1 SYNOPSIS
 
@@ -82,7 +86,7 @@ Net::BGP::Message::Notify::Open::Generic - Generic Open Error BGP Notify Message
 
 =head1 DESCRIPTION
 
-Generic Open error BGP Notify message type
+Bad Peer AS Open error BGP Notify message type
 
 =head1 Constructors
 
@@ -92,8 +96,7 @@ Constructs a new object for a given raw binary buffer.
 
 =head2 from-hash
 
-This simply throws an exception, since the hash format of a generic message
-is not designed.
+Takes a hash with a no keys.
 
 =head1 Methods
 

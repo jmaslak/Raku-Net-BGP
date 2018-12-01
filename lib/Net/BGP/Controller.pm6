@@ -35,8 +35,16 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         }
 
         if $open.asn ≠ $p.peer-asn {
-            # XXX We should handle a bad peer ASN
-            !!!;
+            my $msg = Net::BGP::Message.from_hash(
+                %{
+                    message-type  => 'Notify',
+                    error-name    => 'Open',
+                    error-subname => 'Bad-Peer-AS',
+                }
+            );
+            $connection.send-bgp($msg);
+            $connection.close;
+            return;
         }
 
         $p.lock.protect: {

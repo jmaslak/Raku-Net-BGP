@@ -21,6 +21,9 @@ class Net::BGP::Message::Notify::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-error-subcode(-->Int) { Int }
     method implemented-error-subname(-->Str) { Str }
 
+    method error-name(-->Str)    { Str }; # Undefined
+    method error-subname(-->Str) { Str }; # Undefined
+
     method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
         my $obj = self.bless(:data( buf8.new($raw) ));
 

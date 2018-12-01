@@ -19,7 +19,9 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
     method implemented-error-subcode(-->Int) { 1 }
     method implemented-error-subname(-->Str) { "Unsupported-Version" }
 
-    method from-raw(buf8:D $raw where $raw.bytes == 4) {
+    method error-subname(-->Str) { "Unsupported-Version" }
+
+    method from-raw(buf8:D $raw where $raw.bytes == 5) {
         my $obj = self.bless(:data( buf8.new($raw) ));
 
         if $raw[0] ≠ 4 { # Not a notify
@@ -27,6 +29,9 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
         }
         if $raw[1] ≠ 2 { # Not an Open error
             die("Can only build an Open error notification message");
+        }
+        if $raw[2] ≠ 1 { # Not an Unsupported-Version
+            die("Can only build an Unsupported Version error notification message");
         }
 
         # Validate the parameters parse.
@@ -59,12 +64,12 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
     };
 
     method max-supported-version(-->Int) {
-        return nuint16(self.data[2..3]);
+        return nuint16(self.data[3..4]);
     }
 }
 
 # Register handler
-INIT { Net::BGP::Message::Notify.register(Net::BGP::Message::Notify::Open::Unsupported-Version) }
+INIT { Net::BGP::Message::Notify::Open.register(Net::BGP::Message::Notify::Open::Unsupported-Version) }
 
 =begin pod
 
