@@ -15,6 +15,8 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
         %message-types{ $class.implemented-message-name } = $class;
     }
 
+    has buf8 $.data is rw;
+
     method new() {
         die("Must use from-raw or from-hash to construct a new object");
     }

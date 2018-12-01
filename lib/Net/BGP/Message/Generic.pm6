@@ -17,8 +17,6 @@ class Net::BGP::Message::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-message-code(--> Int) { Int }
     method implemented-message-name(--> Str) { Str }
 
-    has buf8 $.data is rw;
-
     method message-type() {
         return $.data[0];
     }

@@ -22,8 +22,6 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-message-code(--> Int) { 1 }
     method implemented-message-name(--> Str) { "OPEN" }
 
-    has buf8 $.data is rw;
-
     method message-type() { 1 }
     method message-code() { "OPEN" }
 
