@@ -28,9 +28,10 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         # Does the peer exist?
         my $p = self.peers.get($connection.remote-ip);
         if ! $p.defined {
-            # Bad peer
-            # XXX
-            die("Peer not defined: " ~ $connection.remote-ip);
+            # Bad peer, we just close the connection, it's an invalid
+            # peer.
+            $connection.close;
+            return;
         }
 
         if $open.asn ≠ $p.peer-asn {
@@ -80,7 +81,7 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
         $p.lock.protect: {
             if $p.connection.defined && $p.connection.id == $connection.id {
-                $p.connection.undefine;
+                $p.connection = Nil;
                 $p.state = Net::BGP::Peer::Idle;  # XXX This might not be right
             }
         }

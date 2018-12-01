@@ -14,6 +14,7 @@ role Net::BGP::Connection-Role:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Str:D  $.remote-ip   is required;
     has Int:D  $.remote-port is required where ^65536;
 
+    method close(-->Nil) { … }
 }
 
 =begin pod
@@ -43,6 +44,12 @@ The IP of the remote end of the connection.
 =head2 remote-port
 
 The port of the remote end of the connection.
+
+=head1 METHODS
+
+=head2 close(-->Nil)
+
+Close the connection.
 
 =head1 AUTHOR
 

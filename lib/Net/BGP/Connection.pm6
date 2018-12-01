@@ -54,27 +54,31 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                 }
 
                 LAST {
+                    my $ip = self.socket.peer-host;
+                    my $port = self.socket.peer-port;
+                    self.close;
                     $.user-supplier.emit(
                         Net::BGP::Event::Closed-Connection.new(
-                            :client-ip( self.socket.peer-host ),
-                            :client-port( self.socket.peer-port ),
+                            :client-ip($ip),
+                            :client-port($port),
                             :connection-id( self.id ),
                         ),
                     );
-                    self.close;
 
                     my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
                     $.listener-channel.send($dc);
                 }
                 QUIT {
+                    my $ip = self.socket.peer-host;
+                    my $port = self.socket.peer-port;
+                    self.close;
                     $.user-supplier.emit(
                         Net::BGP::Event::Closed-Connection.new(
-                            :client-ip( self.socket.peer-host ),
-                            :client-port( self.socket.peer-port ),
+                            :client-ip($ip),
+                            :client-port($port),
                             :connection-id( self.id ),
                         ),
                     );
-                    self.close;
 
                     my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
                     $.listener-channel.send($dc);

@@ -230,6 +230,9 @@ if (!check-compiler-version) {
         is $cr-bgp.message.message-type, 1, 'BGP Message is proper type';
         is $cr-bgp.message.option-len, 0, 'Option length is zero';
         is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
+
+        is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
+        is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
         
         $client.close();
 
@@ -237,6 +240,8 @@ if (!check-compiler-version) {
         is $cr-bad.message-type, 'Closed-Connection', 'Close message type is as expected';
         is $cr-bad.is-error, False, 'Is not an error';
         
+        is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::Idle, 'Peer is idle';
+
         $bgp.listen-stop();
         done-testing;
     };
