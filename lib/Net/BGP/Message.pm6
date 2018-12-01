@@ -126,7 +126,6 @@ Contains an integer that corresponds to the message-code.
 
 Contains the raw message (not including the BGP header).
 
-
 =head1 AUTHOR
 
 Joelle Maslak <jmaslak@antelope.net>
