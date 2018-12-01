@@ -62,6 +62,23 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     ) {
         return; # XXX We don't do anything for most messages right now
     }
+
+    method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) {
+        my $p = self.peers.get($connection.remote-ip);
+        if $!connections.exists($connection.id) {
+            $!connections.remove($connection.id);
+        }
+
+        if ! $p.defined {
+            # Do nothing;
+            return;
+        }
+
+        if $p.connection.defined && $p.connection.id == $connection.id {
+            $p.connection.undefine;
+            $p.state = Net::BGP::Peer::Idle;  # XXX This might not be right
+        }
+    }
 }
 
 =begin pod
@@ -83,6 +100,16 @@ This manages the associations between peers and connections, handles some
 BGP errors, and manages the conflict resolution.
 
 =head1 ATTRIBUTES
+
+=head1 METHODS
+
+=head2 receive-bgp(Net::BGP::Connection-Role:D, Net::BGP::Message:D)
+
+Processes a received BGP message.
+
+=head2 connection-closed(Net::BGP::Connection-Role:D) {
+
+Removes a BGP connection from the connection list and peer object.
 
 =head1 AUTHOR
 

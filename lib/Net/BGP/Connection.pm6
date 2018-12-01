@@ -46,7 +46,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                 CATCH {
                     when Net::BGP::Error {
                         $.user-supplier.emit( $_ );
-                        self.socket.close;
+                        self.close;
 
                         my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
                         $.listener-channel.send($dc);
@@ -61,7 +61,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                             :connection-id( self.id ),
                         ),
                     );
-                    self.socket.close;
+                    self.close;
 
                     my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
                     $.listener-channel.send($dc);
@@ -74,7 +74,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                             :connection-id( self.id ),
                         ),
                     );
-                    self.socket.close;
+                    self.close;
 
                     my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
                     $.listener-channel.send($dc);
@@ -147,6 +147,12 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
 
         # Here we go - hand back parsed hash
         return $bgp-msg;
+    }
+
+    method close(-->Nil) {
+        self.socket.close;
+        $.bgp-handler.connection-closed(self);
+        # XXX Do we need to signal anything here?
     }
 
     method valid-marker(-->Bool) {
@@ -247,6 +253,11 @@ This method also will throw BGP message errors if encountered.
 Looks at the first 16 bytes of hte buffer to determine if a valid BGP marker
 is present (I.E. 16 bytes consisting of value 255).  Returns a boolean true
 or false value.
+
+=head2 close
+
+Closes the connection, signalling controller.  Note it doesn't signal
+anything else.
 
 =head1 AUTHOR
 

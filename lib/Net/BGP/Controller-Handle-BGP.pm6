@@ -20,4 +20,6 @@ role Net::BGP::Controller-Handle-BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         Net::BGP::Connection-Role:D $connection,
         Net::BGP::Message:D $msg
     ) { … }
+
+    method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) { … }
 }
