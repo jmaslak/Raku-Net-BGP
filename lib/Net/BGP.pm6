@@ -43,20 +43,25 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     has Net::BGP::Controller $.controller is rw;
 
-    has Int:D $.my-asn is required where ^65536;
+    has Int:D $.my-asn     is required where ^65536;
+    has Int:D $.identifier is required where ^(2³²);
 
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
             given $k {
-                when 'port'   { $!port   = %args{$k} if %args{$k}.defined }
-                when 'my-asn' { $!my-asn = %args{$k} }
+                when 'port'       { $!port       = %args{$k} if %args{$k}.defined }
+                when 'my-asn'     { $!my-asn     = %args{$k} }
+                when 'identifier' { $!identifier = %args{$k} }
                 default { die("Invalid attribute set in call to constructor: $k") }
             }
         }
 
         $!user-supplier = Supplier.new;
         $!user-channel  = $!user-supplier.Supply.Channel;
-        $!controller    = Net::BGP::Controller.new(:my-asn($!my-asn));
+        $!controller    = Net::BGP::Controller.new(
+            :$!my-asn,
+            :identifier($!identifier),
+        );
     }
 
     method listen-stop(--> Nil) {

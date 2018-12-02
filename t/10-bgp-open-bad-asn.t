@@ -14,7 +14,7 @@ if (!check-compiler-version) {
     skip "Compiler doesn't support dynamic IO::Socket::Async port listening";
 } else {
     subtest 'OPEN', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -48,7 +48,7 @@ if (!check-compiler-version) {
         is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::Idle, 'Peer is idle';
 
         my $pkt = $client.read(16); # Read (and silently discard) header
-        my $raw = $client.read(nuint16($client.read(2))); # Read appropriate length
+        my $raw = $client.read(nuint16($client.read(2))-18); # Read appropriate length
         my $msg = Net::BGP::Message.from-raw($raw);
         ok $msg ~~ Net::BGP::Message::Notify::Open::Bad-Peer-AS, "Message is proper type";
 

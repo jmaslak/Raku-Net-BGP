@@ -15,7 +15,9 @@ use Net::BGP::IP;
 class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     does Net::BGP::Controller-Handle-BGP
 {
-    has Int:D $.my-asn is required where ^65536;
+    has Int:D $.my-asn            is required where ^65536;
+    has Int:D $.default-hold-time             where ^65536 = 0;
+    has Int:D $.identifier        is required where ^(2³²);
 
     has Net::BGP::Peer-List:D       $.peers       = Net::BGP::Peer-List.new(:$!my-asn);
     has Net::BGP::Connection-List:D $.connections = Net::BGP::Connection-List.new;
@@ -47,6 +49,8 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             return;
         }
 
+        # XXX Check for proper options
+
         $p.lock.protect: {
             # We know we have a connection from a peer that is valid. So
             # lets see if we have a connection to that peer already
@@ -59,9 +63,20 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             # So we know we're the best connection to be active
             $p.peer-identifier = $open.identifier;
             $p.connection      = $connection;
+
             if $connection.inbound {
-                # XXX Send an Open
+                # Answer the OPEN
+                my $msg = Net::BGP::Message.from-hash(
+                    %{
+                            message-name  => 'OPEN',
+                            asn           => $.my-asn,
+                            hold-time     => $.default-hold-time,
+                            identifier    => $.identifier,
+                    }
+                );
+                $connection.send-bgp($msg);
             }
+
             $p.state = Net::BGP::Peer::OpenConfirm;
         }
 

@@ -18,7 +18,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'invalid-marker', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -45,7 +45,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'invalid-length-short', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -72,7 +72,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'invalid-length-long', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -99,7 +99,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'invalid-version', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -120,7 +120,7 @@ if (!check-compiler-version) {
         is $cr-bad.is-error, True, 'Is an error';
        
         my $pkt = $client.read(16); # Read (and silently discard) header
-        my $raw = $client.read(nuint16($client.read(2))); # Read appropriate length
+        my $raw = $client.read(nuint16($client.read(2))-18); # Read appropriate length
         my $msg = Net::BGP::Message.from-raw($raw);
         ok $msg ~~ Net::BGP::Message::Notify::Open::Unsupported-Version, "Message is proper type";
         is $msg.max-supported-version, 4, "Max supported version is valid";
@@ -133,7 +133,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'hold-time-too-short', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -160,7 +160,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'bad-option-length [1]', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -188,7 +188,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'bad-option-length [3]', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -216,7 +216,7 @@ if (!check-compiler-version) {
     };
 
     subtest 'OPEN', {
-        my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+        my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
@@ -242,7 +242,19 @@ if (!check-compiler-version) {
 
         is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
         is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
-        
+       
+        my $pkt = $client.read(16); # Read (and silently discard) header
+        my $raw = $client.read(nuint16($client.read(2))-18); # Read appropriate length
+
+        my $msg = Net::BGP::Message.from-raw($raw);
+        ok $msg ~~ Net::BGP::Message::Open, "Message is proper type";
+        is $msg.version, 4, "Version correct";
+        is $msg.asn, 65000, "ASN is correct";
+        is $msg.hold-time, 0, "Hold-Time is correct";
+        is $msg.identifier, 1000, "Identifier is correct";
+        is $msg.option-len, 0, "Option length is correct";
+        is $msg.parameters.elems, 0, "No parameters provided";
+
         $client.close();
 
         my $cr-bad = $uc.receive;
@@ -280,7 +292,7 @@ sub check-list($a, $b -->Bool) {
 }
 
 sub test-valid() {
-    my $bgp = Net::BGP.new( port => 0, my-asn => 65000 );
+    my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
     is $bgp.port, 0, 'BGP Port is 0';
 
     $bgp.listen();
