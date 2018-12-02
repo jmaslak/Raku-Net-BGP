@@ -59,10 +59,8 @@ class Net::BGP::Message::Notify::Open::Bad-Peer-AS:ver<0.0.0>:auth<cpan:JMASLAK>
 
         my @REQUIRED = «»;
 
-        # Optional parameters
-        %params<max-supported-version> //= 4;
-
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+            warn %params.keys.sort.list;
             die("Did not provide proper options");
         }
 
