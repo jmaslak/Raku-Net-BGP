@@ -13,13 +13,16 @@ role Net::BGP::Controller-Handle-BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     # Receive Messages
     multi method receive-bgp(
         Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Message::Open:D $msg
-    ) { … }
-
-    multi method receive-bgp(
-        Net::BGP::Connection-Role:D $connection,
         Net::BGP::Message:D $msg
     ) { … }
 
+    # Handle errors
+    multi method handle-error(
+        Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Error:D $e
+        -->Nil
+    ) { … };
+
+    # Deal with closed connections
     method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) { … }
 }

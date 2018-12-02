@@ -76,6 +76,33 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         return; # XXX We don't do anything for most messages right now
     }
 
+    multi method handle-error(
+        Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Error::Unknown-Version:D $e
+        -->Nil
+    ) {
+        # Exception created on receipt of OPEN if there is an invalid versionn
+        # number
+
+        my $msg = Net::BGP::Message.from-hash(
+            %{
+                message-name  => 'NOTIFY',
+                error-name    => 'Open',
+                error-subname => 'Unsupported-Version',
+            }
+        );
+        $connection.send-bgp($msg);
+        $connection.close;
+    }
+
+    multi method handle-error(
+        Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Error:D $e
+        -->Nil
+    ) {
+        return; # XXX We don't do anything for most messages right now.
+    }
+
     method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) {
         if $!connections.exists($connection.id) {
             $!connections.remove($connection.id);
@@ -121,6 +148,10 @@ BGP errors, and manages the conflict resolution.
 =head2 receive-bgp(Net::BGP::Connection-Role:D, Net::BGP::Message:D)
 
 Processes a received BGP message.
+
+=head2 method handle-error(Net::BGP::Connection-Role:D, Net::BGP::Error:D)
+
+Process a BGP exception.
 
 =head2 connection-closed(Net::BGP::Connection-Role:D) {
 

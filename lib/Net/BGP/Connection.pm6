@@ -44,25 +44,9 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                     $.bgp-handler.receive-bgp(self, $bgpmsg);
                 }
                 CATCH {
-                    when Net::BGP::Error::Unknown-Version {
-                        $.user-supplier.emit( $_ );
-
-                        my $msg = Net::BGP::Message.from-hash(
-                            %{
-                                message-name  => 'NOTIFY',
-                                error-name    => 'Open',
-                                error-subname => 'Unsupported-Version',
-                            }
-                        );
-                        self.send-bgp($msg);
-                        self.close;
-
-                        my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
-                        $.listener-channel.send($dc);
-                    }
                     when Net::BGP::Error {
+                        $.bgp-handler.handle-error(self, $_);
                         $.user-supplier.emit( $_ );
-                        self.close;
 
                         my $dc = Net::BGP::Command::Dead-Child.new(:connection-id(self.id));
                         $.listener-channel.send($dc);
