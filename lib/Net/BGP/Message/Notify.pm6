@@ -14,7 +14,7 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     my %error-codes := Hash[Net::BGP::Message::Notify:U,Int].new;
     my %error-names := Hash[Net::BGP::Message::Notify:U,Str].new;
 
-    method implemented-message-code(--> Int) { 4 }
+    method implemented-message-code(--> Int) { 3 }
     method implemented-message-name(--> Str) { "NOTIFY" }
 
     method implemented-error-code\  (--> Int) { … }
@@ -33,7 +33,7 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
 
     has buf8 $.data is rw;
 
-    method message-code() { 4 }
+    method message-code() { 3 }
     method message-name() { "NOTIFY" }
 
     # Stuff unique to NOTIFY
@@ -51,7 +51,7 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     }
     
     method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
-        if $raw[0] ≠ 4 { # Not notify
+        if $raw[0] ≠ 3 { # Not notify
             die("Can only build a notification message");
         }
 
@@ -65,7 +65,7 @@ class Net::BGP::Message::Notify:ver<0.0.0>:auth<cpan:JMASLAK>
     method from-hash(%params is copy)  {
         # Delete unnecessary option
         if %params<message-code>:exists {
-            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
             %params<message-code>:delete
         }
 

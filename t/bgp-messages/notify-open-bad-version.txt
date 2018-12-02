@@ -1,6 +1,6 @@
 ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
 00 10                                                   # Length
-04                                                      # Message Type (Notify)
+03                                                      # Message Type (Notify)
 02                                                      # Error Code (Open)
 01                                                      # Error Subcode (Bad version)
 00 04                                                   # Best Supported Version

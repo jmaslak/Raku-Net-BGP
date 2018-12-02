@@ -1,5 +1,5 @@
 ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
 00 10                                                   # Length
-04                                                      # Message Type (Notify)
+03                                                      # Message Type (Notify)
 02                                                      # Error Code (Open)
 02                                                      # Error Subcode (Bad Peer ASN)

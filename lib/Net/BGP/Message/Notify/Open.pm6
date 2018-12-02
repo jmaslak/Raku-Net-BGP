@@ -32,7 +32,7 @@ class Net::BGP::Message::Notify::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
-        if $raw[0] ≠ 4 { # Not notify
+        if $raw[0] ≠ 3 { # Not notify
             die("Can only build a notification message");
         }
         if $raw[1] ≠ 2 { # Not Open Error
@@ -49,7 +49,7 @@ class Net::BGP::Message::Notify::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     method from-hash(%params is copy)  {
         # Delete unnecessary options
         if %params<message-code>:exists {
-            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
             %params<message-code>:delete
         }
         if %params<error-code>:exists {

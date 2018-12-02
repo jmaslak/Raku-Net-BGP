@@ -24,7 +24,7 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
     method from-raw(buf8:D $raw where $raw.bytes == 5) {
         my $obj = self.bless(:data( buf8.new($raw) ));
 
-        if $raw[0] ≠ 4 { # Not a notify
+        if $raw[0] ≠ 3 { # Not a notify
             die("Can only build a notification message");
         }
         if $raw[1] ≠ 2 { # Not an Open error
@@ -45,7 +45,7 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
     method from-hash(%params is copy)  {
         # Delete unnecessary options
         if %params<message-code>:exists {
-            if (%params<message-code> ≠ 4) { die("Invalid message type for NOTIFY"); }
+            if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
             %params<message-code>:delete
         }
         if %params<error-code>:exists {
@@ -70,7 +70,7 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
         # Now we need to build the raw data.
         my $data = buf8.new();
 
-        $data.append( 4 );   # Message type (NOTIFY)
+        $data.append( 3 );   # Message type (NOTIFY)
         $data.append( 2 );   # Error code (OPEN)
         $data.append( 1 );   # Unsupported version
         $data.append( nuint16-buf8( %params<max-supported-version> ) ); # Version supported

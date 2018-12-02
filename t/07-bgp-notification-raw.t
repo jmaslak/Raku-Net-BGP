@@ -12,7 +12,7 @@ use Net::BGP::Message;
 subtest 'Open Notification Unsupported Version', {
     my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-bad-version') );
     ok defined($bgp), "BGP message is defined";
-    is $bgp.message-code, 4, 'Message type is correct';
+    is $bgp.message-code, 3, 'Message type is correct';
     is $bgp.message-name, 'NOTIFY', 'Message code is correct';
     is $bgp.error-code, 2, 'Error code is correct';
     is $bgp.error-name, 'Open', 'Error name is correct';
@@ -28,7 +28,7 @@ subtest 'Open Notification Unsupported Version', {
 subtest 'Open Notification Bad Peer AS', {
     my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-bad-peer-asn') );
     ok defined($bgp), "BGP message is defined";
-    is $bgp.message-code, 4, 'Message type is correct';
+    is $bgp.message-code, 3, 'Message type is correct';
     is $bgp.message-name, 'NOTIFY', 'Message code is correct';
     is $bgp.error-code, 2, 'Error code is correct';
     is $bgp.error-name, 'Open', 'Error name is correct';
