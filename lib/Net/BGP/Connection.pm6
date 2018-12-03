@@ -123,7 +123,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     method pop-bgp-message(--> Net::BGP::Message) {
         # We need at least 19 bytes to have a BGP message (RFC4271 4.1)
         if self.buffer.bytes < 19 {
-            return 0;  # We don't have a message
+            return;  # We don't have a message
         }
 
         # Check for valid marker
@@ -153,7 +153,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
         # Remove message
         self.buffer.splice: 0, $expected-len, ();
 
-        # Here we go - hand back parsed hash
+        # Here we go - hand back parsed message
         return $bgp-msg;
     }
 
