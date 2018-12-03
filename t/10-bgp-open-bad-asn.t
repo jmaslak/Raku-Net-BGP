@@ -18,7 +18,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1111), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1111), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";

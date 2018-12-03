@@ -11,7 +11,8 @@ use Net::BGP::Peer-List;
 use Net::BGP::IP;
 use Net::BGP::Message::Keep-Alive;
 
-# NOTE: The controller is running on the connection thread.
+# NOTE: The controller is running on the connection thread, for any
+# method that takes a controller.
 
 class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     does Net::BGP::Controller-Handle-BGP
@@ -67,10 +68,10 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         $p.lock.protect: {
             # We know we have a connection from a peer that is valid. So
             # lets see if we have a connection to that peer already
-            if $p.connection.defined {
+            if $p.connection.defined && ($p.connection.id ≠ $connection.id) {
                 # So we have a connection already to this peer.
                 # We would do our collision detection here.
-                !!!;
+                !!!; # XXX
             }
 
             # So we know we're the best connection to be active
@@ -78,19 +79,12 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             $p.connection      = $connection;
 
             if $connection.inbound {
-                # Answer the OPEN
-                my $msg = Net::BGP::Message.from-hash(
-                    %{
-                            message-name  => 'OPEN',
-                            asn           => $.my-asn,
-                            hold-time     => $.default-hold-time,
-                            identifier    => $.identifier,
-                    }
-                );
-                $connection.send-bgp($msg);
+                self.send-open($connection);
+                $p.state = Net::BGP::Peer::OpenConfirm;
+            } else {
+                self.send-keep-alive($connection);
+                $p.state = Net::BGP::Peer::Established; # XXX We should wait until we receive the keepalive...
             }
-
-            $p.state = Net::BGP::Peer::OpenConfirm;
         }
 
         # Add the connection to the connection table
@@ -110,13 +104,10 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             return;
         }
 
-        # XXX Right now, we just blindly reply.
-        my $msg = Net::BGP::Message.from-hash(
-            %{
-                message-name => 'KEEP-ALIVE'
-            }
-        );
-        $connection.send-bgp($msg);
+        # XXX Only if $conn is not inbound.
+        if ! $connection.inbound { return; }       # XXX Don't reply to keep alives we don't initiate
+
+        self.send-keep-alive($connection);
 
         $p.lock.protect: {
             # If the peer exists and is the current peer, in OpenConfirm state,
@@ -178,9 +169,31 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         $p.lock.protect: {
             if $p.connection.defined && $p.connection.id == $connection.id {
                 $p.connection = Nil;
+                $p.last-connect-attempt = DateTime.now.posix();
                 $p.state = Net::BGP::Peer::Idle;  # XXX This might not be right
             }
         }
+    }
+
+    method send-open(Net::BGP::Connection-Role:D $connection -->Nil) {
+        my $msg = Net::BGP::Message.from-hash(
+            %{
+                    message-name  => 'OPEN',
+                    asn           => $.my-asn,
+                    hold-time     => $.default-hold-time,
+                    identifier    => $.identifier,
+            }
+        );
+        $connection.send-bgp($msg);
+    }
+    
+    method send-keep-alive(Net::BGP::Connection-Role:D $connection -->Nil) {
+        my $msg = Net::BGP::Message.from-hash(
+            %{
+                message-name => 'KEEP-ALIVE'
+            }
+        );
+        $connection.send-bgp($msg);
     }
 }
 

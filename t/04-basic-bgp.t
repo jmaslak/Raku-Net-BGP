@@ -22,7 +22,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -49,7 +49,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -76,7 +76,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -103,7 +103,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -137,7 +137,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -164,7 +164,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -192,7 +192,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -220,7 +220,7 @@ if (!check-compiler-version) {
         is $bgp.port, 0, 'BGP Port is 0';
 
         $bgp.listen();
-        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1') );
+        $bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
         isnt $bgp.port, 0, 'BGP Port isnt 0';
 
         is $bgp.my-asn, 65000, "ASN is correct";
@@ -300,8 +300,8 @@ sub test-valid() {
 
     is $bgp.my-asn, 65000, "ASN is correct";
 
-    $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1'));
-    dies-ok { $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1')) },
+    $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1'), :passive);
+    dies-ok { $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1'), :passive) },
         "Cannot add a duplicate peer";
 
     my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));

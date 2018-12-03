@@ -19,10 +19,13 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     has PeerState $.state is rw = Idle;
 
     # Their side
-    has Str:D $.peer-ip is required where { ip-valid($^a) };
-    has Int:D $.peer-port where ^65536 = 179;
-    has Int:D $.peer-asn is required where ^65536;
-    has Int   $.peer-identifier is rw where ^(2³²);
+    has Str:D  $.peer-ip is required where { ip-valid($^a) };
+    has Int:D  $.peer-port where ^65536 = 179;
+    has Int:D  $.peer-asn is required where ^65536;
+    has Int    $.peer-identifier is rw where ^(2³²);
+    has Int:D  $.last-connect-attempt is rw = 0;
+    has UInt:D $.connect-retry-time is rw = 60;
+    has Bool:D $.passive = False;
 
     # My side
     has Int:D $.my-asn is required where ^65536;

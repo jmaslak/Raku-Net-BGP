@@ -23,7 +23,12 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
     }
 
-    method add(Int:D :$peer-asn, Str:D :$peer-ip, Int:D :$peer-port? = 179) {
+    method add(
+        Int:D  :$peer-asn,
+        Str:D  :$peer-ip,
+        Int:D  :$peer-port? = 179,
+        Bool:D :$passive?   = False,
+    ) {
         my $key = self.peer-key($peer-ip);
 
         if %!peers{$key}:exists {
@@ -35,6 +40,7 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
             :$peer-port,
             :$peer-asn,
             :$!my-asn,
+            :$passive,
         );
     }
 
@@ -49,6 +55,20 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     method peer-key(Str:D $peer-ip) {
         return ip-cannonical($peer-ip);
+    }
+
+    method get-peer-due-for-connect(-->Net::BGP::Peer) {
+        my $now = DateTime.now.posix();
+        for %!peers.values -> $peer {
+            $peer.lock.protect: {
+                if $peer.passive            { next; }
+                if $peer.connection.defined { next; }
+
+                if $now ≥ ($peer.last-connect-attempt + $peer.connect-retry-time) {
+                    return $peer;
+                }
+            }
+        }
     }
 
 };
