@@ -9,6 +9,7 @@ use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Peer-List;
 use Net::BGP::IP;
+use Net::BGP::Message::Keep-Alive;
 
 # NOTE: The controller is running on the connection thread.
 
@@ -95,6 +96,39 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         # Add the connection to the connection table
         $!connections.add: $connection;
     }
+
+    multi method receive-bgp(
+        Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Message::Keep-Alive:D $keep-alive
+    ) {
+        # Does the peer exist?
+        my $p = self.peers.get($connection.remote-ip);
+        if ! $p.defined {
+            # Bad peer, we just close the connection, it's an invalid
+            # peer.
+            $connection.close;
+            return;
+        }
+
+        # XXX Right now, we just blindly reply.
+        my $msg = Net::BGP::Message.from-hash(
+            %{
+                message-name => 'KEEP-ALIVE'
+            }
+        );
+        $connection.send-bgp($msg);
+
+        $p.lock.protect: {
+            # If the peer exists and is the current peer, in OpenConfirm state,
+            # move to ESTABLISHED
+            if $p.connection.defined && ($p.connection.id == $connection.id ) {
+                if $p.state == Net::BGP::Peer::OpenConfirm {
+                    $p.state = Net::BGP::Peer::Established;
+                }
+            }
+        }
+    }
+
 
     multi method receive-bgp(
         Net::BGP::Connection-Role:D $connection,
