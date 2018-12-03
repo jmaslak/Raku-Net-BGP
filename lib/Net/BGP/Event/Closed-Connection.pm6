@@ -13,7 +13,7 @@ class Net::BGP::Event::Closed-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::B
 
     method message-name(-->Str) { 'Closed-Connection' };
 
-    method Str(-->Str) { "CLosed connection { self.connection-id }" }
+    method Str(-->Str) { "Closed connection { self.connection-id }" }
 }
 
 =begin pod
