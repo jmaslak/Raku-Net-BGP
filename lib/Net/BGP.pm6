@@ -30,6 +30,7 @@ use Net::BGP::Message::Notify::Generic;
 use Net::BGP::Message::Notify::Open;
 use Net::BGP::Message::Notify::Open::Bad-Peer-AS;
 use Net::BGP::Message::Notify::Open::Generic;
+use Net::BGP::Message::Notify::Open::Unsupported-Optional-Parameter;
 use Net::BGP::Message::Notify::Open::Unsupported-Version;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {

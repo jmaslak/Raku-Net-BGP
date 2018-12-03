@@ -40,6 +40,21 @@ subtest 'Open Notification Bad Peer AS', {
     done-testing;
 };
 
+subtest 'Open Notification Unsupported Optional Parameter', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-unsupported-optional-parameter') );
+    ok defined($bgp), "BGP message is defined";
+    is $bgp.message-code, 3, 'Message type is correct';
+    is $bgp.message-name, 'NOTIFY', 'Message code is correct';
+    is $bgp.error-code, 2, 'Error code is correct';
+    is $bgp.error-name, 'Open', 'Error name is correct';
+    is $bgp.error-subcode, 4, 'Error subtype is correct';
+    is $bgp.error-subname, 'Unsupported-Optional-Parameter', 'Error subtype is correct';
+    ok $bgp ~~ Net::BGP::Message::Notify::Open::Unsupported-Optional-Parameter, 'Class is correct';
+    ok check-list($bgp.raw, read-message('notify-open-unsupported-optional-parameter')), 'Message value correct';
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {
