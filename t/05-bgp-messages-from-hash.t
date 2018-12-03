@@ -153,6 +153,26 @@ subtest 'Open Message', {
     done-testing;
 };
 
+subtest 'Keep-Alive Message', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('keep-alive') );
+    ok defined($bgp), "BGP message is defined";
+    is $bgp.message-code, 4, 'Message type is correct';
+    is $bgp.message-name, 'KEEP-ALIVE', 'Message code is correct';
+
+    my $from-hash = Net::BGP::Message.from-hash(
+        {
+            message-name => 'KEEP-ALIVE',
+        }
+    );
+    ok defined($from-hash), "FH BGP message is defined";
+    is $from-hash.message-code, 4, 'FH Message type is correct';
+    is $from-hash.message-name, 'KEEP-ALIVE', 'FH Message code is correct';
+
+    ok check-list($bgp.raw, read-message('keep-alive')), 'Message value correct';;
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {

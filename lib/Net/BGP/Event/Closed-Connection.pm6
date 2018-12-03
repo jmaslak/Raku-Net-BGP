@@ -12,6 +12,8 @@ class Net::BGP::Event::Closed-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::B
     has Int $.client-port;
 
     method message-name(-->Str) { 'Closed-Connection' };
+
+    method Str(-->Str) { "CLosed connection { self.connection-id }" }
 }
 
 =begin pod

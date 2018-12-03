@@ -49,7 +49,19 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             return;
         }
 
-        # XXX Check for proper options
+        if $open.option-len > 0 {
+            # We don't speak *ANY* options yet
+            my $msg = Net::BGP::Message.from-hash(
+                %{
+                    message-name  => 'NOTIFY',
+                    error-name    => 'Open',
+                    error-subname => 'Unsupported-Optional-Parameter',
+                }
+            );
+            $connection.send-bgp($msg);
+            $connection.close;
+            return;
+        }
 
         $p.lock.protect: {
             # We know we have a connection from a peer that is valid. So

@@ -33,6 +33,16 @@ subtest 'Open Message', {
     done-testing;
 };
 
+subtest 'Keep-Alive Message', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('keep-alive') );
+    ok defined($bgp), "BGP message is defined";
+    is $bgp.message-code, 4, 'Message type is correct';
+    is $bgp.message-name, 'KEEP-ALIVE', 'Message code is correct';
+    ok check-list($bgp.raw, read-message('keep-alive')), 'Message value correct';;
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {
