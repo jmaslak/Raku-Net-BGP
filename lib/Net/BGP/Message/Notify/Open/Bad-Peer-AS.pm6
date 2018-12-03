@@ -68,7 +68,7 @@ class Net::BGP::Message::Notify::Open::Bad-Peer-AS:ver<0.0.0>:auth<cpan:JMASLAK>
         my $data = buf8.new();
 
         $data.append( 3 );   # Message type (NOTIFY)
-        $data.append( 2 );   # Error code (OPEN)
+        $data.append( 2 );   # Error code (Open)
         $data.append( 2 );   # Bad Peer AS
 
         return self.bless(:data( buf8.new($data) ));
@@ -116,7 +116,7 @@ Takes a hash with a no keys.
 
 Returns a string that describes what message type the command represents.
 
-Currently understood types include C<OPEN>.
+Currently understood types include C<Open>.
 
 =head2 message-code
 

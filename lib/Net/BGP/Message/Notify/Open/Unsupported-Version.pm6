@@ -71,7 +71,7 @@ class Net::BGP::Message::Notify::Open::Unsupported-Version:ver<0.0.0>:auth<cpan:
         my $data = buf8.new();
 
         $data.append( 3 );   # Message type (NOTIFY)
-        $data.append( 2 );   # Error code (OPEN)
+        $data.append( 2 );   # Error code (Open)
         $data.append( 1 );   # Unsupported version
         $data.append( nuint16-buf8( %params<max-supported-version> ) ); # Version supported
 
@@ -121,7 +121,7 @@ key isn't provided or is not defined, a max version of 4 is used.
 
 Returns a string that describes what message type the command represents.
 
-Currently understood types include C<OPEN>.
+Currently understood types include C<Open>.
 
 =head2 message-code
 

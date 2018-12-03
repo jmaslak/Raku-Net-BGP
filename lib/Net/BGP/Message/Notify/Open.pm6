@@ -120,7 +120,7 @@ is not designed.
 
 Returns a string that describes what message type the command represents.
 
-Currently understood types include C<OPEN>.
+Currently understood types include C<Open>.
 
 =head2 message-code
 
