@@ -10,7 +10,7 @@
   "description" : "BGP Server Support",
   "license" : "Artistic-2.0",
   "name" : "Net::BGP",
-  "perl" : "6.c",
+  "perl" : "6.d",
   "provides" : {
     "Net::BGP" : "lib/Net/BGP.pm6",
     "Net::BGP::Command" : "lib/Net/BGP/Command.pm6",

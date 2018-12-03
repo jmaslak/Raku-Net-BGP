@@ -1,5 +1,5 @@
 ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
-00 10                                                   # Length
+00 17                                                   # Length
 03                                                      # Message Type (Notify)
 02                                                      # Error Code (Open)
 01                                                      # Error Subcode (Bad version)

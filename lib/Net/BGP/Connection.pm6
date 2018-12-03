@@ -24,11 +24,13 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     has Channel:D           $.command = Channel.new;
     has Channel:D           $.listener-channel is required; # To communicate with listener
     has Supplier:D          $.user-supplier    is required; # To communicate with user
-    has buf8:D              $.buffer  = buf8.new;
+    has buf8:D              $.buffer = buf8.new;
+    has Bool:D              $.closed           is rw = False;
 
     has Net::BGP::Controller-Handle-BGP:D $.bgp-handler is required;
 
     method handle-messages(-->Nil) {
+        if self.closed { return; } # Do nothing;
         react {
             whenever self.socket.Supply(:bin).list -> $buf {
                 self.buffer.append($buf);
@@ -96,6 +98,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     method send-bgp(Net::BGP::Message:D $msg -->Nil) {
+        if self.closed { return; } # Do nothing;
         my $outbuf = buf8.new();
 
         # Marker
@@ -121,6 +124,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     # Side Effect 2 - Will throw on BGP message error
     #
     method pop-bgp-message(--> Net::BGP::Message) {
+        if self.closed { return; } # Do nothing;
         # We need at least 19 bytes to have a BGP message (RFC4271 4.1)
         if self.buffer.bytes < 19 {
             return;  # We don't have a message
@@ -158,7 +162,9 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     method close(-->Nil) {
+        if self.closed { return; } # Do nothing;
         self.socket.close;
+        self.closed = True;
         $.bgp-handler.connection-closed(self);
         # XXX Do we need to signal anything here?
     }

@@ -149,6 +149,25 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
     multi method handle-error(
         Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Error::Marker-Format:D $e
+        -->Nil
+    ) {
+        # Exception created on receipt of OPEN if there is an invalid versionn
+        # number
+
+        my $msg = Net::BGP::Message.from-hash(
+            %{
+                message-name  => 'NOTIFY',
+                error-name    => 'Header',
+                error-subname => 'Connection-Not-Syncronized',
+            }
+        );
+        $connection.send-bgp($msg);
+        $connection.close;
+    }
+
+    multi method handle-error(
+        Net::BGP::Connection-Role:D $connection,
         Net::BGP::Error:D $e
         -->Nil
     ) {

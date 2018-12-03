@@ -55,6 +55,22 @@ subtest 'Open Notification Unsupported Optional Parameter', {
     done-testing;
 };
 
+subtest 'Header Notification Connection not Syncronized', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-header-connection-not-syncronized') );
+    ok defined($bgp), "BGP message is defined";
+    is $bgp.raw.list, read-message('notify-header-connection-not-syncronized').list, "AAA";
+    is $bgp.message-code, 3, 'Message type is correct';
+    is $bgp.message-name, 'NOTIFY', 'Message code is correct';
+    is $bgp.error-code, 1, 'Error code is correct';
+    is $bgp.error-name, 'Header', 'Error name is correct';
+    is $bgp.error-subcode, 1, 'Error subtype is correct';
+    is $bgp.error-subname, 'Connection-Not-Syncronized', 'Error subtype is correct';
+    ok $bgp ~~ Net::BGP::Message::Notify::Header::Connection-Not-Syncronized, 'Class is correct';
+    ok check-list($bgp.raw, read-message('notify-header-connection-not-syncronized')), 'Message value correct';
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {
