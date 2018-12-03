@@ -12,6 +12,10 @@ class Net::BGP::Event::New-Connection:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP:
     has Int $.client-port;
 
     method message-name(-->Str) { 'New-Connection' };
+
+    method Str(-->Str) {
+        "New connection { self.connection-id } from $.client-ip:$.client-port";
+    }
 }
 
 =begin pod

@@ -71,6 +71,10 @@ class Net::BGP::Parameter::Generic:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Pa
     method parameter-value() {
         return $.data.subbuf(2, $.data[1]);
     }
+
+    method Str(-->Str) {
+        "Type={ self.parameter-code } Len={ self.parameter-length }";
+    }
 }
 
 # Register handler

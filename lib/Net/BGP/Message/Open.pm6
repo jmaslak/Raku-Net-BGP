@@ -9,6 +9,7 @@ use Net::BGP::Conversions;
 use Net::BGP::Error::Bad-Option-Length;
 use Net::BGP::Error::Hold-Time-Too-Short;
 use Net::BGP::Error::Unknown-Version;
+use Net::BGP::IP;
 use Net::BGP::Message;
 use Net::BGP::Parameter;
 
@@ -56,6 +57,13 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
                 }
             }
         }
+    }
+
+    method Str(-->Str) {
+        my $ip = int-to-ipv4(self.identifier);
+        my $params = self.parameters.map({$_.Str}).join(';');
+        return "OPEN ASN={ self.asn } ID=$ip Hold-Time={ self.hold-time } "
+            ~ "OPT=[$params]";
     }
 
     method from-raw(buf8:D $raw where $raw.bytes ≥ 11) {

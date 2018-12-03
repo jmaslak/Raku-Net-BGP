@@ -12,6 +12,10 @@ class Net::BGP::Event::BGP-Message:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Ev
     has Net::BGP::Message $.message;
 
     method message-name(-->Str) { 'BGP-Message' };
+
+    method Str(-->Str) {
+        "{ self.connection-id } BGP { self.message.Str }";
+    }
 }
 
 =begin pod
