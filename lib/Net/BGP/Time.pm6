@@ -8,10 +8,12 @@ use v6;
 use DateTime::Monotonic;
 
 module Net::BGP::Time:ver<0.0.1>:auth<cpan:JMASLAK> {
-    my $time = DateTime::Monotonic.new;
+    sub monotonic-seconds(-->Numeric) is export {
+        return DateTime::Monotonic::monotonic-seconds;
+    }
 
     sub monotonic-whole-seconds(-->Int) is export {
-        return $time.seconds.truncate;
+        return DateTime::Monotonic::monotonic-whole-seconds;
     }
 };
 
@@ -24,9 +26,15 @@ Net::BGP::Time - Time utilities
 =head1 SYNOPSIS
 
   use Net::BGP::Time;
-  say "Seconds since timer initialization: { monotonic-whole-seconds }";
+  say "Seconds since timer initialization: { monotonic-seconds }";
+  say "Whole Seconds since timer initialization: { monotonic-whole-seconds }";
 
 =head1 SUBROUTINES
+
+=head2 monotonic-seconds(-->Int) is export
+
+Returns number of seconds since module was loaded, including fractional
+seconds.
 
 =head2 monotonic-whole-seconds(-->Int) is export
 
