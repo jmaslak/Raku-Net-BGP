@@ -18,6 +18,7 @@ use Net::BGP::Peer;
 # We need to register all the parameter types, which happens when the
 # module is loaded.
 use Net::BGP::Parameter;
+use Net::BGP::Parameter::Capabilities;
 use Net::BGP::Parameter::Generic;
 
 # We need to register all the message types, which happens when the
