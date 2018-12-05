@@ -10,6 +10,7 @@ use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Peer-List;
 use Net::BGP::IP;
 use Net::BGP::Message::Keep-Alive;
+use Net::BGP::Time;
 
 # NOTE: The controller is running on the connection thread, for any
 # method that takes a controller.
@@ -188,7 +189,7 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         $p.lock.protect: {
             if $p.connection.defined && $p.connection.id == $connection.id {
                 $p.connection = Nil;
-                $p.last-connect-attempt = DateTime.now.posix();
+                $p.last-connect-attempt = monotonic-whole-seconds;
                 $p.state = Net::BGP::Peer::Idle;  # XXX This might not be right
             }
         }

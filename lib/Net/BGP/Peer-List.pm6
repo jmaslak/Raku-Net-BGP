@@ -7,6 +7,7 @@ use v6;
 
 use Net::BGP::IP;
 use Net::BGP::Peer;
+use Net::BGP::Time;
 use OO::Monitors;
 
 monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
@@ -58,12 +59,16 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
     }
 
     method get-peer-due-for-connect(-->Net::BGP::Peer) {
-        my $now = DateTime.now.posix();
+        my $now = monotonic-whole-seconds;
         for %!peers.values -> $peer {
             $peer.lock.protect: {
                 if $peer.passive            { next; }
                 if $peer.connection.defined { next; }
 
+                # Never connected?
+                if ! $peer.last-connect-attempt { return $peer; }
+
+                # Connected in the past by at least retry time?
                 if $now ≥ ($peer.last-connect-attempt + $peer.connect-retry-time) {
                     return $peer;
                 }

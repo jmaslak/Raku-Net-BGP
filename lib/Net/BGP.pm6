@@ -14,6 +14,7 @@ use Net::BGP::Conversions;
 use Net::BGP::IP;
 use Net::BGP::Event::New-Connection;
 use Net::BGP::Peer;
+use Net::BGP::Time;
 
 # We need to register all the parameter types, which happens when the
 # module is loaded.
@@ -204,7 +205,7 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         $p.lock.protect: {
             if $p.connection.defined { return; }    # Someone created a connection
 
-            $p.last-connect-attempt = DateTime.now.posix();
+            $p.last-connect-attempt = monotonic-whole-seconds;
         }
 
         my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);

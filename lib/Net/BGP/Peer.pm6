@@ -23,7 +23,7 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D  $.peer-port where ^65536 = 179;
     has Int:D  $.peer-asn is required where ^65536;
     has Int    $.peer-identifier is rw where ^(2³²);
-    has Int:D  $.last-connect-attempt is rw = 0;
+    has Int    $.last-connect-attempt is rw;
     has UInt:D $.connect-retry-time is rw = 60;
     has Bool:D $.passive = False;
 
