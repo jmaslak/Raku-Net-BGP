@@ -9,6 +9,6 @@ ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
 02                                                      # Capability Option
 05                                                      # Capability Length
 01                                                      # MPBGP Capability
-00                                                      # MPBGP Capability Length
+03                                                      # MPBGP Capability Length
 00 01 01                                                # IPv4, Reserved, Unicast
 

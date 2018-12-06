@@ -5,6 +5,11 @@ use v6;
 # All Rights Reserved - See License
 #
 
+# Ensure capabilities are registered, even though we don't use them
+# here.
+use Net::BGP::Capability;
+use Net::BGP::Capability::Generic;
+
 use Net::BGP::Error::Bad-Parameter-Length;
 use Net::BGP::Parameter;
 
@@ -32,6 +37,8 @@ class Net::BGP::Parameter::Capabilities:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
             die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw[1])));
         }
         if $raw[0] ≠ 2 { die("Can only build a Capabilities parameter") }
+
+        # Validate the capabilities parse.
         
         return self.bless( :data(buf8.new($raw)) );
     };
@@ -64,7 +71,12 @@ class Net::BGP::Parameter::Capabilities:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
         $parameter.append( %params<parameter-value>.bytes );
         $parameter.append( %params<parameter-value> );
 
-        return self.bless(:data( buf8.new($parameter) ));
+        my $obj = self.bless(:data( $parameter ));
+
+        # Validate capabilities parse
+        $obj.capabilities.sink;
+
+        return $obj;
     };
 
     method raw() { return $.data; }
@@ -75,6 +87,26 @@ class Net::BGP::Parameter::Capabilities:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
 
     method parameter-value() {
         return $.data.subbuf(2, $.data[1]);
+    }
+
+    method capabilities( -->Array[Net::BGP::Capability:D] ) {
+        my Net::BGP::Capability:D @capabilities;
+        my $start = 2;
+        while $start < $!data.bytes {
+            my $cap-len = $!data[$start+1] + 2;
+
+            if ($start + $cap-len) > $!data.bytes {
+                die("Capability too long for option field");
+            }
+
+            my $cap-raw = $!data[ $start..($start + $cap-len - 1) ];
+            @capabilities.push: Net::BGP::Capability.from-raw( buf8.new($cap-raw) );
+
+            # Get next capability
+            $start += $cap-len;
+        }
+
+        return @capabilities;
     }
 
     method Str(-->Str) {

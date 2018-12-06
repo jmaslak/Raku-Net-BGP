@@ -46,6 +46,10 @@ subtest 'Open Message w/ Capabilities', {
     ok $bgp.parameters[0] ~~ Net::BGP::Parameter::Capabilities, "Parameter is a Capabilitiy";
     is $bgp.parameters[0].parameter-code, 2, "Parameter has proper code";
     is $bgp.parameters[0].parameter-name, "Capabilities", "Parameter has proper name";
+    is $bgp.parameters[0].capabilities.elems, 1, "Proper number of capabilities";
+    ok $bgp.parameters[0].capabilities[0] ~~ Net::BGP::Capability::Generic, "Capability is proper type";
+    is $bgp.parameters[0].capabilities[0].capability-code, 1, "Capability has proper code";
+    is $bgp.parameters[0].capabilities[0].capability-name, "1", "Capability has proper code";
     ok check-list($bgp.raw, read-message('open-message-capabilities')), 'Message value correct';;
 
     done-testing;
