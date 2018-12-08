@@ -62,21 +62,40 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             }
         }
 
-        if $open.asn ≠ $p.peer-asn {
-            my $msg = Net::BGP::Message.from-hash(
-                %{
-                    message-name  => 'NOTIFY',
-                    error-name    => 'Open',
-                    error-subname => 'Bad-Peer-AS',
-                }
-            );
-            $connection.send-bgp($msg);
-            $connection.close;
-            return;
-        }
-
         # Negotiate capabilities
         $p.lock.protect: {
+            # XXX If we think they don't support capabilities, but
+            # they do, what do we do?
+
+            $p.supports-capabilities = @capabilities.elems.so;
+
+            my $asn32cap =
+                @capabilities.grep( { $^c ~~ Net::BGP::Capability::ASN32 } ).first;
+
+            my $peer-asn = $asn32cap.defined ?? $asn32cap.asn !! $open.asn;
+            if ($open.asn ≠ $peer-asn) && ($peer-asn < (2¹⁶)) {
+                die("Peer ASN does not match ASN32 Parameter");
+            }
+            if ($open.asn ≠ 23456) && ($peer-asn ≥ (2¹⁶)) {
+                die("Open ASN is not correct for a 32 bit ASN");
+            }
+
+            # Set this flag, we'll need it in a bunch of places.
+            $p.peer-supports-asn32 = $asn32cap.defined;
+
+            if $open.asn ≠ $p.peer-asn {
+                my $msg = Net::BGP::Message.from-hash(
+                    %{
+                        message-name  => 'NOTIFY',
+                        error-name    => 'Open',
+                        error-subname => 'Bad-Peer-AS',
+                    }
+                );
+                $connection.send-bgp($msg);
+                $connection.close;
+                return;
+            }
+
             $p.last-message-received = monotonic-whole-seconds;
 
             # We know we have a connection from a peer that is valid. So
@@ -90,10 +109,6 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             # So we know we're the best connection to be active
             $p.peer-identifier = $open.identifier;
             $p.connection      = $connection;
-            
-            # XXX If we think they don't support capabilities, but
-            # they do, what do we do?
-            $p.supports-capabilities = @capabilities.elems.so;
 
             if $connection.inbound {
                 self.send-open(

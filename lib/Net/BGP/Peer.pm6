@@ -28,12 +28,14 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     has UInt:D $.connect-retry-time is rw = 60;
     has Bool:D $.passive = False;
     has Bool   $.supports-capabilities is rw;
+    has Bool:D $.peer-supports-asn32 is rw = False;
     has Int:D  $.last-message-received is rw = 0;
 
     # My side
-    has Int:D $.my-asn is required where ^(2³²);
-    has Int:D $.my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60;
-    has Int:D $.last-message-sent is rw = 0;
+    has Int:D  $.my-asn is required where ^(2³²);
+    has Int:D  $.my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60;
+    has Int:D  $.last-message-sent is rw = 0;
+    has Bool:D $.local-supports-asn32 is rw = True;
 
     # Channel from server component
     has Channel $.channel is rw;
