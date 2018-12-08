@@ -88,11 +88,12 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy)  {
-        my @REQUIRED = «version asn hold-time identifier parameters»;
+        my @REQUIRED = «version asn hold-time identifier parameters capabilities»;
 
         # Optional parameters
-        %params<version>    //= 4;
-        %params<parameters> //= [];
+        %params<version>      //= 4;
+        %params<parameters>   //= [];
+        %params<capabilities> //= [];
 
         # Delete unnecessary option
         if %params<message-code>:exists {
@@ -117,6 +118,16 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
         for |%params<parameters> -> $param-hash {
             $options.append( Net::BGP::Parameter.from-hash( $param-hash ).raw );
         }
+
+        if (|%params<capabilities>).elems {
+            my $val = Net::BGP::Parameter.from-hash(
+                %{
+                    parameter-name => 'Capabilities',
+                    capabilities   => |%params<capabilities>,
+                }
+            );
+        }
+
         if $options.bytes > 255 { die("Options too long for BGP message") }
 
         # Now we need to build the raw data.

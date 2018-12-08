@@ -206,66 +206,73 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     }
 
     method connect-if-needed(-->Nil) {
-        loop {
-            my $p = $.controller.peers.get-peer-due-for-connect;
-            if ! $p.defined { return; }
+        state Lock $lock = Lock.new;
+        $lock.protect: {
+            loop {
+                my $p = $.controller.peers.get-peer-due-for-connect;
+                if ! $p.defined { return; }
 
-            $p.lock.protect: {
-                if $p.connection.defined { next; }    # Someone created a connection
-
-                $p.last-connect-attempt = monotonic-whole-seconds;
-            }
-
-            my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);
-
-            start {
-                my $socket = $promise.result;
-
-                my $conn;
                 $p.lock.protect: {
-                    if $p.connection.defined { done() } # Just in case it got defined
+                    if $p.connection.defined { next; }    # Someone created a connection
 
-                    $conn = Net::BGP::Connection.new(
-                        :socket($socket),
-                        :listener-channel($!listener-channel),
-                        :user-supplier($!user-supplier),
-                        :bgp-handler($.controller),
-                        :remote-ip($socket.peer-host),
-                        :remote-port($socket.peer-port),
-                        :inbound(False),
-                    );
-
-                    # Add peer to connection
-                    $p.connection = $conn;
-
-                    # Set up connection object
-                    $!controller.connections.add($conn);
-
-                    # Send Open
-                    $p.state = Net::BGP::Peer::OpenSent;
-                    $!controller.send-open($conn);
+                    $p.last-connect-attempt = monotonic-whole-seconds;
                 }
 
-                # Let user know.
-                $!user-supplier.emit(
-                    Net::BGP::Event::New-Connection.new(
-                        :client-ip( $socket.peer-host ),
-                        :client-port( $socket.peer-port ),
-                        :connection-id( $conn.id ),
-                    ),
-                );
+                my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);
+                start self.connection-handler($promise, $p);
+            }
+        }
+    }
 
-                $conn.handle-messages;
+    method connection-handler(Promise:D $socket-promise, Net::BGP::Peer:D $peer) {
+        my $socket = $socket-promise.result;
 
-                CATCH {
-                    default {
-                        # We should log better
-                        $*ERR.say("Error in child process!");
-                        $*ERR.say(.message);
-                        $*ERR.say(.backtrace.join);
-                        .rethrow;
-                    }
-                }
+        my $conn;
+        $peer.lock.protect: {
+            if $peer.connection.defined { return } # Just in case it got defined
+
+            $conn = Net::BGP::Connection.new(
+                :socket($socket),
+                :listener-channel($!listener-channel),
+                :user-supplier($!user-supplier),
+                :bgp-handler($.controller),
+                :remote-ip($socket.peer-host),
+                :remote-port($socket.peer-port),
+                :inbound(False),
+            );
+
+            # Add peer to connection
+            $peer.connection = $conn;
+
+            # Set up connection object
+            $!controller.connections.add($conn);
+
+            # Send Open
+            $peer.state = Net::BGP::Peer::OpenSent;
+            $!controller.send-open($conn,
+                :hold-time($peer.my-hold-time),
+                :supports-capabilities($peer.supports-capabilities),
+            );
+        }
+
+        # Let user know.
+        $!user-supplier.emit(
+            Net::BGP::Event::New-Connection.new(
+                :client-ip( $socket.peer-host ),
+                :client-port( $socket.peer-port ),
+                :connection-id( $conn.id ),
+            ),
+        );
+
+        $conn.handle-messages;
+
+        CATCH {
+            default {
+                # We should log better
+                $*ERR.say("Error in child process!");
+                $*ERR.say(.message);
+                $*ERR.say(.backtrace.join);
+                .rethrow;
             }
         }
     }

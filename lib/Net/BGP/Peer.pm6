@@ -21,7 +21,7 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     # Their side
     has Str:D  $.peer-ip is required where { ip-valid($^a) };
     has Int:D  $.peer-port where ^65536 = 179;
-    has Int:D  $.peer-asn is required where ^65536;
+    has Int:D  $.peer-asn is required where ^(2³²);
     has Int    $.peer-identifier is rw where ^(2³²);
     has Int    $.peer-hold-time where { $^h == 0 or $^h ~~ 3..65535 };
     has Int    $.last-connect-attempt is rw;
@@ -31,7 +31,7 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D  $.last-message-received is rw = 0;
 
     # My side
-    has Int:D $.my-asn is required where ^65536;
+    has Int:D $.my-asn is required where ^(2³²);
     has Int:D $.my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60;
     has Int:D $.last-message-sent is rw = 0;
 

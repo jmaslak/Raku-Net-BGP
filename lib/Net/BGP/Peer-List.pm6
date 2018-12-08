@@ -62,11 +62,14 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
         my $now = monotonic-whole-seconds;
         for %!peers.values -> $peer {
             $peer.lock.protect: {
-                if $peer.passive            { next; }
-                if $peer.connection.defined { next; }
+                if $peer.passive              { next; }
+                if $peer.connection.defined   { next; }
+                if $peer.state == OpenSent    { next; }
+                if $peer.state == OpenConfirm { next; }
+                if $peer.state == Established { next; }
 
                 # Never connected?
-                if ! $peer.last-connect-attempt { return $peer; }
+                if ! $peer.last-connect-attempt.defined { return $peer; }
 
                 # Connected in the past by at least retry time?
                 if $now ≥ ($peer.last-connect-attempt + $peer.connect-retry-time) {
@@ -74,6 +77,7 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
                 }
             }
         }
+        return;
     }
 
     method get-peer-due-for-keepalive(-->Net::BGP::Peer) {
@@ -99,6 +103,7 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
                 }
             }
         }
+        return;
     }
 
     method get-peer-dead(-->Net::BGP::Peer) {
@@ -124,6 +129,7 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
                 }
             }
         }
+        return;
     }
 
 };

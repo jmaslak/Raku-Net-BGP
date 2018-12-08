@@ -33,17 +33,17 @@ class Net::BGP::Capability::ASN32:ver<0.0.0>:auth<cpan:JMASLAK>
         my @REQUIRED = «asn»;
 
         if %params<capability-code>:exists {
-            if %params<capability-code> ≠ 2 {
+            if %params<capability-code> ≠ 65 {
                 die "Can only create a ASN32 capability";
             }
-            %params<capability-code>.delete;
+            %params<capability-code>:delete;
         }
 
         if %params<capability-name>:exists {
             if %params<capability-name> ne "ASN32" {
                 die "Can only create a ASN32 capability";
             }
-            %params<capability-name>.delete;
+            %params<capability-name>:delete;
         }
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
@@ -53,8 +53,9 @@ class Net::BGP::Capability::ASN32:ver<0.0.0>:auth<cpan:JMASLAK>
         my buf8 $capability = buf8.new();
         $capability.append( 65 );  # Code
         $capability.append( 4 );   # Length
-        $capability.append( %params<asn> );
+        $capability.append( nuint32-buf8(%params<asn>) );
 
+        return buf8.new;
         return self.bless(:raw( $capability ));
     };
 

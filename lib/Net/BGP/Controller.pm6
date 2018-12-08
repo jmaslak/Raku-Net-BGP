@@ -39,19 +39,6 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             return;
         }
 
-        if $open.asn ≠ $p.peer-asn {
-            my $msg = Net::BGP::Message.from-hash(
-                %{
-                    message-name  => 'NOTIFY',
-                    error-name    => 'Open',
-                    error-subname => 'Bad-Peer-AS',
-                }
-            );
-            $connection.send-bgp($msg);
-            $connection.close;
-            return;
-        }
-
         # Process Parmaters
         my @capabilities;
         for $open.parameters -> $param {
@@ -73,6 +60,19 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
                 $connection.close;
                 return;
             }
+        }
+
+        if $open.asn ≠ $p.peer-asn {
+            my $msg = Net::BGP::Message.from-hash(
+                %{
+                    message-name  => 'NOTIFY',
+                    error-name    => 'Open',
+                    error-subname => 'Bad-Peer-AS',
+                }
+            );
+            $connection.send-bgp($msg);
+            $connection.close;
+            return;
         }
 
         # Negotiate capabilities
@@ -227,18 +227,29 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
     method send-open(
         Net::BGP::Connection-Role:D $connection,
-        Bool:D                      :$supports-capabilities,
+        Bool                        :$supports-capabilities,
         Int:D                       :$hold-time
         -->Nil
     ) { 
-        my $msg = Net::BGP::Message.from-hash(
-            %{
-                    message-name  => 'OPEN',
-                    asn           => $.my-asn,
-                    hold-time     => $hold-time,
-                    identifier    => $.identifier,
-            }
-        );
+        my $asn16 = $.my-asn ≥ (2¹⁶) ?? 23456 !! $.my-asn;
+        my $asn32 = $.my-asn;
+
+        my %msg-hash =
+            message-name  => 'OPEN',
+            asn           => $asn16,
+            hold-time     => $hold-time,
+            identifier    => $.identifier;
+
+        if $supports-capabilities // True {
+            %msg-hash<capabilities> = (
+                %{
+                    capability-name => 'ASN32',
+                    asn             => $asn32,
+                },
+            );
+        }
+        
+        my $msg = Net::BGP::Message.from-hash(%msg-hash);
         $connection.send-bgp($msg);
     }
     

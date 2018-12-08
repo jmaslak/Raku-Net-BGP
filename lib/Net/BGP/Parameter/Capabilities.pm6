@@ -46,7 +46,7 @@ class Net::BGP::Parameter::Capabilities:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
     };
 
     method from-hash(%params)  {
-        my @REQUIRED = «parameter-value»;
+        my @REQUIRED = «capabilities»;
 
         # Delete unnecessary option
         if %params<parameter-name>:exists {
@@ -59,11 +59,19 @@ class Net::BGP::Parameter::Capabilities:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
             if %params<parameter-code> ≠ 2 {
                 die("Can only build a Capabilities parameter");
             }
+            %params<parameter-code>:delete;
         }
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper parameter options");
+            die("Did not provide proper parameter options: " ~ %params.keys.join(", ") );
         }
+
+        my $value = buf8.new;
+        %params<capabilities> //= [];
+        for |%params<capabilities> -> $cap-hash {
+            $value.append: Net::BGP::Capability.from-hash( $cap-hash );
+        }
+        %params<parameter-value> =  $value;
         
         # Max length is 253, because 253 + one byte type + one byte len = 255
         if %params<parameter-value>.bytes > 253 { die("Parameter too long"); }

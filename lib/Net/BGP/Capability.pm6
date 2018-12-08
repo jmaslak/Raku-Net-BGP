@@ -47,11 +47,18 @@ class Net::BGP::Capability:ver<0.0.0>:auth<cpan:JMASLAK>
             if %capability-codes{ %params<capability-code> } ≠ %capability-names{ %params<capability-name> } {
                 die("Capability code and capability name do not match");
             }
-            %params<capability-code>:delete
+            %params<capability-name>:delete
         }
 
+        if %params<capability-name>:exists and %params<capability-code>:!exists {
+            %params<capability-code> = %capability-names{ %params<capability-name> }.implemented-capability-code;
+            %params<capability-name>:delete
+        }
+
+        if %params<capability-code>:!exists { die("Must provide capability code { %params.keys.join(" ") }") }
+
         if %capability-codes{ %params<capability-code> }:exists {
-            return %capability-codes{ %params<error-subcode> }.from-hash(%params);
+            return %capability-codes{ %params<capability-code> }.from-hash(%params);
         } else {
             return %capability-codes{ Int }.from-hash(%params);
         }
