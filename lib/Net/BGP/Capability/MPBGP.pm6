@@ -62,7 +62,6 @@ class Net::BGP::Capability::MPBGP:ver<0.0.0>:auth<cpan:JMASLAK>
         $capability.append( %params<reserved> );
         $capability.append( safi-code(%params<safi>) );
 
-        return buf8.new;
         return self.bless(:raw( $capability ));
     };
 

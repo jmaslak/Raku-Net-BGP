@@ -249,6 +249,7 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         my $asn16 = $.my-asn ≥ (2¹⁶) ?? 23456 !! $.my-asn;
         my $asn32 = $.my-asn;
 
+        # XXX We need to set address families in a better way
         my %msg-hash =
             message-name  => 'OPEN',
             asn           => $asn16,
@@ -260,6 +261,16 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
                 %{
                     capability-name => 'ASN32',
                     asn             => $asn32,
+                },
+                %{
+                    capability-name => 'MPBGP',
+                    afi             => 'IP',
+                    safi            => 'unicast',
+                },
+                %{
+                    capability-name => 'MPBGP',
+                    afi             => 'IPv6',
+                    safi            => 'unicast',
                 },
             );
         }

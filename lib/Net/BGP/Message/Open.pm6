@@ -120,12 +120,13 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
         }
 
         if (|%params<capabilities>).elems {
-            my $val = Net::BGP::Parameter.from-hash(
+            my $cap = Net::BGP::Parameter.from-hash(
                 %{
                     parameter-name => 'Capabilities',
                     capabilities   => |%params<capabilities>,
                 }
             );
+            $options.append = $cap.raw;
         }
 
         if $options.bytes > 255 { die("Options too long for BGP message") }

@@ -55,7 +55,6 @@ class Net::BGP::Capability::ASN32:ver<0.0.0>:auth<cpan:JMASLAK>
         $capability.append( 4 );   # Length
         $capability.append( nuint32-buf8(%params<asn>) );
 
-        return buf8.new;
         return self.bless(:raw( $capability ));
     };
 

@@ -67,10 +67,11 @@ class Net::BGP::Parameter::Capabilities:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
             die("Did not provide proper parameter options: " ~ %params.keys.join(", ") );
         }
 
+        # XXX Don't add capabilities if nothing in the capabilities!
         my $value = buf8.new;
         %params<capabilities> //= [];
         for |%params<capabilities> -> $cap-hash {
-            $value.append: Net::BGP::Capability.from-hash( $cap-hash );
+            $value.append: Net::BGP::Capability.from-hash( $cap-hash ).raw;
         }
         %params<parameter-value> =  $value;
         
