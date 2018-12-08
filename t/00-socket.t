@@ -10,16 +10,15 @@ use experimental :pack;
 use Net::BGP::Socket;
 use Net::BGP::Socket-Connection;
 
-subtest 'Basic', {
+subtest 'Basic Server', {
     my $inet = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock = $inet.socket;
 
     ok $sock ~~ Int, "sock is proper type";
     is $sock.defined, True, "sock is defined";
 
-    lives-ok { $inet.bind }, "bind does not die";
-
-    lives-ok { $inet.listen }, "listen does not die";
+    $inet.bind;
+    $inet.listen;
     
     ok $inet.bound-port ~~ Int, "bound port does not die";
     ok $inet.bound-port ~~ 1024..65535, "bound port in proper range";
@@ -35,7 +34,7 @@ subtest 'Basic', {
     $connections.tap: { $conn = $_; $promise.keep };
     await $promise;
 
-    ok $conn ~~ Socket-Connection, "conn is Socket-Connection";
+    ok $conn ~~ Net::BGP::Socket-Connection, "conn is Socket-Connection";
     is $conn.defined, True, "conn is defined";
     is $conn.my-host, $inet.my-host, "my-host matches";
     is $conn.my-port, $inet.bound-port, "my-port matches bound-port";
@@ -70,6 +69,112 @@ subtest 'Basic', {
     is $client.recv, $str, "Read line 6";
     $conn.buffered-send( buf8.new( $str.encode(:encoding('ascii')) ) );
     is $client.recv, $str, "Read line 7";
+   
+    done-testing;
+};
+
+subtest 'Client/Server', {
+    my $inet1 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
+    my $sock1 = $inet1.socket;
+
+    my $inet2 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
+    my $sock2 = $inet2.socket;
+
+    $inet1.bind;
+    $inet2.bind;
+
+    $inet1.listen;
+    note "# Listening on port {$inet1.bound-port}";
+    my $conn2 = await $inet2.connect('127.0.0.1', $inet1.bound-port);
+    
+    my $connections1 = $inet1.acceptor;
+    my $promise = Promise.new;
+    $connections1.tap: { $promise.keep($_) };
+    my $conn1 = await $promise;
+    lives-ok { $inet1.close }, "Listening socket closed";
+
+    my $str = "Hello, World!\n";
+    my $buf = buf8.new( $str.encode(:encoding('ascii')) );
+
+    $conn1.write($buf);
+    is $conn2.recv, $buf, "Read line 1";
+    $conn2.write($buf);
+    is $conn1.recv, $buf, "Read line 2";
+
+    lives-ok { $conn1.close }, "Connection 1 closed";
+    sleep .5;
+    lives-ok { $conn2.close }, "Connection 2 closed";
+   
+    done-testing;
+};
+
+subtest 'Client/Server - MD5 Non-Match', {
+    my $inet1 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
+    my $sock1 = $inet1.socket;
+
+    my $inet2 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
+    my $sock2 = $inet2.socket;
+
+    $inet1.bind;
+    $inet2.bind;
+
+    $inet1.set-md5('192.0.2.1', 'key key key'); # should not match anything
+    $inet1.listen;
+
+    my $conn2 = await $inet2.connect('127.0.0.1', $inet1.bound-port);
+    
+    my $connections1 = $inet1.acceptor;
+    my $promise = Promise.new;
+    $connections1.tap: { $promise.keep($_) };
+    my $conn1 = await $promise;
+    lives-ok { $inet1.close }, "Listening socket closed";
+
+    my $str = "Hello, World!\n";
+    my $buf = buf8.new( $str.encode(:encoding('ascii')) );
+
+    $conn1.write($buf);
+    is $conn2.recv, $buf, "Read line 1";
+
+    lives-ok { $conn1.close }, "Connection 1 closed";
+    sleep .5;
+    lives-ok { $conn2.close }, "Connection 2 closed";
+   
+    done-testing;
+};
+
+
+subtest 'Client/Server - MD5 Match', {
+    my $inet1 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
+    my $sock1 = $inet1.socket;
+
+    my $inet2 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
+    my $sock2 = $inet2.socket;
+
+    $inet1.bind;
+    $inet2.bind;
+
+    $inet1.set-md5('127.0.0.1', 'key key key');
+    $inet2.set-md5('127.0.0.1', 'key key key');
+
+    $inet1.listen;
+
+    my $conn2 = await $inet2.connect('127.0.0.1', $inet1.bound-port);
+    
+    my $connections1 = $inet1.acceptor;
+    my $promise = Promise.new;
+    $connections1.tap: { $promise.keep($_) };
+    my $conn1 = await $promise;
+    lives-ok { $inet1.close }, "Listening socket closed";
+
+    my $str = "Hello, World!\n";
+    my $buf = buf8.new( $str.encode(:encoding('ascii')) );
+
+    $conn1.write($buf);
+    is $conn2.recv, $buf, "Read line 1";
+
+    lives-ok { $conn1.close }, "Connection 1 closed";
+    sleep .5;
+    lives-ok { $conn2.close }, "Connection 2 closed";
    
     done-testing;
 };

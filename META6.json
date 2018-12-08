@@ -6,6 +6,7 @@
   "build-depends" : [ ],
   "depends" : [
     "DateTime::Monotonic",
+    "NativeHelpers::Blob",
     "OO::Monitors"
   ],
   "description" : "BGP Server Support",
