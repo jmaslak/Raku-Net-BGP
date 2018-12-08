@@ -127,7 +127,10 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     # Side Effect 2 - Will throw on BGP message error
     #
     method pop-bgp-message(--> Net::BGP::Message) {
-        if self.closed { return; } # Do nothing;
+        if self.closed {
+            self.buffer = buf8.new;
+            return;
+        }
         # We need at least 19 bytes to have a BGP message (RFC4271 4.1)
         if self.buffer.bytes < 19 {
             return;  # We don't have a message
