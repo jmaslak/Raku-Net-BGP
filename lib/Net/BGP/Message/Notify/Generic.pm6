@@ -67,6 +67,10 @@ class Net::BGP::Message::Notify::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
     };
     
     method raw() { return $.data; }
+
+    method Str(-->Str:D) {
+        "NOTIFY Error={ self.error-code } Subtype={ self.error-subcode }"
+    }
 }
 
 # Register handler

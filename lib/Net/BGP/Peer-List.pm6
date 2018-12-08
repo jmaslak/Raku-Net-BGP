@@ -116,7 +116,7 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
                 if ! $peer.last-message-received.defined { return $peer; }
 
                 # Send time
-                my $send-time = ($hold-time / 3).truncate;
+                my $send-time = $hold-time;
 
                 # Connected in the past by at least retry time?
                 if $now ≥ (($peer.last-message-received // 0) + $send-time) {
