@@ -52,16 +52,19 @@ subtest 'Open Message w/ Capabilities', {
 
     ok $caps[0] ~~ Net::BGP::Capability::Route-Refresh, "Capability¹ is proper type";
     is $caps[0].capability-code, 2,                     "Capability¹ has proper code";
-    is $caps[0].capability-name, "Route-Refresh",       "Capability¹ has proper code";
+    is $caps[0].capability-name, "Route-Refresh",       "Capability¹ has proper name";
 
     ok $caps[1] ~~ Net::BGP::Capability::ASN32, "Capability² is proper type";
     is $caps[1].capability-code, 65,            "Capability² has proper code";
-    is $caps[1].capability-name, "ASN32",       "Capability² has proper code";
-    is $caps[1].asn, :16('12345678'),           "Capability² has proper code";
+    is $caps[1].capability-name, "ASN32",       "Capability² has proper name";
+    is $caps[1].asn, :16('12345678'),           "Capability² has proper asn";
 
-    ok $caps[2] ~~ Net::BGP::Capability::Generic, "Capability³ is proper type";
+    ok $caps[2] ~~ Net::BGP::Capability::MPBGP,   "Capability³ is proper type";
     is $caps[2].capability-code, 1,               "Capability³ has proper code";
-    is $caps[2].capability-name, "1",             "Capability³ has proper code";
+    is $caps[2].capability-name, "MPBGP",         "Capability³ has proper name";
+    is $caps[2].afi,             "IP",            "Capability³ has proper afi";
+    is $caps[2].safi,            "unicast",       "Capability³ has proper safi";
+    is $caps[2].reserved,        0,               "Capability³ has proper reserved";
 
     ok check-list($bgp.raw, read-message('open-message-capabilities')), 'Message value correct';;
 

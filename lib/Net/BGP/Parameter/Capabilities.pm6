@@ -10,6 +10,7 @@ use v6;
 use Net::BGP::Capability;
 use Net::BGP::Capability::ASN32;
 use Net::BGP::Capability::Generic;
+use Net::BGP::Capability::MPBGP;
 use Net::BGP::Capability::Route-Refresh;
 
 use Net::BGP::Error::Bad-Parameter-Length;
