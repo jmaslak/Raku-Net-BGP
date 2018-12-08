@@ -32,10 +32,11 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     method handle-messages(-->Nil) {
         if self.closed { return; } # Do nothing;
         react {
-            whenever self.socket.Supply(:bin).list -> $buf {
+            whenever self.socket.Supply(:bin) -> $buf {
                 self.buffer.append($buf);
-                my $bgpmsg = self.pop-bgp-message();
-                if (defined($bgpmsg)) {
+                loop {
+                    my $bgpmsg = self.pop-bgp-message();
+                    if ! $bgpmsg.defined { last; } # Exit loop
                     # Send message to client
                     $.user-supplier.emit(
                         Net::BGP::Event::BGP-Message.new(
