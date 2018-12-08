@@ -26,6 +26,7 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int    $.last-connect-attempt is rw;
     has UInt:D $.connect-retry-time is rw = 60;
     has Bool:D $.passive = False;
+    has Bool   $.supports-capabilities is rw;
 
     # My side
     has Int:D $.my-asn is required where ^65536;
@@ -87,6 +88,13 @@ The ASN belonging to the peer.
 =head2 my-asn
 
 The ASN belonging to the server process.
+
+=head2 supports-capabilities
+
+Set to C<True> if a connection has been established where the peer sent a
+capability parameter.  Set to C<False> if the peer didn't send a capability
+parameter in the last OPEN they sent.  Not defined if the peer has not yet
+connected.
 
 =head1 METHODS
 

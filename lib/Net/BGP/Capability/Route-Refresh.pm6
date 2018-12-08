@@ -7,72 +7,76 @@ use v6;
 
 use Net::BGP::Capability;
 
-class Net::BGP::Capability::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Capability::Route-Refresh:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
 {
     # Generic Types
-    method implemented-capability-code(-->Int) { Int }
-    method implemented-capability-name(-->Str) { Str }
+    method implemented-capability-code(-->Int) { 2 }
+    method implemented-capability-name(-->Str) { "Route-Refresh" }
 
-    method capability-name(-->Str:D) { "{ $.raw[0] }" }
+    method capability-name(-->Str:D) { "Route-Refresh" }
     
     method new() {
         die("Must use from-raw or from-hash to construct a new object");
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
-        if ($raw.bytes - 2) ≠ $raw[1] { die("Invalid capability payload length"); }
+    method from-raw(buf8:D $raw where $raw.bytes == 2) {
+        if $raw[0] ≠ 2 { die("Can only build a Route-Refresh capability"); }
+        if $raw[1] ≠ 0 { die("Bad capability length"); }
 
         my $obj = self.bless(:$raw);
         return $obj;
     };
 
     method from-hash(%params is copy)  {
-        my @REQUIRED = «capability-code value»;
+        my @REQUIRED = «»;
+
+        if %params<capability-code>:exists {
+            if %params<capability-code> ≠ 2 {
+                die "Can only create a route-refresh capability";
+            }
+            %params<capability-code>.delete;
+        }
+
+        if %params<capability-name>:exists {
+            if %params<capability-name> ne "Route-Refresh" {
+                die "Can only create a route-refresh capability";
+            }
+            %params<capability-name>.delete;
+        }
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
             die("Did not provide proper options");
         }
 
-        # Yes, it's ^254, not ^256, because the maximum parameter size is
-        # 255 bytes - so 253 bytes max (^254) plus the octets
-        # representing the capability's code point and the capability's
-        # length bring us to 253 + 2 = 255.
-        if %params<capability-code> !~~ ^254 { die "Capability code is invalid" }
-
-        if %params<value>.bytes > 255 { die "Value is longer than 255 bytes" }
-
         my buf8 $capability = buf8.new();
-        $capability.append( %params<capability-code> );
-        $capability.append( %params<value>.bytes );
-        $capability.append( %params<value> );
+        $capability.append( 2 );  # Code
+        $capability.append( 0 );  # Length
 
         return self.bless(:raw( $capability ));
     };
 
     method Str(-->Str:D) {
-        "Code=" ~ self.capability-name ~ " Len=" ~ self.capability-length;
+        "Route-Refresh";
     }
 }
 
 # Register capability
-INIT { Net::BGP::Capability.register(Net::BGP::Capability::Generic) }
+INIT { Net::BGP::Capability.register(Net::BGP::Capability::Route-Refresh) }
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Message::Capability::Generic - BGP Generic Capability Object
+Net::BGP::Message::Capability::Route-Refresh - BGP Route-Refresh Capability Object
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Capability::Generic;
+  use Net::BGP::Capability::Route-Refresh;
 
-  my $cap = Net::BGP::Capability::Generic.from-raw( $raw );
+  my $cap = Net::BGP::Capability::Route-Refresh.from-raw( $raw );
   # or …
-  my $cap = Net::BGP::Capability::Generic.from-hash(
-    %{ capability-name => 'ASN32', asn => '65550' }
-  );
+  my $cap = Net::BGP::Capability::Route-Refresh.from-hash( %{ } );
 
 =head1 DESCRIPTION
 
@@ -95,7 +99,7 @@ data (C<value> in RFC standards).
 
 =head2 capability-code
 
-Cpaability code of the object.
+Capability code of the object.
 
 =head2 capability-name
 

@@ -10,6 +10,7 @@ use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Peer-List;
 use Net::BGP::IP;
 use Net::BGP::Message::Keep-Alive;
+use Net::BGP::Parameter::Capabilities;
 use Net::BGP::Time;
 
 # NOTE: The controller is running on the connection thread, for any
@@ -52,20 +53,30 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             return;
         }
 
-        if $open.option-len > 0 {
-            # We don't speak *ANY* options yet
-            my $msg = Net::BGP::Message.from-hash(
-                %{
-                    message-name  => 'NOTIFY',
-                    error-name    => 'Open',
-                    error-subname => 'Unsupported-Optional-Parameter',
+        # Process Parmaters
+        my @capabilities;
+        for $open.parameters -> $param {
+            if $param ~~ Net::BGP::Parameter::Capabilities {
+                for $param.capabilities -> $cap {
+                    @capabilities.push: $cap;
                 }
-            );
-            $connection.send-bgp($msg);
-            $connection.close;
-            return;
+            } else {
+                # We don't speak this option yet
+                # XXX We should thorw an event to the user so they know
+                my $msg = Net::BGP::Message.from-hash(
+                    %{
+                        message-name  => 'NOTIFY',
+                        error-name    => 'Open',
+                        error-subname => 'Unsupported-Optional-Parameter',
+                    }
+                );
+                $connection.send-bgp($msg);
+                $connection.close;
+                return;
+            }
         }
 
+        # Negotiate capabilities
         $p.lock.protect: {
             # We know we have a connection from a peer that is valid. So
             # lets see if we have a connection to that peer already
@@ -78,9 +89,13 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             # So we know we're the best connection to be active
             $p.peer-identifier = $open.identifier;
             $p.connection      = $connection;
+            
+            # XXX If we think they don't support capabilities, but
+            # they do, what do we do?
+            $p.supports-capabilities = @capabilities.elems.so;
 
             if $connection.inbound {
-                self.send-open($connection);
+                self.send-open($connection, $p.supports-capabilities);
                 $p.state = Net::BGP::Peer::OpenConfirm;
             } else {
                 self.send-keep-alive($connection);
@@ -195,7 +210,11 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         }
     }
 
-    method send-open(Net::BGP::Connection-Role:D $connection -->Nil) {
+    method send-open(
+        Net::BGP::Connection-Role:D $connection,
+        Bool:D $supports-capabilities
+        -->Nil
+    ) { 
         my $msg = Net::BGP::Message.from-hash(
             %{
                     message-name  => 'OPEN',

@@ -8,7 +8,9 @@ use v6;
 # Ensure capabilities are registered, even though we don't use them
 # here.
 use Net::BGP::Capability;
+use Net::BGP::Capability::ASN32;
 use Net::BGP::Capability::Generic;
+use Net::BGP::Capability::Route-Refresh;
 
 use Net::BGP::Error::Bad-Parameter-Length;
 use Net::BGP::Parameter;
@@ -110,7 +112,7 @@ class Net::BGP::Parameter::Capabilities:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BG
     }
 
     method Str(-->Str) {
-        "Type={ self.parameter-code } Len={ self.parameter-length }";
+        "CAP=[" ~ self.capabilities.map({ .Str }).join('; ') ~ "]";
     }
 }
 

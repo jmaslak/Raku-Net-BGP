@@ -13,9 +13,10 @@ my subset Port of UInt where ^2¹⁶;
 my subset Asn  of UInt where ^2¹⁶;
 
 sub MAIN(
-    Int:D :$port = 179,
-    Int:D :$my-asn,
-    Int:D :$peer-asn,       # XXX should allow per-per spec
+    Bool:D               :$passive? = False,
+    Int:D                :$port = 179,
+    Int:D                :$my-asn,
+    Int:D                :$peer-asn,       # XXX should allow per-per spec
     Net::BGP::IP::ipv4:D :$my-bgp-id,
     *@peers
 ) {
@@ -27,7 +28,7 @@ sub MAIN(
 
     # Add peers
     for @peers -> $peer-ip {
-        $bgp.peer-add( :$peer-asn, :$peer-ip );  # XXX Should allow peer port spec
+        $bgp.peer-add( :$peer-asn, :$peer-ip :$passive );  # XXX Should allow peer port spec
     }
 
     # Start the TCP socket

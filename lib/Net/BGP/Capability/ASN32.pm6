@@ -6,77 +6,87 @@ use v6;
 #
 
 use Net::BGP::Capability;
+use Net::BGP::Conversions;
 
-class Net::BGP::Capability::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Capability::ASN32:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
 {
     # Generic Types
-    method implemented-capability-code(-->Int) { Int }
-    method implemented-capability-name(-->Str) { Str }
+    method implemented-capability-code(-->Int) { 65 }
+    method implemented-capability-name(-->Str) { "ASN32" }
 
-    method capability-name(-->Str:D) { "{ $.raw[0] }" }
+    method capability-name(-->Str:D) { "ASN32" }
     
     method new() {
         die("Must use from-raw or from-hash to construct a new object");
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
-        if ($raw.bytes - 2) ≠ $raw[1] { die("Invalid capability payload length"); }
+    method from-raw(buf8:D $raw where $raw.bytes == 6) {
+        if $raw[0] ≠ 65 { die("Can only build a ASN32 capability"); }
+        if $raw[1] ≠  4 { die("Bad capability length"); }
 
         my $obj = self.bless(:$raw);
         return $obj;
     };
 
     method from-hash(%params is copy)  {
-        my @REQUIRED = «capability-code value»;
+        my @REQUIRED = «asn»;
+
+        if %params<capability-code>:exists {
+            if %params<capability-code> ≠ 2 {
+                die "Can only create a ASN32 capability";
+            }
+            %params<capability-code>.delete;
+        }
+
+        if %params<capability-name>:exists {
+            if %params<capability-name> ne "ASN32" {
+                die "Can only create a ASN32 capability";
+            }
+            %params<capability-name>.delete;
+        }
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
             die("Did not provide proper options");
         }
 
-        # Yes, it's ^254, not ^256, because the maximum parameter size is
-        # 255 bytes - so 253 bytes max (^254) plus the octets
-        # representing the capability's code point and the capability's
-        # length bring us to 253 + 2 = 255.
-        if %params<capability-code> !~~ ^254 { die "Capability code is invalid" }
-
-        if %params<value>.bytes > 255 { die "Value is longer than 255 bytes" }
-
         my buf8 $capability = buf8.new();
-        $capability.append( %params<capability-code> );
-        $capability.append( %params<value>.bytes );
-        $capability.append( %params<value> );
+        $capability.append( 65 );  # Code
+        $capability.append( 4 );   # Length
+        $capability.append( %params<asn> );
 
         return self.bless(:raw( $capability ));
     };
 
+    method asn(-->Int:D) {
+        return nuint32($.raw[2..5]);
+    }
+
     method Str(-->Str:D) {
-        "Code=" ~ self.capability-name ~ " Len=" ~ self.capability-length;
+        "ASN32=" ~ self.asn;
     }
 }
 
 # Register capability
-INIT { Net::BGP::Capability.register(Net::BGP::Capability::Generic) }
+INIT { Net::BGP::Capability.register(Net::BGP::Capability::ASN32) }
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Message::Capability::Generic - BGP Generic Capability Object
+Net::BGP::Message::Capability::ASN32 - BGP Four Octet ASN Capability Object
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Capability::Generic;
+  use Net::BGP::Capability::ASN32;
 
-  my $cap = Net::BGP::Capability::Generic.from-raw( $raw );
+  my $cap = Net::BGP::Capability::ASN32.from-raw( $raw );
   # or …
-  my $cap = Net::BGP::Capability::Generic.from-hash(
-    %{ capability-name => 'ASN32', asn => '65550' }
-  );
+  my $cap = Net::BGP::Capability::ASN32.from-hash( %{ asn => 65550 } );
 
 =head1 DESCRIPTION
 
-BGP Capability Object
+BGP Four Octet ASN Capability Object
 
 =head1 Constructors
 
@@ -93,9 +103,13 @@ data (C<value> in RFC standards).
 
 =head1 Methods
 
+=head2 asn
+
+ASN present in the capability object.
+
 =head2 capability-code
 
-Cpaability code of the object.
+Capability code of the object.
 
 =head2 capability-name
 

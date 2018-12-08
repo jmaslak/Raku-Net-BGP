@@ -46,10 +46,23 @@ subtest 'Open Message w/ Capabilities', {
     ok $bgp.parameters[0] ~~ Net::BGP::Parameter::Capabilities, "Parameter is a Capabilitiy";
     is $bgp.parameters[0].parameter-code, 2, "Parameter has proper code";
     is $bgp.parameters[0].parameter-name, "Capabilities", "Parameter has proper name";
-    is $bgp.parameters[0].capabilities.elems, 1, "Proper number of capabilities";
-    ok $bgp.parameters[0].capabilities[0] ~~ Net::BGP::Capability::Generic, "Capability is proper type";
-    is $bgp.parameters[0].capabilities[0].capability-code, 1, "Capability has proper code";
-    is $bgp.parameters[0].capabilities[0].capability-name, "1", "Capability has proper code";
+
+    my $caps = $bgp.parameters[0].capabilities;
+    is $caps.elems, 3, "Proper number of capabilities";
+
+    ok $caps[0] ~~ Net::BGP::Capability::Route-Refresh, "Capability¹ is proper type";
+    is $caps[0].capability-code, 2,                     "Capability¹ has proper code";
+    is $caps[0].capability-name, "Route-Refresh",       "Capability¹ has proper code";
+
+    ok $caps[1] ~~ Net::BGP::Capability::ASN32, "Capability² is proper type";
+    is $caps[1].capability-code, 65,            "Capability² has proper code";
+    is $caps[1].capability-name, "ASN32",       "Capability² has proper code";
+    is $caps[1].asn, :16('12345678'),           "Capability² has proper code";
+
+    ok $caps[2] ~~ Net::BGP::Capability::Generic, "Capability³ is proper type";
+    is $caps[2].capability-code, 1,               "Capability³ has proper code";
+    is $caps[2].capability-name, "1",             "Capability³ has proper code";
+
     ok check-list($bgp.raw, read-message('open-message-capabilities')), 'Message value correct';;
 
     done-testing;

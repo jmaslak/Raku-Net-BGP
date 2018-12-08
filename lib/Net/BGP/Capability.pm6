@@ -17,6 +17,7 @@ class Net::BGP::Capability:ver<0.0.0>:auth<cpan:JMASLAK>
     method implemented-capability-name(-->Str)   { … }
     method capability-code\           (-->Int:D) { $!raw[0] }
     method capability-name\           (-->Str:D) { $!raw[0] }
+    method capability-length\         (-->Int:D) { $!raw[1] }
     
     method payload(-->buf8:D) {
         if $.raw[1] == 0 { return buf8.new }
@@ -33,8 +34,8 @@ class Net::BGP::Capability:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
-        if %capability-codes{ $raw[1] }:exists {
-            return %capability-codes{ $raw[1] }.from-raw($raw);
+        if %capability-codes{ $raw[0] }:exists {
+            return %capability-codes{ $raw[0] }.from-raw($raw);
         } else {
             return %capability-codes{ Int }.from-raw($raw);
         }
