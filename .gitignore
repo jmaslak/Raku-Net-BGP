@@ -6,3 +6,4 @@
 /resources/*.dylib
 .precomp/
 /Net-BGP-*
+test.sh
