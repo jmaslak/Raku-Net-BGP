@@ -228,32 +228,30 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         my $socket = $socket-promise.result;
 
         my $conn;
-        $peer.lock.protect: {
-            if $peer.connection.defined { return } # Just in case it got defined
+        if $peer.connection.defined { return } # Just in case it got defined
 
-            $conn = Net::BGP::Connection.new(
-                :socket($socket),
-                :listener-channel($!listener-channel),
-                :user-supplier($!user-supplier),
-                :bgp-handler($.controller),
-                :remote-ip($socket.peer-host),
-                :remote-port($socket.peer-port),
-                :inbound(False),
-            );
+        $conn = Net::BGP::Connection.new(
+            :socket($socket),
+            :listener-channel($!listener-channel),
+            :user-supplier($!user-supplier),
+            :bgp-handler($.controller),
+            :remote-ip($socket.peer-host),
+            :remote-port($socket.peer-port),
+            :inbound(False),
+        );
 
-            # Add peer to connection
-            $peer.connection = $conn;
+        # Add peer to connection
+        $peer.connection = $conn;
 
-            # Set up connection object
-            $!controller.connections.add($conn);
+        # Set up connection object
+        $!controller.connections.add($conn);
 
-            # Send Open
-            $peer.state = Net::BGP::Peer::OpenSent;
-            $!controller.send-open($conn,
-                :hold-time($peer.my-hold-time),
-                :supports-capabilities($peer.supports-capabilities),
-            );
-        }
+        # Send Open
+        $peer.state = Net::BGP::Peer::OpenSent;
+        $!controller.send-open($conn,
+            :hold-time($peer.my-hold-time),
+            :supports-capabilities($peer.supports-capabilities),
+        );
 
         # Let user know.
         $!user-supplier.emit(

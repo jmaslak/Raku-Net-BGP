@@ -101,8 +101,8 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
                     :supports-capabilities($p.supports-capabilities),
                     :hold-time($p.my-hold-time),
                 );
-                $p.state = Net::BGP::Peer::OpenConfirm;
             }
+            $p.state = Net::BGP::Peer::OpenConfirm;
 
             self.send-keep-alive($connection);
         }
