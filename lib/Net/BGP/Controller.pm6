@@ -1,4 +1,4 @@
-use v6;
+use v6.d;
 
 #
 # Copyright © 2018 Joelle Maslak
@@ -20,7 +20,6 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     does Net::BGP::Controller-Handle-BGP
 {
     has Int:D $.my-asn            is required where ^65536;
-    has Int:D $.default-hold-time             where ^65536 = 0;
     has Int:D $.identifier        is required where ^(2³²);
 
     has Net::BGP::Peer-List:D       $.peers       = Net::BGP::Peer-List.new(:$!my-asn);
@@ -78,6 +77,8 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
         # Negotiate capabilities
         $p.lock.protect: {
+            $p.last-message-received = monotonic-whole-seconds;
+
             # We know we have a connection from a peer that is valid. So
             # lets see if we have a connection to that peer already
             if $p.connection.defined && ($p.connection.id ≠ $connection.id) {
@@ -95,12 +96,15 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             $p.supports-capabilities = @capabilities.elems.so;
 
             if $connection.inbound {
-                self.send-open($connection, $p.supports-capabilities);
+                self.send-open(
+                    $connection,
+                    :supports-capabilities($p.supports-capabilities),
+                    :hold-time($p.my-hold-time),
+                );
                 $p.state = Net::BGP::Peer::OpenConfirm;
-            } else {
-                self.send-keep-alive($connection);
-                $p.state = Net::BGP::Peer::Established; # XXX We should wait until we receive the keepalive...
             }
+
+            self.send-keep-alive($connection);
         }
 
         # Add the connection to the connection table
@@ -120,15 +124,12 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             return;
         }
 
-        # XXX Only if $conn is not inbound.
-        if ! $connection.inbound { return; }       # XXX Don't reply to keep alives we don't initiate
-
-        self.send-keep-alive($connection);
-
         $p.lock.protect: {
             # If the peer exists and is the current peer, in OpenConfirm state,
             # move to ESTABLISHED
             if $p.connection.defined && ($p.connection.id == $connection.id ) {
+                $p.last-message-received = monotonic-whole-seconds;
+
                 if $p.state == Net::BGP::Peer::OpenConfirm {
                     $p.state = Net::BGP::Peer::Established;
                 }
@@ -141,7 +142,21 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         Net::BGP::Connection-Role:D $connection,
         Net::BGP::Message:D $msg
     ) {
-        return; # XXX We don't do anything for most messages right now
+        # Does the peer exist?
+        my $p = self.peers.get($connection.remote-ip);
+        if ! $p.defined {
+            # Bad peer, we just close the connection, it's an invalid
+            # peer.
+            $connection.close;
+            return;
+        }
+
+        $p.lock.protect: {
+            if $p.connection.defined && ($p.connection.id == $connection.id ) {
+                $p.last-message-received = monotonic-whole-seconds;
+                return; # XXX We don't do anything for most messages right now
+            }
+        }
     }
 
     multi method handle-error(
@@ -212,14 +227,15 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
     method send-open(
         Net::BGP::Connection-Role:D $connection,
-        Bool:D $supports-capabilities
+        Bool:D                      :$supports-capabilities,
+        Int:D                       :$hold-time
         -->Nil
     ) { 
         my $msg = Net::BGP::Message.from-hash(
             %{
                     message-name  => 'OPEN',
                     asn           => $.my-asn,
-                    hold-time     => $.default-hold-time,
+                    hold-time     => $hold-time,
                     identifier    => $.identifier,
             }
         );
@@ -233,6 +249,26 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             }
         );
         $connection.send-bgp($msg);
+    }
+
+    method update-last-sent(Net::BGP::Connection-Role:D $connection -->Nil) {
+        my $p = self.peers.get($connection.remote-ip);
+        if ! $p.defined {
+            # Do nothing;
+            return;
+        }
+
+        $p.lock.protect: {
+            if $p.connection.defined && ($p.connection.id == $connection.id ) {
+                if $p.state == Net::BGP::Peer::Established {
+                    $p.last-message-sent = monotonic-whole-seconds;
+                } elsif $p.state == Net::BGP::Peer::OpenSent {
+                    $p.last-message-sent = monotonic-whole-seconds;
+                } elsif $p.state == Net::BGP::Peer::OpenConfirm {
+                    $p.last-message-sent = monotonic-whole-seconds;
+                }
+            }
+        }
     }
 }
 
@@ -266,7 +302,7 @@ Processes a received BGP message.
 
 Process a BGP exception.
 
-=head2 connection-closed(Net::BGP::Connection-Role:D) {
+=head2 connection-closed(Net::BGP::Connection-Role:D)
 
 Removes a BGP connection from the connection list and peer object.
 

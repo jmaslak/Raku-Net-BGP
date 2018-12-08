@@ -1,4 +1,4 @@
-use v6.c;
+use v6.d;
 
 #
 # Copyright © 2018 Joelle Maslak
@@ -38,6 +38,7 @@ use Net::BGP::Message::Notify::Open::Bad-Peer-AS;
 use Net::BGP::Message::Notify::Open::Generic;
 use Net::BGP::Message::Notify::Open::Unsupported-Optional-Parameter;
 use Net::BGP::Message::Notify::Open::Unsupported-Version;
+use Net::BGP::Message::Notify::Hold-Timer-Expired;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     our subset PortNum of Int where ^65536;
@@ -199,64 +200,103 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     # Deal with clock tick
     method tick(-->Nil) {
-        my $p = $.controller.peers.get-peer-due-for-connect;
-        if ! $p.defined { return; }
+        self.connect-if-needed;
+        self.send-keepalives;
+        self.reap-dead-connections;
+    }
 
-        $p.lock.protect: {
-            if $p.connection.defined { return; }    # Someone created a connection
+    method connect-if-needed(-->Nil) {
+        loop {
+            my $p = $.controller.peers.get-peer-due-for-connect;
+            if ! $p.defined { return; }
 
-            $p.last-connect-attempt = monotonic-whole-seconds;
-        }
-
-        my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);
-
-        start {
-            my $socket = $promise.result;
-
-            my $conn;            
             $p.lock.protect: {
-                if $p.connection.defined { done() } # Just in case it got defined
+                if $p.connection.defined { next; }    # Someone created a connection
 
-                $conn = Net::BGP::Connection.new(
-                    :socket($socket),
-                    :listener-channel($!listener-channel),
-                    :user-supplier($!user-supplier),
-                    :bgp-handler($.controller),
-                    :remote-ip($socket.peer-host),
-                    :remote-port($socket.peer-port),
-                    :inbound(False),
-                );
-
-                # Add peer to connection
-                $p.connection = $conn;
-
-                # Set up connection object
-                $!controller.connections.add($conn);
-
-                # Send Open
-                $!controller.send-open($conn);
-                $p.state = Net::BGP::Peer::OpenSent;
+                $p.last-connect-attempt = monotonic-whole-seconds;
             }
 
-            # Let user know.
-            $!user-supplier.emit(
-                Net::BGP::Event::New-Connection.new(
-                    :client-ip( $socket.peer-host ),
-                    :client-port( $socket.peer-port ),
-                    :connection-id( $conn.id ),
-                ),
-            );
+            my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);
 
-            $conn.handle-messages;
+            start {
+                my $socket = $promise.result;
 
-            CATCH {
-                default {
-                    # We should log better
-                    $*ERR.say("Error in child process!");
-                    $*ERR.say(.message);
-                    $*ERR.say(.backtrace.join);
-                    .rethrow;
+                my $conn;
+                $p.lock.protect: {
+                    if $p.connection.defined { done() } # Just in case it got defined
+
+                    $conn = Net::BGP::Connection.new(
+                        :socket($socket),
+                        :listener-channel($!listener-channel),
+                        :user-supplier($!user-supplier),
+                        :bgp-handler($.controller),
+                        :remote-ip($socket.peer-host),
+                        :remote-port($socket.peer-port),
+                        :inbound(False),
+                    );
+
+                    # Add peer to connection
+                    $p.connection = $conn;
+
+                    # Set up connection object
+                    $!controller.connections.add($conn);
+
+                    # Send Open
+                    $p.state = Net::BGP::Peer::OpenSent;
+                    $!controller.send-open($conn);
                 }
+
+                # Let user know.
+                $!user-supplier.emit(
+                    Net::BGP::Event::New-Connection.new(
+                        :client-ip( $socket.peer-host ),
+                        :client-port( $socket.peer-port ),
+                        :connection-id( $conn.id ),
+                    ),
+                );
+
+                $conn.handle-messages;
+
+                CATCH {
+                    default {
+                        # We should log better
+                        $*ERR.say("Error in child process!");
+                        $*ERR.say(.message);
+                        $*ERR.say(.backtrace.join);
+                        .rethrow;
+                    }
+                }
+            }
+        }
+    }
+
+    method send-keepalives(-->Nil) {
+        loop {
+            my $p = $.controller.peers.get-peer-due-for-keepalive;
+            if ! $p.defined { return; }
+
+            $p.lock.protect: {
+                if ! $p.connection.defined { next; }
+                $.controller.send-keep-alive($p.connection);
+            }
+        }
+    }
+
+    method reap-dead-connections(-->Nil) {
+        loop {
+            my $p = $.controller.peers.get-peer-dead;
+            if ! $p.defined { return; }
+
+            $p.lock.protect: {
+                if ! $p.connection.defined { next; }
+                my $msg = Net::BGP::Message.from-hash(
+                    %{
+                        message-name => 'NOTIFY',
+                        error-name   => 'Hold-Timer-Expired',
+                    },
+                );
+                $p.connection.send-bgp($msg);
+                $p.connection.close;
             }
         }
     }

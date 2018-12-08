@@ -25,4 +25,7 @@ role Net::BGP::Controller-Handle-BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     # Deal with closed connections
     method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) { … }
+
+    # Update last sent time
+    method update-last-sent(Net::BGP::Connection-Role:D $connection -->Nil) { … }
 }

@@ -115,6 +115,9 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
 
         # Actually send them.
         self.socket.write($outbuf);
+
+        # controller
+        $.bgp-handler.update-last-sent(self);
     }
 
     # WARNING - THIS METHOD HAS SIDE EFFECTS!

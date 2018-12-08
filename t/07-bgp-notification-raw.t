@@ -71,6 +71,20 @@ subtest 'Header Notification Connection not Syncronized', {
     done-testing;
 };
 
+subtest 'Hold-Timer-Expired', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-hold-timer-expired') );
+    ok defined($bgp), "BGP message is defined";
+    is $bgp.raw.list, read-message('notify-hold-timer-expired').list, "raw matches message";
+    is $bgp.message-code, 3, 'Message type is correct';
+    is $bgp.message-name, 'NOTIFY', 'Message code is correct';
+    is $bgp.error-code, 4, 'Error code is correct';
+    is $bgp.error-name, 'Hold-Timer-Expired', 'Error name is correct';
+    is $bgp.error-subcode, 0, 'Error subtype is correct';
+    is $bgp.error-subname, '0', 'Error subtype is correct';
+    ok $bgp ~~ Net::BGP::Message::Notify::Hold-Timer-Expired, 'Class is correct';
+    ok check-list($bgp.raw, read-message('notify-hold-timer-expired')), 'Message value correct';
+}
+
 done-testing;
 
 sub read-message($filename) {

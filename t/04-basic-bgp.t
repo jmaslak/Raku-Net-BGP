@@ -12,11 +12,6 @@ use Net::BGP::Conversions;
 if (!check-compiler-version) {
     skip "Compiler doesn't support dynamic IO::Socket::Async port listening";
 } else {
-    subtest 'Valid', {
-        test-valid();
-        done-testing;
-    };
-
     subtest 'invalid-marker', {
         my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
         is $bgp.port, 0, 'BGP Port is 0';
@@ -250,7 +245,7 @@ if (!check-compiler-version) {
         ok $msg ~~ Net::BGP::Message::Open, "Message is proper type";
         is $msg.version, 4, "Version correct";
         is $msg.asn, 65000, "ASN is correct";
-        is $msg.hold-time, 0, "Hold-Time is correct";
+        is $msg.hold-time, 60, "Hold-Time is correct";
         is $msg.identifier, 1000, "Identifier is correct";
         is $msg.option-len, 0, "Option length is correct";
         is $msg.parameters.elems, 0, "No parameters provided";
@@ -289,52 +284,5 @@ sub check-compiler-version(--> Bool) {
 sub check-list($a, $b -->Bool) {
     if $a.elems != $b.elems { return False; }
     return [&&] $a.values Z== $b.values;
-}
-
-sub test-valid() {
-    my $bgp = Net::BGP.new( port => 0, my-asn => 65000, identifier => 1000 );
-    is $bgp.port, 0, 'BGP Port is 0';
-
-    $bgp.listen();
-    isnt $bgp.port, 0, 'BGP Port isnt 0';
-
-    is $bgp.my-asn, 65000, "ASN is correct";
-
-    $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1'), :passive);
-    dies-ok { $bgp.peer-add(:peer-asn(65001), :peer-ip('192.0.2.1'), :passive) },
-        "Cannot add a duplicate peer";
-
-    my $client = IO::Socket::INET.new(:host<127.0.0.1>, :port($bgp.port));
-    my $uc = $bgp.user-channel;
-    my $cr = $uc.receive;
-    is $cr.message-name, 'New-Connection', 'Message type is as expected';
-    is $cr.connection-id, 0, 'Connection ID is as expected';
-
-    $client.write( read-message('t/bgp-messages/noop-message.msg') );
-
-    my $cr-bgp = $uc.receive;
-    is $cr-bgp.message-name, 'BGP-Message', 'BGP message type is as expected';
-    is $cr-bgp.is-error, False, 'Is not an error';
-    is $cr-bgp.message.message-name, 0, 'BGP Message is proper type';
-    is $cr-bgp.connection-id, 0, 'BGP Message connection ID is as expected';
-
-    my $open = Net::BGP::Message::Open.from-hash( {
-        :asn(65000),
-        :hold-time(0),
-        :identifier('1.2.3.4'),
-    } );
-    $bgp.send-bgp($cr-bgp.connection-id, $open);
-
-    my $get = $client.recv(:bin);
-    ok check-list($get.subbuf(18), $open.raw), "BGP message sent properly";
-
-    $client.close();
-
-    my $cr-bad = $uc.receive;
-    is $cr-bad.message-name, 'Closed-Connection', 'Close message type is as expected';
-    is $cr-bad.is-error, False, 'Is not an error';
-    is $cr-bad.connection-id, 0, 'Close message connection ID is as expected';
-    
-    $bgp.listen-stop();
 }
 

@@ -76,6 +76,56 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
     }
 
+    method get-peer-due-for-keepalive(-->Net::BGP::Peer) {
+        my $now = monotonic-whole-seconds;
+        for %!peers.values -> $peer {
+            $peer.lock.protect: {
+                if ! $peer.connection.defined                { next; }
+                if $peer.state ≠ Net::BGP::Peer::Established { next; }
+
+                # Get time
+                my $hold-time = min($peer.peer-hold-time, $peer.my-hold-time);
+                if $hold-time == 0 { next; }
+
+                # Never sent?
+                if ! $peer.last-message-sent.defined { return $peer; }
+
+                # Send time
+                my $send-time = ($hold-time / 3).truncate;
+
+                # Connected in the past by at least retry time?
+                if $now ≥ ($peer.last-message-sent + $send-time) {
+                    return $peer;
+                }
+            }
+        }
+    }
+
+    method get-peer-dead(-->Net::BGP::Peer) {
+        my $now = monotonic-whole-seconds;
+        for %!peers.values -> $peer {
+            $peer.lock.protect: {
+                if ! $peer.connection.defined                { next; }
+                if $peer.state ≠ Net::BGP::Peer::Established { next; }
+
+                # Get time
+                my $hold-time = min(($peer.peer-hold-time // 65535), $peer.my-hold-time);
+                if $hold-time == 0 { next; }
+
+                # Never received?
+                if ! $peer.last-message-received.defined { return $peer; }
+
+                # Send time
+                my $send-time = ($hold-time / 3).truncate;
+
+                # Connected in the past by at least retry time?
+                if $now ≥ (($peer.last-message-received // 0) + $send-time) {
+                    return $peer;
+                }
+            }
+        }
+    }
+
 };
 
 
