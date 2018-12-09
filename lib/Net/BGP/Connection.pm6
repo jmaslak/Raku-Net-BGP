@@ -163,7 +163,6 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
 
         # Remove message
         $!buffer.splice: 0, $expected-len, ();
-        $!buffer = buf8.new($!buffer);
 
         # Here we go - hand back parsed message
         return $bgp-msg;
