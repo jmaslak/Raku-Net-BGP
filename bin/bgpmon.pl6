@@ -44,6 +44,11 @@ sub MAIN(
     }
 }
 
+multi sub logevent(Net::BGP::Event::BGP-Message:D $event) {
+    state $counter = 0;
+    lognote("«" ~ $counter++ ~ "» " ~ $event.Str);
+}
+
 multi sub logevent(Net::BGP::Event:D $event) {
     lognote($event.Str);
 }
