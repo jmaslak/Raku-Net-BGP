@@ -47,7 +47,7 @@ sub MAIN(
             logevent($event);
 
             $messages-logged++;
-            if $messages-logged ≥ ($max-log-messages // $messages-logged) {
+            if $max-log-messages.defined && ($messages-logged ≥ $max-log-messages) {
                 log('*', "RUN TIME: " ~ (monotonic-whole-seconds() - $start) );
                 exit;
             }
