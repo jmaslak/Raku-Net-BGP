@@ -235,8 +235,10 @@ if (!check-compiler-version) {
         is $cr-bgp.message.option-len, 0, 'Option length is zero';
         is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
 
-        is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
-        is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
+        $bgp.peer-get(:peer-ip('127.0.0.1')).lock.protect: {
+            is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
+            is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
+        }
        
         my $pkt = $client.read(16); # Read (and silently discard) header
         my $raw = $client.read(nuint16($client.read(2))-18); # Read appropriate length
