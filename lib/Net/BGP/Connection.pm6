@@ -162,7 +162,8 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
         my $bgp-msg = Net::BGP::Message.from-raw( buf8.new(self.buffer[18..*]) );
 
         # Remove message
-        self.buffer.splice: 0, $expected-len, ();
+        $!buffer.splice: 0, $expected-len, ();
+        $!buffer = buf8.new($!buffer);
 
         # Here we go - hand back parsed message
         return $bgp-msg;
