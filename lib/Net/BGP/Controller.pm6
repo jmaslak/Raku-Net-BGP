@@ -272,6 +272,11 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
                     afi             => 'IPv6',
                     safi            => 'unicast',
                 },
+                %{
+                    capability-name => 'MPBGP',
+                    afi             => 'L2VPN',
+                    safi            => 'VPLS',
+                },
             );
         }
         
