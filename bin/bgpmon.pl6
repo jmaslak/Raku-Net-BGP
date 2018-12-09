@@ -8,6 +8,7 @@ use v6.d;
 
 use Net::BGP;
 use Net::BGP::IP;
+use Net::BGP::Time;
 
 my subset Port of UInt where ^2¹⁶;
 my subset Asn  of UInt where ^2¹⁶;
@@ -17,6 +18,7 @@ sub MAIN(
     Int:D                :$port = 179,
     Int:D                :$my-asn,
     Int:D                :$peer-asn,       # XXX should allow per-per spec
+    Int                  :$max-log-messages,
     Net::BGP::IP::ipv4:D :$my-bgp-id,
     *@peers
 ) {
@@ -37,20 +39,25 @@ sub MAIN(
 
     my $channel = $bgp.user-channel;
 
+    my $messages-logged = 0;
+    my $start = monotonic-whole-seconds;
+
     react {
         whenever $channel -> $event {
             logevent($event);
+
+            $messages-logged++;
+            if $messages-logged ≥ ($max-log-messages // $messages-logged) {
+                log('*', "RUN TIME: " ~ (monotonic-whole-seconds() - $start) );
+                exit;
+            }
         }
     }
 }
 
-multi sub logevent(Net::BGP::Event::BGP-Message:D $event) {
+multi sub logevent(Net::BGP::Event:D $event) {
     state $counter = 0;
     lognote("«" ~ $counter++ ~ "» " ~ $event.Str);
-}
-
-multi sub logevent(Net::BGP::Event:D $event) {
-    lognote($event.Str);
 }
 
 sub lognote(Str:D $msg) {
