@@ -7,4 +7,5 @@ Todo Items:
   * Constraint violation in message classes shouldn't kill everything
     (example: a capability with an invalid length to pass the from-raw
     anonymous constraints)
-
+  * If listening port cannot be bound, something bad should happen - it
+    should not just silently fail.
