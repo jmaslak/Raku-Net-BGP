@@ -6,6 +6,7 @@ use v6;
 #
 
 module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
+    use experimental :cached;
 
     # IPv4
     #
@@ -91,15 +92,19 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
 
     our subset ipv4_as_ipv6 of Str where m:i/ ^ '::ffff:' @octet**4 % '.' $ /;
 
-    our proto ip-cannonical(Str:D $ip -->Str) is export {*};
+    sub ip-cannonical(Str:D $ip -->Str) is export {
+        state %cached;
 
-    multi ip-cannonical(ipv6:D $ip -->Str) {
+        return %cached{$ip} || ( %cached{$ip} = _ip-cannonical($ip) );
+    }
+
+    multi _ip-cannonical(ipv6:D $ip -->Str) {
         return ipv6-compact($ip);
     }
-    multi ip-cannonical(ipv4:D $ip -->Str) {
+    multi _ip-cannonical(ipv4:D $ip -->Str) {
         return $ip;
     }
-    multi ip-cannonical(ipv4_as_ipv6:D $ip -->Str) {
+    multi _ip-cannonical(ipv4_as_ipv6:D $ip -->Str) {
         return S:i/^ '::ffff:' // given $ip;
     }
 
