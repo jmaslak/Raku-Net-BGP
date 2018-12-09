@@ -46,7 +46,10 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
 
         return gather {
             while $buf.bytes {
-                my $opt = Net::BGP::Parameter.from-raw($buf);
+                if $buf.bytes < 2             { die("Parameter too short"); }
+                if ($buf[1] + 2) > $buf.bytes { die("Parameter too short"); }
+
+                my $opt = Net::BGP::Parameter.from-raw($buf.subbuf(0, 2+$buf[1]));
                 take $opt;
 
                 my $len = $opt.parameter-length() + 2;
