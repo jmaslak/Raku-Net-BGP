@@ -51,6 +51,13 @@ point in time.
 
 Add a new peer to the BGP server.
 
+=head1 PATRONS
+
+Mythic Beasts, a managed and unmanaged VPS, dedicated server, web and
+email hosting company (among many other services) generously donated the use
+of a VPS host with IPv4 and IPv6 BGP feeds for the development of this module.
+Check them out at L<https://www.mythic-beasts.com/>.
+
 =head1 AUTHOR
 
 Joelle Maslak <jmaslak@antelope.net>

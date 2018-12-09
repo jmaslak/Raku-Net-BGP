@@ -54,6 +54,11 @@ add-peer
 
 Add a new peer to the BGP server.
 
+PATRONS
+=======
+
+Mythic Beasts, a managed and unmanaged VPS, dedicated server, web and email hosting company (among many other services) generously donated the use of a VPS host with IPv4 and IPv6 BGP feeds for the development of this module. Check them out at [https://www.mythic-beasts.com/](https://www.mythic-beasts.com/).
+
 AUTHOR
 ======
 
