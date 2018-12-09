@@ -262,12 +262,12 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
                     capability-name => 'ASN32',
                     asn             => $asn32,
                 },
-                #%{
-                #    capability-name => 'MPBGP',
-                #    afi             => 'IP',
-                #    safi            => 'unicast',
-                #},
                 %{
+                    capability-name => 'MPBGP',
+                    afi             => 'IP',
+                    safi            => 'unicast',
+                },
+                {
                     capability-name => 'MPBGP',
                     afi             => 'IPv6',
                     safi            => 'unicast',
