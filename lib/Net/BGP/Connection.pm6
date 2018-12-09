@@ -159,7 +159,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
         }
 
         # We delegate the hard work of parsing this message
-        my $bgp-msg = Net::BGP::Message.from-raw( buf8.new(self.buffer[18..*]) );
+        my $bgp-msg = Net::BGP::Message.from-raw: self.buffer.subbuf(18..($expected-len-1));
 
         # Remove message
         $!buffer.splice: 0, $expected-len, ();
