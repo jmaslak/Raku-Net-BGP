@@ -39,6 +39,7 @@ use Net::BGP::Message::Notify::Open::Generic;
 use Net::BGP::Message::Notify::Open::Unsupported-Optional-Parameter;
 use Net::BGP::Message::Notify::Open::Unsupported-Version;
 use Net::BGP::Message::Notify::Hold-Timer-Expired;
+use Net::BGP::Message::Update;
 
 class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     our subset PortNum of Int where ^65536;
