@@ -14,8 +14,8 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
     our subset ipv4 of Str where / ^ @octet**4 % '.' $ /;
     our subset ipv4_int of UInt where * < 2³²;
 
-    our sub ipv4-to-int(ipv4:D $ip) is export { # XXX We need to handle invalid IPs
-        my int $ipval = 0;
+    our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
+        my uint32 $ipval = 0;
         for $ip.split('.') -> Int(Str) $part {
             $ipval = $ipval +< 8 + $part;
         }
@@ -23,7 +23,7 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         return $ipval;
     }
 
-    our sub int-to-ipv4(ipv4_int:D $i) is export {
+    our sub int-to-ipv4(ipv4_int:D $i -->Str:D) is export {
         my uint32 $ip = $i;
         return join('.', $ip +> 24, $ip +> 16 +& 255, $ip +> 8 +& 255, $ip +& 255);
     }

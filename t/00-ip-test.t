@@ -7,6 +7,7 @@ use Test;
 #
 
 use Net::BGP::IP;
+use Net::BGP::CIDR;
 
 my @TESTS := (
     { ip => '1.2.3.4', val => 16909060 },
@@ -110,6 +111,31 @@ my @TESTS-INVALID := (
 
 for @TESTS-INVALID -> $test {
     is ip-valid($test), False, "$test ip-valid (invalid)";
+}
+
+my @CIDRS := «
+    0.0.0.0/0
+    10.0.0.0/8
+    10.0.0.0/24
+    192.0.2.4/30
+    255.255.255.255/32
+»;
+
+    is Net::BGP::CIDR.from-int(0, 0).Str,          "0.0.0.0/0",  "CIDR 0.0.0.0/24";
+    is Net::BGP::CIDR.from-int((10 +< 24), 8).Str, "10.0.0.0/8", "CIDR 10.0.0.0/8";
+
+for @CIDRS -> $cidr {
+    is Net::BGP::CIDR.from-str($cidr).Str, $cidr, "CIDR $cidr maps to CIDR";
+}
+
+my @BAD-CIDRS := «
+    0.0.0.0/a
+    192.0.2.1/33
+    3/29
+»;
+
+for @BAD-CIDRS -> $cidr {
+    dies-ok { Net::BGP::CIDR.from-str($cidr) }, "CIDR $cidr dies ok";
 }
 
 done-testing;
