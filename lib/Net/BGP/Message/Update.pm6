@@ -40,7 +40,7 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
 
         my $withdrawn = self.withdrawn;
         if $withdrawn.elems {
-            push @lines, "WITHDRAWN: " ~ $withdrawn.join(" ");
+            push @lines, "WITHDRAWN: " ~ $withdrawn».Str ==> join(" ");
         }
 
         my $nlri = self.nlri;
@@ -80,60 +80,14 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
         return self.bless(:data( buf8.new($out) ));
     };
 
-    method nlri(-->Array[Str:D]) {
-        my $buf = $.data.subbuf( self.nlri-start(), self.nlri-length() );
-
-        my Str:D @nlri = gather {
-            while $buf.bytes {
-                my $len = $buf[0];
-                if $len > 32 { die("NLRI length too long"); }
-
-                my $bytes = (($len+7) / 8).truncate;
-                if $buf.bytes < (1 + $bytes) { die("NLRI payload too short") }
-
-                my uint32 $ip = 0;
-                if ($bytes > 0) { $ip += $buf[1] +< 24; }
-                if ($bytes > 1) { $ip += $buf[2] +< 16; }
-                if ($bytes > 2) { $ip += $buf[3] +< 8; }
-                if ($bytes > 3) { $ip += $buf[4]; }
-
-                $ip = $ip +> (32 - $len) +< (32 - $len);  # Zero any trailing bits
-                take int-to-ipv4($ip) ~ "/$len";
-
-                $buf.splice: 0, $bytes+1, ();
-            }
-        }
-
-        return @nlri;
+    method nlri(-->Array[Net::BGP::CIDR:D]) {
+        Net::BGP::CIDR.packed-to-array( $.data.subbuf( self.nlri-start(), self.nlri-length() ));
     }
-    
-    method withdrawn(-->Array[Str:D]) {
-        my $buf = $.data.subbuf( self.withdrawn-start(), self.withdrawn-length() );
 
-        my Str:D @withdrawn = gather {
-            while $buf.bytes {
-                my $len = $buf[0];
-                if $len > 32 { die("Withdrawn length too long"); }
-
-                my $bytes = (($len+7) / 8).truncate;
-                if $buf.bytes < (1 + $bytes) { die("Withdrawn payload too short") }
-
-                my uint32 $ip = 0;
-                if ($bytes > 0) { $ip += $buf[1] +< 24; }
-                if ($bytes > 1) { $ip += $buf[2] +< 16; }
-                if ($bytes > 2) { $ip += $buf[3] +< 8; }
-                if ($bytes > 3) { $ip += $buf[4]; }
-
-                $ip = $ip +> (32 - $len) +< (32 - $len);  # Zero any trailing bits
-                take int-to-ipv4($ip) ~ "/$len";
-
-                $buf.splice: 0, $bytes+1, ();
-            }
-        }
-
-        return @withdrawn;
+    method withdrawn(-->Array[Net::BGP::CIDR:D]) {
+        Net::BGP::CIDR.packed-to-array( $.data.subbuf( self.withdrawn-start(), self.withdrawn-length() ));
     }
-    
+
     method raw() { return $.data; }
 }
 
