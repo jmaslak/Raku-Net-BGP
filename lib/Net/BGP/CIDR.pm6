@@ -27,7 +27,48 @@ method from-str(Str:D $ip) {
     return self.from-int(ipv4-to-int(@parts[0]), @parts[1].Int);
 }
 
+method packed-to-array(buf8:D $buf -->Array[Net::BGP::CIDR:D]) {
+     my Net::BGP::CIDR:D @nlri = gather {
+        while $buf.bytes {
+            my $len = $buf[0];
+            if $len > 32 { die("Pack length too long"); }
+
+            my $bytes = (($len+7) / 8).truncate;
+            if $buf.bytes < (1 + $bytes) { die("Pack payload too short") }
+
+            my uint32 $ip = 0;
+            if ($bytes > 0) { $ip += $buf[1] +< 24; }
+            if ($bytes > 1) { $ip += $buf[2] +< 16; }
+            if ($bytes > 2) { $ip += $buf[3] +< 8; }
+            if ($bytes > 3) { $ip += $buf[4]; }
+
+            $ip = $ip +> (32 - $len) +< (32 - $len);  # Zero any trailing bits
+            take self.from-int($ip, $len);
+
+            $buf.splice: 0, $bytes+1, ();
+        }
+    }
+
+    return @nlri;
+}
+
+method to-packed(-->buf8:D) {
+    my int32 $ip = $!prefix-int32 +> (32 - $!prefix-length);
+    $ip = $ip +< (32 - $!prefix-length);
+
+    my $buf = buf8.new;
+
+    $buf.append: $!prefix-length;
+    $buf.append(  $ip +> 24        ) if $!prefix-length >  0;
+    $buf.append( ($ip +> 16) % 256 ) if $!prefix-length >  8;
+    $buf.append( ($ip +>  8) % 256 ) if $!prefix-length > 16;
+    $buf.append(  $ip        % 256 ) if $!prefix-length > 24;
+
+    return $buf;
+}
+
 method Str(-->Str:D) {
+    if ! self.defined { return "Net::BGP::CIDR" }
     return $!cached-str if $!cached-str.defined;
 
     $!cached-str = int-to-ipv4($!prefix-int32) ~ "/$!prefix-length"
@@ -57,6 +98,15 @@ The integer value of the prefix address.
 =head2 prefix-length
 
 The integer value of the prefix length.
+
+method packed-to-array
+
+Takes a "packed" buffer of length + prefix and converts it into an array of
+C<Net::BGP::CIDR> objects.  These "packed" buffers are common in BGP structures.
+
+method to-packed
+
+Takes a C<Net::BGP::CIDR> object and produces a packed representation.
 
 =head1 METHODS
 

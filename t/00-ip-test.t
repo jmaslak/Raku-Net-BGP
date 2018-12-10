@@ -138,5 +138,31 @@ for @BAD-CIDRS -> $cidr {
     dies-ok { Net::BGP::CIDR.from-str($cidr) }, "CIDR $cidr dies ok";
 }
 
+my $buf = buf8.new(24, 192, 168, 1);
+my $res = Net::BGP::CIDR.packed-to-array($buf);
+is $res.elems,  1,                "Test 1 - Count Correct";
+is $res[0].Str, "192.168.1.0/24", "Test 1 - String Correct";
+
+$buf = buf8.new(23, 192, 168, 1);
+$res = Net::BGP::CIDR.packed-to-array($buf);
+is $res.elems,  1,                "Test 2 - Count Correct";
+is $res[0].Str, "192.168.0.0/23", "Test 2 - String Correct";
+
+$buf = buf8.new(0);
+$res = Net::BGP::CIDR.packed-to-array($buf);
+is $res.elems,  1,           "Test 3 - Count Correct";
+is $res[0].Str, "0.0.0.0/0", "Test 3 - String Correct";
+
+$buf = buf8.new(32, 255, 255, 255, 255);
+$res = Net::BGP::CIDR.packed-to-array($buf);
+is $res.elems,  1,                    "Test 4 - Count Correct";
+is $res[0].Str, "255.255.255.255/32", "Test 4 - String Correct";
+
+$buf = buf8.new(32, 255, 255, 255, 255, 24, 192, 168, 1);
+$res = Net::BGP::CIDR.packed-to-array($buf);
+is $res.elems,  2,                    "Test 5 - Count Correct";
+is $res[0].Str, "255.255.255.255/32", "Test 5a - String Correct";
+is $res[1].Str, "192.168.1.0/24",     "Test 5b - String Correct";
+
 done-testing;
 

@@ -7,6 +7,7 @@ use v6;
 
 use Net::BGP::Conversions;
 use Net::BGP::IP;
+use Net::BGP::CIDR;
 use Net::BGP::Message;
 use Net::BGP::Parameter;
 
