@@ -34,13 +34,13 @@ class Net::BGP::Capability::Generic:ver<0.0.0>:auth<cpan:JMASLAK>
             die("Did not provide proper options");
         }
 
+        if %params<capability-code> !~~ ^256 { die "Capability code is invalid" }
+
         # Yes, it's ^254, not ^256, because the maximum parameter size is
         # 255 bytes - so 253 bytes max (^254) plus the octets
         # representing the capability's code point and the capability's
         # length bring us to 253 + 2 = 255.
-        if %params<capability-code> !~~ ^254 { die "Capability code is invalid" }
-
-        if %params<value>.bytes > 255 { die "Value is longer than 255 bytes" }
+        if %params<value>.bytes !~~ ^254 { die "Value is longer than 255 bytes" }
 
         my buf8 $capability = buf8.new();
         $capability.append( %params<capability-code> );
