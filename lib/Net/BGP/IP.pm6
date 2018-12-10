@@ -6,8 +6,6 @@ use v6;
 #
 
 module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
-    use experimental :cached;
-
     # IPv4
     #
     #
