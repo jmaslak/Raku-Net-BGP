@@ -9,3 +9,4 @@
 profile-*.html
 test.sh
 test2.sh
+/*.log
