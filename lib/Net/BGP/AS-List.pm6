@@ -31,15 +31,13 @@ method asns(-->Array[Int:D]) {
         die("AS Path List too short");
     }
 
-    my Int:D @result = gather {
-        for ^(self.asn-count) -> $i {
-            if $!asn32 {
-                take nuint32( buf8.new($!raw.subbuf(2+$i*4, 4)) );
-            } else {
-                take nuint16( $!raw[2+$i*2], $!raw[3+$i*2] );
-            }
+    my Int:D @result = (^(self.asn-count)).hyper.map: -> $i {
+        if $!asn32 {
+            nuint32( buf8.new($!raw.subbuf(2+$i*4, 4)) );
+        } else {
+            nuint16( $!raw[2+$i*2], $!raw[3+$i*2] );
         }
-    }
+    };
 
    return @result;
 } 
