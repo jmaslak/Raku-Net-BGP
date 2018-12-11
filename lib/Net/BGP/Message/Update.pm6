@@ -10,10 +10,15 @@ use Net::BGP::IP;
 use Net::BGP::CIDR;
 use Net::BGP::Message;
 use Net::BGP::Parameter;
+use Net::BGP::Path-Attribute;
+use Net::BGP::Path-Attribute::Generic;
+use Net::BGP::Path-Attribute::Origin;
 
 class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
 {
+    has Bool:D $.asn32 is required;
+
     method new() {
         die("Must use from-raw or from-hash to construct a new object");
     }
@@ -34,6 +39,12 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
     method nlri-start(-->Int:D)  { self.path-start() + self.path-length; }
     method nlri-length(-->Int:D) { $.data.bytes - self.nlri-start() + 1; }
 
+    method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
+        return Net::BGP::Path-Attribute.path-attributes(
+            self.data.subbuf( self.path-start, self.path-length )
+        );
+    }
+
     method Str(-->Str) {
         my @lines;
         push @lines, "UPDATE";
@@ -48,13 +59,19 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
             push @lines, "NLRI: " ~ $nlri.join(" ");
         }
 
+        my $path-attributes = self.path-attributes;
+        for $path-attributes.sort( { $^a.path-attribute-code <=> $^b.path-attribute-code } ) -> $attr {
+            push @lines, "  ATTRIBUTE: " ~ $attr.Str;
+        }
+
         return join("\n      ", @lines);
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
-        my $obj = self.bless(:data( buf8.new($raw) ));
+    method from-raw(buf8:D $raw where $raw.bytes ≥ 2, Bool:D :$asn32) {
+        my $obj = self.bless(:data( buf8.new($raw) ), :$asn32);
 
         $obj.nlri-length();  # Just make sure we can read everything.
+        # XXX Need to validate components
 
         return $obj;
     };
@@ -134,6 +151,10 @@ Currently understood types include C<UPDATE>.
 =head2 message-code
 
 Contains an integer that corresponds to the message-code.
+
+=head2 path-attributes
+
+Returns an array of path attributes.
 
 =head2 raw
 

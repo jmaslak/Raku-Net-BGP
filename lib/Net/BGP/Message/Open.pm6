@@ -5,6 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
+use Net::BGP::Capability;
 use Net::BGP::Conversions;
 use Net::BGP::Error::Bad-Option-Length;
 use Net::BGP::Error::Hold-Time-Too-Short;
@@ -12,6 +13,7 @@ use Net::BGP::Error::Unknown-Version;
 use Net::BGP::IP;
 use Net::BGP::Message;
 use Net::BGP::Parameter;
+use Net::BGP::Parameter::Capabilities;
 
 class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
@@ -60,6 +62,24 @@ class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
                 }
             }
         }
+    }
+
+    method capabilities(-->Array[Net::BGP::Capability:D]) {
+        my Net::BGP::Capability:D @cap = gather {
+            for self.parameters -> $param {
+                if ($param ~~ Net::BGP::Parameter::Capabilities) {
+                    for $param.capabilities -> $cap {
+                        take $cap;
+                    }
+                }
+            }
+        }
+
+        return @cap;
+    }
+
+    method asn32-support(-->Bool:D) {
+        return self.capabilities.first( { $_ ~~ Net::BGP::Capability::ASN32 } ).defined;
     }
 
     method Str(-->Str) {
@@ -205,6 +225,14 @@ Version field of the BGP message (currently this only supports version 4).
 
 The ASN field of the source of the OPEN message
 
+=head2 asn32-support
+
+Returns true if the peer has 32 bit ASN support.
+
+=head2 capabilities
+
+A list of all individual capabilities in this open message.
+
 =head hold-time
 
 The hold time in seconds provided by the sender of the OPEN message
@@ -212,6 +240,10 @@ The hold time in seconds provided by the sender of the OPEN message
 =head identifier
 
 The BGP identifier of the sender.
+
+=head parameters
+
+A list of all individual parameters in this open message.
 
 =head2 raw
 

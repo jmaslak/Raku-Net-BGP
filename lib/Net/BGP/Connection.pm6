@@ -26,6 +26,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     has Supplier:D          $.user-supplier    is required; # To communicate with user
     has buf8:D              $.buffer = buf8.new;
     has Bool:D              $.closed           is rw = False;
+    has Bool:D              $.asn32            is rw = False;
 
     has Net::BGP::Controller-Handle-BGP:D $.bgp-handler is required;
 
@@ -160,6 +161,9 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
 
         # We delegate the hard work of parsing this message
         my $bgp-msg = Net::BGP::Message.from-raw: self.buffer.subbuf(18..($expected-len-1));
+
+        # Look for BGP ASN32 capability
+        if ($bgp-msg ~~ Net::BGP::Message::Open) { $!asn32 = $bgp-msg.asn32-support }
 
         # Remove message
         $!buffer.splice: 0, $expected-len, ();

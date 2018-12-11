@@ -28,11 +28,11 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
     method implemented-message-code(--> Int) { … }
     method implemented-message-name(--> Str) { … }
 
-    method from-raw(buf8:D $raw) {
+    method from-raw(buf8:D $raw, Bool:D :$asn32? = False) {
         if %registrations{ $raw[0] }:exists {
-            return %registrations{ $raw[0] }.from-raw($raw);
+            return %registrations{ $raw[0] }.from-raw($raw, :$asn32);
         } else {
-            return %registrations{Int}.from-raw($raw);
+            return %registrations{Int}.from-raw($raw, :$asn32);
         }
     };
 

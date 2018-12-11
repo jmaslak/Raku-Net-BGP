@@ -238,6 +238,7 @@ if (!check-compiler-version) {
         $bgp.peer-get(:peer-ip('127.0.0.1')).lock.protect: {
             is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
             is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
+            is $bgp.peer-get(:peer-ip('127.0.0.1')).connection.asn32, False, 'Connection does not support ASN32';
         }
        
         my $pkt = $client.read(16); # Read (and silently discard) header
