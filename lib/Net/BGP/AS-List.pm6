@@ -16,8 +16,6 @@ has buf8:D $.raw   is required where { $^a.bytes ≥ 2 };
 method check(-->Bool:D) {
     if $.raw[0] !~~ 1..2 { die("AS type must be 1 or 2") }
     if $.raw.bytes ≠ 2 + self.asn-size * self.asn-count {
-        say $.raw.bytes;
-        say $.raw.perl;
         die("Path segment wrong length");
     }
 
