@@ -24,7 +24,7 @@ method new() {
 
 method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
     if $raw[0] +& 0x10 {
-        if ($raw.bytes - 4) ≠ nuint16($raw.substr(2,2)) {
+        if ($raw.bytes - 4) ≠ nuint16($raw.subbuf(2,2)) {
             die("Invalid path-attribute payload length");
         }
     } else {
