@@ -31,7 +31,7 @@ method asns(-->Array[Int:D]) {
         die("AS Path List too short");
     }
 
-    my Int:D @result = (^(self.asn-count)).hyper.map: -> $i {
+    my Int:D @result = (^(self.asn-count)).map: -> $i {
         if $!asn32 {
             nuint32( buf8.new($!raw.subbuf(2+$i*4, 4)) );
         } else {
