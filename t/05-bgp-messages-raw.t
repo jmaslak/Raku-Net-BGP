@@ -10,7 +10,7 @@ use Net::BGP;
 use Net::BGP::Message;
 
 subtest 'Generic', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('noop-message') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('noop-message'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 0, 'Message type is correct';
     is $bgp.message-name, '0', 'Message code is correct';
@@ -20,7 +20,7 @@ subtest 'Generic', {
 };
 
 subtest 'Open Message', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('open-message') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('open-message'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 1, 'Message type is correct';
     is $bgp.message-name, 'OPEN', 'Message code is correct';
@@ -34,7 +34,7 @@ subtest 'Open Message', {
 };
 
 subtest 'Open Message w/ Capabilities', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('open-message-capabilities') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('open-message-capabilities'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 1, 'Message type is correct';
     is $bgp.message-name, 'OPEN', 'Message code is correct';
@@ -72,7 +72,7 @@ subtest 'Open Message w/ Capabilities', {
 };
 
 subtest 'Keep-Alive Message', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('keep-alive') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('keep-alive'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 4, 'Message type is correct';
     is $bgp.message-name, 'KEEP-ALIVE', 'Message code is correct';
@@ -82,7 +82,7 @@ subtest 'Keep-Alive Message', {
 };
 
 subtest 'Update Message (ASN16)', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('update-asn16') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('update-asn16'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     ok $bgp ~~ Net::BGP::Message::Update, "BGP message is proper type";
     is $bgp.message-code, 2, 'Message type is correct';

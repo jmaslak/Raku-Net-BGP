@@ -22,7 +22,7 @@ method new() {
     die("Must use from-raw or from-hash to construct a new object");
 }
 
-method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
+method from-raw(buf8:D $raw where $raw.bytes ≥ 3, Bool:D :$asn32) {
     if $raw[0] +& 0x10 {
         if ($raw.bytes - 4) ≠ nuint16($raw.subbuf(2,2)) {
             die("Invalid path-attribute payload length");
@@ -33,11 +33,11 @@ method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
         }
     }
 
-    my $obj = self.bless(:$raw);
+    my $obj = self.bless(:$raw, :$asn32);
     return $obj;
 };
 
-method from-hash(%params is copy)  {
+method from-hash(%params is copy, :$asn32)  {
     my @REQUIRED = «path-attribute-code value optional transitive partial»;
 
     %params<optional>   //= False;
@@ -70,7 +70,7 @@ method from-hash(%params is copy)  {
     
     $path-attribute.append( %params<value> );
 
-    return self.bless(:raw( $path-attribute ));
+    return self.bless(:raw( $path-attribute ), :$asn32);
 };
 
 method Str(-->Str:D) {

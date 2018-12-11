@@ -9,7 +9,7 @@ use Test;
 use Net::BGP;
 use Net::BGP::Message;
 
-my $bgp = Net::BGP::Message.from-raw( read-message('open-message-capabilities.2') );
+my $bgp = Net::BGP::Message.from-raw( read-message('open-message-capabilities.2'), :!asn32 );
 ok defined($bgp), "BGP message is defined";
 is $bgp.message-code, 1, 'Message type is correct';
 is $bgp.message-name, 'OPEN', 'Message code is correct';

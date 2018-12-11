@@ -7,106 +7,113 @@ use v6;
 
 use Net::BGP::Path-Attribute;
 
-unit class Net::BGP::Path-Attribute::Origin:ver<0.0.0>:auth<cpan:JMASLAK>
+unit class Net::BGP::Path-Attribute::AS-Path:ver<0.0.0>:auth<cpan:JMASLAK>
 is Net::BGP::Path-Attribute;
 
 use Net::BGP::Conversions;
+use Net::BGP::AS-List;
 
-# Origin Types
-method implemented-path-attribute-code(-->Int) { 1 }
-method implemented-path-attribute-name(-->Str) { "Origin" }
+# AS-Path Types
+method implemented-path-attribute-code(-->Int) { 2 }
+method implemented-path-attribute-name(-->Str) { "AS-Path" }
 
-method path-attribute-name(-->Str:D) { "Origin" }
+method path-attribute-name(-->Str:D) { "AS-Path" }
 
 method new() {
     die("Must use from-raw or from-hash to construct a new object");
 }
 
-method from-raw(buf8:D $raw where $raw.bytes == 4, Bool:D :$asn32) {
-    if   $raw[0] +& 0x80 { die("Optional flag not valid on Origin attribute") }
-    if ! $raw[0] +& 0x40 { die("Transitive flag must be set on Origin attribute") }
-    if   $raw[0] +& 0x20 { die("Partial flag not valid on Origin attribute") }
-    if   $raw[0] +& 0x10 { die("Extended length flag not valid on Origin attribute") }
+method from-raw(buf8:D $raw where $raw.bytes ≥ 3, :$asn32) {
+    if   $raw[0] +& 0x80 { die("Optional flag not valid on AS-Path attribute") }
+    if ! $raw[0] +& 0x40 { die("Transitive flag must be set on AS-Path attribute") }
+    if   $raw[0] +& 0x20 { die("Partial flag not valid on AS-Path attribute") }
 
-    if ($raw.bytes - 3) ≠ $raw[2] { die("Invalid path-attribute payload length") }
-
-    if   $raw[2] !~~ ^2  { die("Invalid origin in Origin attribute") }
+    my $aslist;
+    if $raw[0] +& 0x10 { # XXX Should check length field, but we skip it
+        $aslist = Net::BGP::AS-List.as-lists( buf8.new($raw[4..*]), $asn32 );
+    } else {
+        $aslist = Net::BGP::AS-List.as-lists( buf8.new($raw[3..*]), $asn32 );
+    }
+    @$aslist».check;     # Validate all are proper
 
     my $obj = self.bless(:$raw, :$asn32);
     return $obj;
 };
 
 method from-hash(%params is copy, Bool:D :$asn32)  {
-    my @REQUIRED = «origin»;
+    my @REQUIRED = «as-path»;
 
     # Remove path attributes
     if %params<path-attribute-code>:exists {
-        if %params<path-attribute-code> ≠ 1 {
-            die("Can only create an Origin attribute");
+        if %params<path-attribute-code> ≠ 2 {
+            die("Can only create an AS-Path attribute");
         }
         %params<path-attribute-code>:delete;
     }
     if %params<path-attribute-name>:exists {
-        if %params<path-attribute-name> ≠ 'origin' {
-            die("Can only create an Origin attribute");
+        if %params<path-attribute-name> ≠ 'AS-Path' {
+            die("Can only create an AS-Path attribute");
         }
         %params<path-attribute-name>:delete;
     }
+
+    my @aslists = Net::BGP::AS-List.from-str(%params<as-path>);
+    my $as-path-buf = buf8.new;
+    for @aslists -> $aslist { buf8.append: $aslist.raw }
 
     # Check to make sure attributes are correct
     if @REQUIRED.sort.list !~~ %params.keys.sort.list {
         die("Did not provide proper options");
     }
 
-    my $value;
-    given %params<origin>.fc {
-        when 'i' { $value = 0 }
-        when 'e' { $value = 1 }
-        when '?' { $value = 2 }
-        default  { die("Unknown origin value") }
-    }
-
-    if %params<value>.bytes > 65535 { die "Value is longer than 65535 bytes" }
+    if $as-path-buf.bytes > 65535 { die "Value is longer than 65535 bytes" }
 
     my $flag = 0x40;  # Transitive
+    if $as-path-buf.bytes > 255 { $flag += 0x10 }  # Extended length?
 
     my buf8 $path-attribute = buf8.new();
     $path-attribute.append( $flag );
     $path-attribute.append( %params<path-attribute-code> );
-    $path-attribute.append( 1 );        # Length
-    $path-attribute.append( $value );
 
-    return self.bless(:raw( $path-attribute ), :$asn32);
+    if $as-path-buf.bytes > 255 {
+        $path-attribute.append( nuint16-buf8( $as-path-buf.bytes ) );
+    } else {
+        $path-attribute.append( $as-path-buf.bytes );
+    }
+    $path-attribute.append( $as-path-buf );
+
+    return self.bless( :raw( $path-attribute ), :$asn32 );
 };
 
-method origin(-->Str:D) {
-    given self.raw[3] {
-        when 0  { return 'I' }
-        when 1  { return 'E' }
-        when 2  { return '?' }
-        default { die("Invalid origin value") }
+method as-lists(-->Array[Net::BGP::AS-List:D]) {
+    my Net::BGP::AS-List:D @return;
+
+    if $.raw[0] +& 0x10 { # XXX Should check length field, but we skip it
+        @return = Net::BGP::AS-List.as-lists( buf8.new($.raw[4..*]), $.asn32 );
+    } else {
+        @return = Net::BGP::AS-List.as-lists( buf8.new($.raw[3..*]), $.asn32 );
     }
 }
 
-method Str(-->Str:D) { "Origin=" ~ self.origin }
+method Str(-->Str:D) { "AS-Path=" ~ (join " ", self.as-lists».Str) }
 
 # Register path-attribute
-INIT { Net::BGP::Path-Attribute.register(Net::BGP::Path-Attribute::Origin) }
+INIT { Net::BGP::Path-Attribute.register(Net::BGP::Path-Attribute::AS-Path) }
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Message::Path-Attribute::Origin - BGP Origin Path-Attribute Object
+Net::BGP::Message::Path-Attribute::AS-Path - BGP AS-Path Path-Attribute Object
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Path-Attribute::Origin;
+  use Net::BGP::Path-Attribute::AS-Path;
 
-  my $cap = Net::BGP::Path-Attribute::Origin.from-raw( $raw );
+  my $cap = Net::BGP::Path-Attribute::AS-Path.from-raw( $raw );
   # or …
-  my $cap = Net::BGP::Path-Attribute::Origin.from-hash(
-    %{ path-attribute-name => 192, value => buf8.new(1,2,3,4) }
+  my $cap = Net::BGP::Path-Attribute::AS-Path.from-hash(
+    !!! # NOT YET IMPLEMENTED
   );
 
 =head1 DESCRIPTION

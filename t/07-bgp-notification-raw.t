@@ -10,7 +10,7 @@ use Net::BGP;
 use Net::BGP::Message;
 
 subtest 'Open Notification Unsupported Version', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-bad-version') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-bad-version'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 3, 'Message type is correct';
     is $bgp.message-name, 'NOTIFY', 'Message code is correct';
@@ -26,7 +26,7 @@ subtest 'Open Notification Unsupported Version', {
 };
 
 subtest 'Open Notification Bad Peer AS', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-bad-peer-asn') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-bad-peer-asn'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 3, 'Message type is correct';
     is $bgp.message-name, 'NOTIFY', 'Message code is correct';
@@ -41,7 +41,7 @@ subtest 'Open Notification Bad Peer AS', {
 };
 
 subtest 'Open Notification Unsupported Optional Parameter', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-unsupported-optional-parameter') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-open-unsupported-optional-parameter'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 3, 'Message type is correct';
     is $bgp.message-name, 'NOTIFY', 'Message code is correct';
@@ -56,7 +56,7 @@ subtest 'Open Notification Unsupported Optional Parameter', {
 };
 
 subtest 'Header Notification Connection not Syncronized', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('notify-header-connection-not-syncronized') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-header-connection-not-syncronized'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.raw.list, read-message('notify-header-connection-not-syncronized').list, "AAA";
     is $bgp.message-code, 3, 'Message type is correct';
@@ -72,7 +72,7 @@ subtest 'Header Notification Connection not Syncronized', {
 };
 
 subtest 'Hold-Timer-Expired', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('notify-hold-timer-expired') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('notify-hold-timer-expired'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.raw.list, read-message('notify-hold-timer-expired').list, "raw matches message";
     is $bgp.message-code, 3, 'Message type is correct';

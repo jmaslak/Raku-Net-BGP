@@ -11,7 +11,7 @@ use Net::BGP::Message;
 use Net::BGP::Parameter;
 
 subtest 'Open Message', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('open-message') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('open-message'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 1, 'Message type is correct';
     is $bgp.message-name, 'OPEN', 'Message code is correct';
@@ -154,7 +154,7 @@ subtest 'Open Message', {
 };
 
 subtest 'Keep-Alive Message', {
-    my $bgp = Net::BGP::Message.from-raw( read-message('keep-alive') );
+    my $bgp = Net::BGP::Message.from-raw( read-message('keep-alive'), :!asn32 );
     ok defined($bgp), "BGP message is defined";
     is $bgp.message-code, 4, 'Message type is correct';
     is $bgp.message-name, 'KEEP-ALIVE', 'Message code is correct';

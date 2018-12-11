@@ -58,7 +58,7 @@ subtest 'Event' => {
     };
 
     subtest 'BGP-Message-No-Opt' => {
-        my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message-no-opt.msg') );
+        my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message-no-opt.msg'), :asn32(False) );
         my $msg = Net::BGP::Event::BGP-Message.new(:message($bgp), :connection-id(22));
         ok $msg, "Created Event Class";
         is $msg.message-name, 'BGP-Message', 'Message type has proper value';
@@ -72,7 +72,7 @@ subtest 'Event' => {
     };
 
     subtest 'BGP-Message-With-Opt' => {
-        my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message.msg') );
+        my $bgp = Net::BGP::Message.from-raw( read-message-nohead('t/bgp-messages/open-message.msg'), :asn32(False) );
         my $msg = Net::BGP::Event::BGP-Message.new(:message($bgp), :connection-id(22));
         ok $msg, "Created Event Class";
         is $msg.message-name, 'BGP-Message', 'Message type has proper value';

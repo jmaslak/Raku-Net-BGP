@@ -116,7 +116,7 @@ if (!check-compiler-version) {
        
         my $pkt = $client.read(16); # Read (and silently discard) header
         my $raw = $client.read(nuint16($client.read(2))-18); # Read appropriate length
-        my $msg = Net::BGP::Message.from-raw($raw);
+        my $msg = Net::BGP::Message.from-raw($raw, :!asn32);
         ok $msg ~~ Net::BGP::Message::Notify::Open::Unsupported-Version, "Message is proper type";
         is $msg.max-supported-version, 4, "Max supported version is valid";
 
@@ -244,7 +244,7 @@ if (!check-compiler-version) {
         my $pkt = $client.read(16); # Read (and silently discard) header
         my $raw = $client.read(nuint16($client.read(2))-18); # Read appropriate length
 
-        my $msg = Net::BGP::Message.from-raw($raw);
+        my $msg = Net::BGP::Message.from-raw($raw, :!asn32);
         ok $msg ~~ Net::BGP::Message::Open, "Message is proper type";
         is $msg.version, 4, "Version correct";
         is $msg.asn, 65000, "ASN is correct";

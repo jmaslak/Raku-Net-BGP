@@ -28,7 +28,7 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
     method implemented-message-code(--> Int) { … }
     method implemented-message-name(--> Str) { … }
 
-    method from-raw(buf8:D $raw, Bool:D :$asn32? = False) {
+    method from-raw(buf8:D $raw, Bool:D :$asn32) {
         if %registrations{ $raw[0] }:exists {
             return %registrations{ $raw[0] }.from-raw($raw, :$asn32);
         } else {
@@ -90,7 +90,7 @@ Net::BGP::Message - BGP Message Parent Class
 
   use Net::BGP::Message;
 
-  my $msg = Net::BGP::Message.from-raw( $raw );  # Might return a child crash
+  my $msg = Net::BGP::Message.from-raw( $raw, :$asn32 );  # Might return a child crash
 
 =head1 DESCRIPTION
 
@@ -101,6 +101,8 @@ Parent class for messages.
 =head2 from-raw
 
 Constructs a new object (likely in a subclass) for a given raw binary buffer.
+You must pass C<:asn32>, a boolean that is true if the connection supports 32
+bit ASNs
 
 =head2 from-hash
 

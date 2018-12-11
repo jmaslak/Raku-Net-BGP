@@ -49,7 +49,7 @@ if (!check-compiler-version) {
 
         my $pkt = $client.read(16); # Read (and silently discard) header
         my $raw = $client.read(nuint16($client.read(2))-18); # Read appropriate length
-        my $msg = Net::BGP::Message.from-raw($raw);
+        my $msg = Net::BGP::Message.from-raw($raw, :!asn32);
         ok $msg ~~ Net::BGP::Message::Notify::Open::Bad-Peer-AS, "Message is proper type";
 
         $client.close();

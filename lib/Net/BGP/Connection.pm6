@@ -160,7 +160,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
         }
 
         # We delegate the hard work of parsing this message
-        my $bgp-msg = Net::BGP::Message.from-raw: self.buffer.subbuf(18..($expected-len-1));
+        my $bgp-msg = Net::BGP::Message.from-raw: self.buffer.subbuf(18..($expected-len-1)), :$!asn32;
 
         # Look for BGP ASN32 capability
         if ($bgp-msg ~~ Net::BGP::Message::Open) { $!asn32 = $bgp-msg.asn32-support }

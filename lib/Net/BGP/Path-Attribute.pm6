@@ -12,7 +12,8 @@ use Net::BGP::Conversions;
 my %path-attribute-codes := Hash[Net::BGP::Path-Attribute:U,Int].new;
 my %path-attribute-names := Hash[Net::BGP::Path-Attribute:U,Str].new;
 
-has buf8:D $.raw is required;
+has buf8:D $.raw   is required;
+has Bool:D $.asn32 is required is rw;
 
 # Generic Types
 method implemented-path-attribute-code(-->Int)   { … }
@@ -58,11 +59,11 @@ method new() {
     die("Must use from-raw or from-hash to construct a new object");
 }
 
-method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
+method from-raw(buf8:D $raw where $raw.bytes ≥ 2, Bool:D :$asn32) {
     if %path-attribute-codes{ $raw[1] }:exists {
-        return %path-attribute-codes{ $raw[1] }.from-raw($raw);
+        return %path-attribute-codes{ $raw[1] }.from-raw($raw, :$asn32);
     } else {
-        return %path-attribute-codes{ Int }.from-raw($raw);
+        return %path-attribute-codes{ Int }.from-raw($raw, :$asn32);
     }
 }
 
@@ -89,24 +90,28 @@ method from-hash(%params is copy)  {
     }
 }
 
-method path-attributes(buf8:D $buf is copy -->Array[Net::BGP::Path-Attribute:D]) {
+method path-attributes(
+    buf8:D $buf is copy,
+    Bool:D :$asn32
+    -->Array[Net::BGP::Path-Attribute:D]
+) {
     my Net::BGP::Path-Attribute:D @result;
 
     @result = gather {
         while $buf.bytes {
             if $buf.bytes < 3 { die("path attribute too short"); }
             if $buf[0] +& 0x10 {
-                if $buf.bytes < 3 { die("path attribute too short"); }
+                if $buf.bytes < 4 { die("path attribute too short"); }
 
                 my $len = nuint16($buf.subbuf(2, 2));
                 if $buf.bytes < ($len + 4) { die("path attribute too short"); }
 
-                take Net::BGP::Path-Attribute.from-raw( $buf.subbuf(0, $len+4) );
+                take Net::BGP::Path-Attribute.from-raw( $buf.subbuf(0, $len+4), :$asn32 );
                 $buf = $buf.subbuf($len+4);
             } else {
                 if $buf.bytes < ($buf[2]+3) { die("path attribute too short"); }
 
-                take Net::BGP::Path-Attribute.from-raw( $buf.subbuf(0, $buf[2]+3) );
+                take Net::BGP::Path-Attribute.from-raw( $buf.subbuf(0, $buf[2]+3), :$asn32 );
                 $buf = $buf.subbuf($buf[2]+3);
             }
         }
