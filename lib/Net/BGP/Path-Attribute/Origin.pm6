@@ -60,9 +60,9 @@ method from-hash(%params is copy)  {
 
     my $value;
     given %params<origin>.fc {
-        with 'i' { $value = 0 }
-        with 'e' { $value = 1 }
-        with '?' { $value = 2 }
+        when 'i' { $value = 0 }
+        when 'e' { $value = 1 }
+        when '?' { $value = 2 }
         default  { die("Unknown origin value") }
     }
 
@@ -81,9 +81,9 @@ method from-hash(%params is copy)  {
 
 method origin(-->Str:D) {
     given self.raw[3] {
-        with 0  { return 'I' }
-        with 1  { return 'E' }
-        with 2  { return '?' }
+        when 0  { return 'I' }
+        when 1  { return 'E' }
+        when 2  { return '?' }
         default { die("Invalid origin value") }
     }
 }
