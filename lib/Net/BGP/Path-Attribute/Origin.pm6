@@ -68,7 +68,7 @@ method from-hash(%params is copy)  {
 
     if %params<value>.bytes > 65535 { die "Value is longer than 65535 bytes" }
 
-    my $flag += 0x40;  # Transitive
+    my $flag = 0x40;  # Transitive
 
     my buf8 $path-attribute = buf8.new();
     $path-attribute.append( $flag );
