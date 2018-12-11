@@ -32,5 +32,21 @@ is @aslists.elems,  2, "Proper number of AS lists";
 is @aslists[0].Str, "{0x02030203}", "First AS Sequence is correct";
 is @aslists[1].Str, "\{{0x09080706},{0x05040302}\}", "Second AS Sequence is correct";
 
+@aslists = Net::BGP::AS-List.from-str('1 2', True);
+is @aslists.elems,  1,     "(A) Proper number of AS lists";
+is @aslists[0].Str, "1 2", "(A) First AS Sequence is correct";
+
+@aslists = Net::BGP::AS-List.from-str('{1,2,3} 456 789 {101} 55', True);
+is @aslists.elems,  4,                          "(B) Proper number of AS lists";
+is @aslists[0].Str, '{1,2,3}', "(B) First AS Sequence is correct";
+is @aslists[0].ordered, False, "(B) First AS Sequence Ordering";
+is @aslists[1].Str, "456 789", "(B) Second AS Sequence is correct";
+is @aslists[1].ordered, True,  "(B) Second AS Sequence Ordering";
+is @aslists[2].Str, '{101}',   "(B) Third AS Sequence is correct";
+is @aslists[2].ordered, False, "(B) Third AS Sequence Ordering";
+is @aslists[3].Str, "55",      "(B) Forth AS Sequence is correct";
+is @aslists[3].ordered, True,  "(B) Forth AS Sequence Ordering";
+
+
 done-testing;
 

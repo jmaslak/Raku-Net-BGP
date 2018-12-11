@@ -52,6 +52,64 @@ method Str(-->Str:D) {
     return $start ~ self.asns.join($sep) ~ $end;
 }
 
+method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
+    grammar AS-Path {
+        token TOP {
+            ^ \s* <AS-LIST> +% \s+ \s* $
+            { make $<AS-LIST>».made }
+        }
+
+        token AS-LIST {
+            | <AS-Set>
+                { make $<AS-Set>.made }
+
+
+            | <AS-Sequence>
+                { make $<AS-Sequence>.made }
+        }
+
+        token AS-Set {
+            '{' \s* <ASN> +% [[\s*] ',' [\s*]] \s* '}'
+                { make Net::BGP::AS-List.from-list(False, $<ASN>».Int, $asn32) }
+        }
+
+        token AS-Sequence {
+            <ASN> +% \s+
+                { make Net::BGP::AS-List.from-list(True, $<ASN>».Int, $asn32) }
+        }
+
+        token ASN          { <[ 0 .. 9 ]>+ }
+    }
+
+    my $match = AS-Path.parse($str);
+    my Net::BGP::AS-List:D @asns = $match.made;
+    
+    return @asns;
+}
+
+# Internal only for now, not documented
+method from-list(
+    Bool:D $ordered,
+    @list,
+    Bool:D $asn32
+    -->Net::BGP::AS-List:D
+) {
+    if @list.elems > 255 { die("Too many ASNs in path element") }
+
+    my $buf = buf8.new;
+    $buf.append( $ordered ?? 2 !! 1 );
+    $buf.append( @list.elems );
+
+    for @list -> $ele {
+        if  $asn32 { die unless $ele ~~ ^(2³²) };
+        if !$asn32 { die unless $ele ~~ ^(2¹⁶) };
+
+        $buf.append( $asn32 ?? nuint32-buf8($ele) !! nuint16-buf8($ele) );
+    }
+
+    return Net::BGP::AS-List.new(:raw($buf), :$asn32);
+}
+
 method as-lists(
     buf8:D $raw where { $^a.bytes ≥ 2 },
     Bool:D $asn32
@@ -68,7 +126,6 @@ method as-lists(
             take Net::BGP::AS-List.new( :raw( $raw.subbuf($pos, 2+$size) ), :asn32 );
 
             $pos += 2 + $size;
-            say $pos;
         }
     }
 
@@ -138,6 +195,10 @@ Returns a string representation of the ASNs.
 
 Returns the AS-Sequence and AS-Sets in the packed binary buffer, as would be
 representated in an AS-Path BGP attribute.
+
+=head2 from-str
+
+Takes an AS Path string and converts it to an array of AS-List objects.
 
 =head1 AUTHOR
 
