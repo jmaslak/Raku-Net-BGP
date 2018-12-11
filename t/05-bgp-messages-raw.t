@@ -81,6 +81,33 @@ subtest 'Keep-Alive Message', {
     done-testing;
 };
 
+subtest 'Update Message (ASN16)', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('update-asn16') );
+    ok defined($bgp), "BGP message is defined";
+    ok $bgp ~~ Net::BGP::Message::Update, "BGP message is proper type";
+    is $bgp.message-code, 2, 'Message type is correct';
+    is $bgp.message-name, 'UPDATE', 'Message code is correct';
+
+    is $bgp.withdrawn.elems, 3, "Proper number of withdrawn prefixes";
+    is $bgp.withdrawn[0], '0.0.0.0/0',        "Withdrawn 1 correct";
+    is $bgp.withdrawn[1], '192.168.150.0/24', "Withdrawn 2 correct";
+    is $bgp.withdrawn[2], '192.168.150.1/32', "Withdrawn 3 correct";
+
+    is $bgp.path-attributes.elems, 1, "Proper number of path elements";
+    ok $bgp.path-attributes[0] ~~ Net::BGP::Path-Attribute::Origin,
+        "Path Attribute 1 Proper Type";
+    is $bgp.path-attributes[0].origin, '?', "Path Attribute 1 Proper Type";
+
+    is $bgp.nlri.elems, 3, "Proper number of NLRI prefixes";
+    is $bgp.nlri[0], '10.0.0.0/8',       "NLRI 1 correct";
+    is $bgp.nlri[1], '192.168.151.0/24', "NLRI 1 correct";
+    is $bgp.nlri[2], '192.168.151.1/32', "NLRI 1 correct";
+
+    ok check-list($bgp.raw, read-message('update-asn16')), 'Message value correct';;
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {
