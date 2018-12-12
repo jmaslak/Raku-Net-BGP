@@ -99,17 +99,21 @@ method path-attributes(
 
     @result = gather {
         while $buf.bytes {
-            if $buf.bytes < 3 { die("path attribute too short"); }
+            if $buf.bytes < 3 { die("path attribute too short ({ $buf.bytes })"); }
             if $buf[0] +& 0x10 {
-                if $buf.bytes < 4 { die("path attribute too short"); }
+                if $buf.bytes < 4 { die("path attribute too short ({ $buf.bytes })"); }
 
                 my $len = nuint16($buf.subbuf(2, 2));
-                if $buf.bytes < ($len + 4) { die("path attribute too short"); }
+                if $buf.bytes < ($len + 4) {
+                    die("path attribute too short ({$buf.bytes} < {$len+4})");
+                }
 
                 take Net::BGP::Path-Attribute.from-raw( $buf.subbuf(0, $len+4), :$asn32 );
                 $buf = $buf.subbuf($len+4);
             } else {
-                if $buf.bytes < ($buf[2]+3) { die("path attribute too short"); }
+                if $buf.bytes < ($buf[2]+3) {
+                    die("path attribute too short ({$buf.bytes} < {$buf[2]+3})");
+                }
 
                 take Net::BGP::Path-Attribute.from-raw( $buf.subbuf(0, $buf[2]+3), :$asn32 );
                 $buf = $buf.subbuf($buf[2]+3);
