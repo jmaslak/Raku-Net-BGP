@@ -29,6 +29,7 @@ method from-raw(buf8:D $raw where $raw.bytes == 4, Bool:D :$asn32) {
     if   $raw[0] +& 0x10 { die("Extended length flag not valid on Origin attribute") }
 
     if ($raw.bytes - 3) ≠ $raw[2] { die("Invalid path-attribute payload length") }
+    if $raw[2] ≠ 1                { die("Invalid path-attribute payload length") }
 
     if   $raw[2] !~~ ^2  { die("Invalid origin in Origin attribute") }
 
