@@ -34,6 +34,9 @@ method from-raw(buf8:D $raw where $raw.bytes ≥ 3, :$asn32) {
     } else {
         $aslist = Net::BGP::AS-List.as-lists( buf8.new($raw[3..*]), $asn32 );
     }
+
+    if $raw[1] ≠ 2 { die("Can only create a AS-Path attribute") }
+
     @$aslist».check;     # Validate all are proper
 
     my $obj = self.bless(:$raw, :$asn32);

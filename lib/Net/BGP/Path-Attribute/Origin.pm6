@@ -28,6 +28,8 @@ method from-raw(buf8:D $raw where $raw.bytes == 4, Bool:D :$asn32) {
     if   $raw[0] +& 0x20 { die("Partial flag not valid on Origin attribute") }
     if   $raw[0] +& 0x10 { die("Extended length flag not valid on Origin attribute") }
 
+    if   $raw[1] ≠ 1     { die("Can only create an Origin attribute") }
+
     if ($raw.bytes - 3) ≠ $raw[2] { die("Invalid path-attribute payload length") }
     if $raw[2] ≠ 1                { die("Invalid path-attribute payload length") }
 
@@ -48,7 +50,7 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
         %params<path-attribute-code>:delete;
     }
     if %params<path-attribute-name>:exists {
-        if %params<path-attribute-name> ≠ 'origin' {
+        if %params<path-attribute-name> ≠ 'Origin' {
             die("Can only create an Origin attribute");
         }
         %params<path-attribute-name>:delete;
