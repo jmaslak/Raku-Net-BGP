@@ -95,7 +95,9 @@ method as-lists(-->Array[Net::BGP::AS-List:D]) {
     }
 }
 
-method Str(-->Str:D) { "AS-Path=" ~ (join " ", self.as-lists».Str) }
+method as-path(-->Str:D) { (join " ", self.as-lists».Str) }
+
+method Str(-->Str:D) { "AS-Path=" ~ self.as-path }
 
 # Register path-attribute
 INIT { Net::BGP::Path-Attribute.register(Net::BGP::Path-Attribute::AS-Path) }
