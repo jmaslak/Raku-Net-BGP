@@ -123,7 +123,7 @@ method as-lists(
             my $size = $raw[$pos+1] * $aslen;
             if ($pos+2+$size) > $raw.bytes { die("Too few bytes") }
 
-            take Net::BGP::AS-List.new( :raw( $raw.subbuf($pos, 2+$size) ), :asn32 );
+            take Net::BGP::AS-List.new( :raw( $raw.subbuf($pos, 2+$size) ), :$asn32 );
 
             $pos += 2 + $size;
         }
