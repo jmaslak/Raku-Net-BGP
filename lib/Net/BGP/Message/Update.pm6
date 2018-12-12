@@ -13,6 +13,7 @@ use Net::BGP::Parameter;
 use Net::BGP::Path-Attribute;
 use Net::BGP::Path-Attribute::AS-Path;
 use Net::BGP::Path-Attribute::Generic;
+use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
 
 class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
