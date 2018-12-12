@@ -1,4 +1,4 @@
-use v6.c;
+use v6.d;
 use Test;
 
 #
@@ -8,6 +8,7 @@ use Test;
 
 use Net::BGP::IP;
 use Net::BGP::CIDR;
+use Net::BGP::Conversions;
 
 my @TESTS := (
     { ip => '1.2.3.4', val => 16909060 },
@@ -18,6 +19,7 @@ for @TESTS -> $test {
     is int-to-ipv4($test<val>), $test<ip>, "$test<ip> int-to-ipv4";
     is int-to-ipv4(ipv4-to-int($test<ip>)), $test<ip>, "$test<ip> ipv4-to-int-to-ipv4";
     is ipv4-to-int(int-to-ipv4($test<val>)), $test<val>, "$test<ip> int-to-ipv4-to-int";
+    is nuint32(ipv4-to-buf8($test<ip>)), $test<val>, "$test<ip> ipv4-to-buf8";
     is ip-valid($test<ip>), True, "$test<ip> ip-valid";
 }
 

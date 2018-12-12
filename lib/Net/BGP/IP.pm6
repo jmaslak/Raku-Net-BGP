@@ -23,6 +23,10 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         return $ipval;
     }
 
+    our sub ipv4-to-buf8(ipv4:D $ip -->buf8:D) is export {
+        return buf8.new( $ip.split('.')».Int );
+    }
+
     our sub int-to-ipv4(ipv4_int:D $i -->Str:D) is export {
         my uint32 $ip = $i;
         return join('.', $ip +> 24, $ip +> 16 +& 255, $ip +> 8 +& 255, $ip +& 255);
