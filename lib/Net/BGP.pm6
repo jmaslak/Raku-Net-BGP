@@ -207,26 +207,33 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     }
 
     method connect-if-needed(-->Nil) {
-        state Lock $lock = Lock.new;
-        $lock.protect: {
-            loop {
-                my $p = $.controller.peers.get-peer-due-for-connect;
-                if ! $p.defined { return; }
+        loop {
+            my $p = $.controller.peers.get-peer-due-for-connect;
+            if ! $p.defined { return; }
 
-                $p.lock.protect: {
-                    if $p.connection.defined { next; }    # Someone created a connection
+            $p.lock.protect: {
+                if $p.connection.defined { next; }    # Someone created a connection
 
-                    $p.last-connect-attempt = monotonic-whole-seconds;
-                }
-
-                my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);
-                start self.connection-handler($promise, $p);
+                $p.last-connect-attempt = monotonic-whole-seconds;
             }
+
+            my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);
+            start self.connection-handler($promise, $p);
         }
     }
 
     method connection-handler(Promise:D $socket-promise, Net::BGP::Peer:D $peer) {
-        my $socket = $socket-promise.result;
+        my $socket;
+        {
+            $socket = $socket-promise.result;
+            CATCH {
+                default {
+                    # XXX We should log better
+                    # But we know...Connection failed.
+                    return;
+                }
+            }
+        }
 
         my $conn;
         if $peer.connection.defined { return } # Just in case it got defined
