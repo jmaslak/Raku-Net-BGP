@@ -76,7 +76,7 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
 
     my buf8 $path-attribute = buf8.new();
     $path-attribute.append( $flag );
-    $path-attribute.append( %params<path-attribute-code> );
+    $path-attribute.append( 2 );
 
     if $as-path-buf.bytes > 255 {
         $path-attribute.append( nuint16-buf8( $as-path-buf.bytes ) );

@@ -75,7 +75,7 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
 
     my buf8 $path-attribute = buf8.new();
     $path-attribute.append( $flag );
-    $path-attribute.append( %params<path-attribute-code> );
+    $path-attribute.append( 1 );        # Origin
     $path-attribute.append( 1 );        # Length
     $path-attribute.append( $value );
 
