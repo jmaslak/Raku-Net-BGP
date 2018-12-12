@@ -43,21 +43,38 @@ sub MAIN(
     my $start = monotonic-whole-seconds;
 
     react {
-        whenever $channel -> $event {
-            logevent($event);
+        whenever $channel -> $event is copy {
+            my @stack;
 
-            $messages-logged++;
-            if $max-log-messages.defined && ($messages-logged ≥ $max-log-messages) {
-                log('*', "RUN TIME: " ~ (monotonic-whole-seconds() - $start) );
-                exit;
+            my uint32 $cnt = 0;
+            repeat {
+                @stack.push: $event;
+                if $cnt++ ≤ 8*64 {
+                    $event = $channel.poll;
+                } else {
+                    $event = Nil;
+                }
+            } while $event.defined;
+
+            # my @str = @stack».Str;
+            my @str = @stack.hyper(:degree(8), :batch(64)).map: { $^a.Str };
+            for @str -> $event {
+                logevent($event);
+
+                $messages-logged++;
+                if $max-log-messages.defined && ($messages-logged ≥ $max-log-messages) {
+                    log('*', "RUN TIME: " ~ (monotonic-whole-seconds() - $start) );
+                    exit;
+                }
             }
+            @str.list.sink;
         }
     }
 }
 
-multi sub logevent(Net::BGP::Event:D $event) {
+sub logevent(Str:D $event) {
     state $counter = 0;
-    lognote("«" ~ $counter++ ~ "» " ~ $event.Str);
+    lognote("«" ~ $counter++ ~ "» " ~ $event);
 }
 
 sub lognote(Str:D $msg) {
