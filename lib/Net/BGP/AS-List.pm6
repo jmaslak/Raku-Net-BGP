@@ -82,6 +82,7 @@ method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
     }
 
     my $match = AS-Path.parse($str);
+    if ! $match.defined { die("Could not parse AS-Path"); }
     my Net::BGP::AS-List:D @asns = $match.made;
     
     return @asns;

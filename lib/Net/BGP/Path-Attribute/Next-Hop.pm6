@@ -43,7 +43,7 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
 
     # Remove path attributes
     if %params<path-attribute-code>:exists {
-        if %params<path-attribute-code> ≠ 4 {
+        if %params<path-attribute-code> ≠ 3 {
             die("Can only create an Next-Hop attribute");
         }
         %params<path-attribute-code>:delete;

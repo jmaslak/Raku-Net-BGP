@@ -80,25 +80,90 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
         return $obj;
     };
 
-    method from-hash(%params is copy)  {
-        my @REQUIRED = «»;
+    method from-hash(%params is copy, Bool:D :$asn32) {
+        my @REQUIRED = «withdrawn origin as-path next-hop community nlri»;
+
+        %params<withdrawn> //= [];
+        %params<origin>    //= '?';
+        %params<as-path>   //= '';
+        %params<next-hop>  //= '';
+        %params<community> //= [];
+        %params<nlri>      //= [];
 
         # Delete unnecessary option
         if %params<message-code>:exists {
             if (%params<message-code> ≠ 2) { die("Invalid message type for UPDATE"); }
             %params<message-code>:delete
         }
+        if %params<message-name>:exists {
+            if (%params<message-name> ≠ 'UPDATE') {
+                die("Invalid message type for UPDATE");
+            }
+            %params<message-name>:delete
+        }
 
         if @REQUIRED.sort.list !~~ %params.keys.sort.list {
             die("Did not provide proper options");
         }
 
-        # Now we need to build the raw data.
-        my $out = buf8.new();
+        # Prefix parts
+        my $withdrawn = buf8.new;
+        for @(%params<withdrawn>) -> $w {
+            $withdrawn.append: Net::BGP::CIDR.from-str($w).to-packed;
+        };
 
-        $out.append( 2 );   # Message type (UPDATE)
+        my $nlri = buf8.new;
+        for @(%params<nlri>) -> $n {
+            $nlri.append: Net::BGP::CIDR.from-str($n).to-packed;
+        };
 
-        return self.bless(:data( buf8.new($out) ));
+        # Path Attributes
+        my $path-attr = buf8.new;
+        if %params<origin> ne '' {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'Origin',
+                    origin              => %params<origin>,
+                },
+                :$asn32
+            ).raw;
+        }
+        if %params<as-path> ne '' {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'AS-Path',
+                    as-path             => %params<as-path>,
+                },
+                :$asn32
+            ).raw;
+        }
+        if %params<next-hop> ne '' {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'Next-Hop',
+                    next-hop            => %params<next-hop>,
+                },
+                :$asn32
+            ).raw;
+        }
+        if %params<community>.elems {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'Community',
+                    community           => %params<community>,
+                },
+                :$asn32
+            ).raw;
+        }
+
+        my $msg = buf8.new( 2 );                        # Message type
+        $msg.append(nuint16-buf8( $withdrawn.bytes ) ); # Length of withdraw
+        $msg.append($withdrawn);                        # Withdrawn
+        $msg.append(nuint16-buf8( $path-attr.bytes ) ); # Length of path attributes
+        $msg.append($path-attr);                        # Path attributes
+        $msg.append($nlri);                             # NLRI
+
+        return self.bless(:data( buf8.new($msg) ), :$asn32);
     };
 
     method nlri(-->Array[Net::BGP::CIDR:D]) {

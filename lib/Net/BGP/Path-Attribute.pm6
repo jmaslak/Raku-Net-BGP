@@ -67,7 +67,7 @@ method from-raw(buf8:D $raw where $raw.bytes ≥ 2, Bool:D :$asn32) {
     }
 }
 
-method from-hash(%params is copy)  {
+method from-hash(%params is copy, Bool:D :$asn32)  {
     # Delete unnecessary options
     if %params<path-attribute-code>:exists and %params<path-attribute-name>:exists {
         if %path-attribute-codes{ %params<path-attribute-code> } ≠ %path-attribute-names{ %params<path-attribute-name> } {
@@ -84,9 +84,9 @@ method from-hash(%params is copy)  {
     if %params<path-attribute-code>:!exists { die("Must provide path-attribute code { %params.keys.join(" ") }") }
 
     if %path-attribute-codes{ %params<path-attribute-code> }:exists {
-        return %path-attribute-codes{ %params<path-attribute-code> }.from-hash(%params);
+        return %path-attribute-codes{ %params<path-attribute-code> }.from-hash(%params, :$asn32);
     } else {
-        return %path-attribute-codes{ Int }.from-hash(%params);
+        return %path-attribute-codes{ Int }.from-hash(%params, :$asn32);
     }
 }
 

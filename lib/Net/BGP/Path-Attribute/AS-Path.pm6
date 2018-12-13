@@ -60,9 +60,9 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
         %params<path-attribute-name>:delete;
     }
 
-    my @aslists = Net::BGP::AS-List.from-str(%params<as-path>);
+    my @aslists = Net::BGP::AS-List.from-str(%params<as-path>, $asn32);
     my $as-path-buf = buf8.new;
-    for @aslists -> $aslist { buf8.append: $aslist.raw }
+    for @aslists -> $aslist { $as-path-buf.append: $aslist.raw }
 
     # Check to make sure attributes are correct
     if @REQUIRED.sort.list !~~ %params.keys.sort.list {

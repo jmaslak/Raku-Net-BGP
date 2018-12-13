@@ -36,7 +36,7 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
     };
 
-    method from-hash(%params is copy)  {
+    method from-hash(%params is copy, :$asn32)  {
         if %params<message-code>:!exists and %params<message-name>:!exists {
             die "Could not determine message type";
         }
@@ -68,7 +68,7 @@ class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
 
         %params<message-name>:delete; # We don't use this in children.
 
-        return %registrations{ %params<message-code> }.from-hash( %params );
+        return %registrations{ %params<message-code> }.from-hash( %params, :$asn32 );
     };
 
     method message-code() {

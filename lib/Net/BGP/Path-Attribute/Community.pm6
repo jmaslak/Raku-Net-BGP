@@ -52,7 +52,7 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
 
     # Remove path attributes
     if %params<path-attribute-code>:exists {
-        if %params<path-attribute-code> ≠ 4 {
+        if %params<path-attribute-code> ≠ 8 {
             die("Can only create an Community attribute");
         }
         %params<path-attribute-code>:delete;
@@ -69,15 +69,27 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
         die("Did not provide proper options");
     }
 
-    my $ip = ipv4-to-buf8( %params<community> );
+    my $community-list = buf8.new;
+    for @(%params<community>) -> $comm {
+        my @parts = $comm.split(':');
+        $community-list.append: nuint16-buf8(Int(@parts[0]));
+        $community-list.append: nuint16-buf8(Int(@parts[1]));
+    }
 
-    my $flag = 0x40;  # Transitive
+    my $flag = 0xC0;  # Optional, Transitive
+    if $community-list.bytes > 255 { $flag += 0x10 }  # Extended length?
 
     my buf8 $path-attribute = buf8.new();
     $path-attribute.append( $flag );
-    $path-attribute.append( 3 );
-    $path-attribute.append( 4 );        # Length
-    $path-attribute.append( $ip );
+    $path-attribute.append( 8 );
+
+    if $community-list.bytes > 255 {
+        $path-attribute.append: nuint16-buf8( $community-list.bytes );
+    } else {
+        $path-attribute.append: $community-list.bytes;
+    }
+
+    $path-attribute.append: $community-list;
 
     return self.bless(:raw( $path-attribute ), :$asn32);
 };

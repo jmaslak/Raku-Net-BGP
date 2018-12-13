@@ -67,6 +67,8 @@ method to-packed(-->buf8:D) {
     return $buf;
 }
 
+method str-to-packed(Str:D $ip -->buf8:D) { return self.from-str($ip).to-packed }
+
 method Str(-->Str:D) {
     if ! self.defined { return "Net::BGP::CIDR" }
     return $!cached-str if $!cached-str.defined;

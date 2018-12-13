@@ -69,8 +69,6 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
         default  { die("Unknown origin value") }
     }
 
-    if %params<value>.bytes > 65535 { die "Value is longer than 65535 bytes" }
-
     my $flag = 0x40;  # Transitive
 
     my buf8 $path-attribute = buf8.new();

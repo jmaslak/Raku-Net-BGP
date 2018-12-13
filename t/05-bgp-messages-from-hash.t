@@ -173,6 +173,41 @@ subtest 'Keep-Alive Message', {
     done-testing;
 };
 
+subtest 'Update-ASN16', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('update-asn16'), :!asn32 );
+    ok defined($bgp), "BGP message is defined";
+    is $bgp.message-code, 2, 'Message type is correct';
+    is $bgp.message-name, 'UPDATE', 'Message code is correct';
+
+    my $from-hash = Net::BGP::Message.from-hash(
+        {
+            message-name => 'UPDATE',
+            withdrawn    => [
+                '0.0.0.0/0',
+                '192.168.150.0/24',
+                '192.168.150.1/32',
+            ],
+            origin       => '?',
+            as-path      => '258 772',
+            next-hop     => '10.0.0.1',
+            community    => [ '2571:258' ],
+            nlri         => [
+                '10.0.0.0/8',
+                '192.168.151.0/24',
+                '192.168.151.1/32',
+            ],
+        },
+        :!asn32,
+    );
+    ok defined($from-hash), "FH BGP message is defined";
+    is $from-hash.message-code, 2, 'FH Message type is correct';
+    is $from-hash.message-name, 'UPDATE', 'FH Message code is correct';
+
+    ok check-list($from-hash.raw, $bgp.raw), 'Message value correct';
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {
