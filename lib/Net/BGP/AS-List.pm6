@@ -69,7 +69,7 @@ method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
         }
 
         token AS-Set {
-            '{' \s* <ASN> +% [[\s*] ',' [\s*]] \s* '}'
+            '{' \s* <ASN> +% [\s* ',' \s*] \s* '}'
                 { make Net::BGP::AS-List.from-list($<ASN>».Int, :!ordered, :$asn32) }
         }
 
