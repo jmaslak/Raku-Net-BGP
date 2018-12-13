@@ -93,7 +93,7 @@ subtest 'Update Message (ASN16)', {
     is $bgp.withdrawn[1], '192.168.150.0/24', "Withdrawn 2 correct";
     is $bgp.withdrawn[2], '192.168.150.1/32', "Withdrawn 3 correct";
 
-    is $bgp.path-attributes.elems, 3, "Proper number of path elements";
+    is $bgp.path-attributes.elems, 4, "Proper number of path elements";
     ok $bgp.path-attributes[0] ~~ Net::BGP::Path-Attribute::Origin,
         "Path Attribute 1 Proper Type";
     is $bgp.path-attributes[0].origin, '?', "Path Attribute 1 Proper Value";
@@ -103,6 +103,9 @@ subtest 'Update Message (ASN16)', {
     ok $bgp.path-attributes[2] ~~ Net::BGP::Path-Attribute::Next-Hop,
         "Path Attribute 3 Proper Type";
     is $bgp.path-attributes[2].ip, "10.0.0.1", "Path Attribute 3 Proper Value";
+    ok $bgp.path-attributes[3] ~~ Net::BGP::Path-Attribute::Community,
+        "Path Attribute 4 Proper Type";
+    is $bgp.path-attributes[3].community-list, "2571:258", "Path Attribute 3 Proper Value";
 
     is $bgp.nlri.elems, 3, "Proper number of NLRI prefixes";
     is $bgp.nlri[0], '10.0.0.0/8',       "NLRI 1 correct";
