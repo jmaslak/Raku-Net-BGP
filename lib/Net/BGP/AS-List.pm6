@@ -55,30 +55,26 @@ method Str(-->Str:D) {
 method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
     grammar AS-Path {
         token TOP {
-            ^ \s* <AS-LIST> +% \s+ \s* $
+            ^ \s*  <AS-LIST> +% <ws>  \s* $
             { make $<AS-LIST>».made }
         }
 
-        token AS-LIST {
-            | <AS-Set>
-                { make $<AS-Set>.made }
+        proto token AS-LIST { * }
 
-
-            | <AS-Sequence>
-                { make $<AS-Sequence>.made }
-        }
-
-        token AS-Set {
-            '{' \s* <ASN> +% [\s* ',' \s*] \s* '}'
+        multi token AS-LIST:Set {
+            '{' \s*  <ASN> +% <comma-sep>  \s* '}'
                 { make Net::BGP::AS-List.from-list($<ASN>».Int, :!ordered, :$asn32) }
         }
 
-        token AS-Sequence {
-            <ASN> +% \s+
+        multi token AS-LIST:Seq {
+            <ASN> +% <ws>
                 { make Net::BGP::AS-List.from-list($<ASN>».Int, :ordered, :$asn32) }
         }
 
         token ASN { <[ 0 .. 9 ]>+ }
+
+        token ws { \s+ }
+        token comma-sep { \s* ',' \s* }
     }
 
     my $match = AS-Path.parse($str);
