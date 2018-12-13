@@ -12,6 +12,7 @@ use Net::BGP::Message;
 use Net::BGP::Parameter;
 use Net::BGP::Path-Attribute;
 use Net::BGP::Path-Attribute::AS-Path;
+use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
 use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
