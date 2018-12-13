@@ -70,15 +70,15 @@ method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
 
         token AS-Set {
             '{' \s* <ASN> +% [[\s*] ',' [\s*]] \s* '}'
-                { make Net::BGP::AS-List.from-list(False, $<ASN>».Int, $asn32) }
+                { make Net::BGP::AS-List.from-list($<ASN>».Int, :!ordered, :$asn32) }
         }
 
         token AS-Sequence {
             <ASN> +% \s+
-                { make Net::BGP::AS-List.from-list(True, $<ASN>».Int, $asn32) }
+                { make Net::BGP::AS-List.from-list($<ASN>».Int, :ordered, :$asn32) }
         }
 
-        token ASN          { <[ 0 .. 9 ]>+ }
+        token ASN { <[ 0 .. 9 ]>+ }
     }
 
     my $match = AS-Path.parse($str);
@@ -88,11 +88,10 @@ method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
     return @asns;
 }
 
-# Internal only for now, not documented
 method from-list(
-    Bool:D $ordered,
     @list,
-    Bool:D $asn32
+    Bool:D :$ordered,
+    Bool:D :$asn32
     -->Net::BGP::AS-List:D
 ) {
     if @list.elems > 255 { die("Too many ASNs in path element") }
