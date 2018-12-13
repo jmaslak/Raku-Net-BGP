@@ -56,7 +56,8 @@ sub MAIN(
                 }
             } while $event.defined;
 
-            # my @str = @stack».Str;
+            if @stack.elems == 0 { next; }
+
             my @str = @stack.hyper(:degree(8), :batch(64)).map: { $^a.Str };
             for @str -> $event {
                 logevent($event);
