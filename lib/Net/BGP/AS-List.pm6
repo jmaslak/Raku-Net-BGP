@@ -107,10 +107,12 @@ method from-list(
 }
 
 method as-lists(
-    buf8:D $raw where { $^a.bytes ≥ 2 },
+    buf8:D $raw,
     Bool:D $asn32
     -->Array[Net::BGP::AS-List:D]
 ) {
+    return Array[Net::BGP::AS-List:D].new unless $raw.bytes;
+
     my $aslen = $asn32 ?? 4 !! 2;
 
     my $pos = 0;
