@@ -14,6 +14,7 @@ use Net::BGP::Path-Attribute;
 use Net::BGP::Path-Attribute::AS-Path;
 use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
+use Net::BGP::Path-Attribute::Local-Pref;
 use Net::BGP::Path-Attribute::MED;
 use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
@@ -82,15 +83,17 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy, Bool:D :$asn32) {
-        my @REQUIRED = «withdrawn origin as-path next-hop med community nlri»;
+        my @REQUIRED = 
+            «withdrawn origin as-path next-hop med local-pref community nlri»;
 
-        %params<withdrawn> //= [];
-        %params<origin>    //= '?';
-        %params<as-path>   //= '';
-        %params<next-hop>  //= '';
-        %params<med>       //= '';
-        %params<community> //= [];
-        %params<nlri>      //= [];
+        %params<withdrawn>  //= [];
+        %params<origin>     //= '?';
+        %params<as-path>    //= '';
+        %params<next-hop>   //= '';
+        %params<local-pref> //= '';
+        %params<med>        //= '';
+        %params<community>  //= [];
+        %params<nlri>       //= [];
 
         # Delete unnecessary option
         if %params<message-code>:exists {
@@ -130,15 +133,15 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
                 :$asn32
             ).raw;
         }
-        if %params<as-path> ne '' {
-            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
-                {
-                    path-attribute-name => 'AS-Path',
-                    as-path             => %params<as-path>,
-                },
-                :$asn32
-            ).raw;
-        }
+
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+            {
+                path-attribute-name => 'AS-Path',
+                as-path             => %params<as-path>,
+            },
+            :$asn32
+        ).raw;
+
         if %params<next-hop> ne '' {
             $path-attr.append: Net::BGP::Path-Attribute.from-hash(
                 {
@@ -148,6 +151,7 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
                 :$asn32
             ).raw;
         }
+
         if %params<med> ne '' {
             $path-attr.append: Net::BGP::Path-Attribute.from-hash(
                 {
@@ -157,6 +161,17 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
                 :$asn32
             ).raw;
         }
+
+        if %params<local-pref> ne '' {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'Local-Pref',
+                    local-pref          => %params<local-pref>,
+                },
+                :$asn32
+            ).raw;
+        }
+
         if %params<community>.elems {
             $path-attr.append: Net::BGP::Path-Attribute.from-hash(
                 {

@@ -191,6 +191,7 @@ subtest 'Update-ASN16', {
             as-path      => '258 772',
             next-hop     => '10.0.0.1',
             med          => 5000,
+            local-pref   => 100,
             community    => [ '2571:258' ],
             nlri         => [
                 '10.0.0.0/8',
@@ -205,6 +206,10 @@ subtest 'Update-ASN16', {
     is $from-hash.message-name, 'UPDATE', 'FH Message code is correct';
 
     ok check-list($from-hash.raw, $bgp.raw), 'Message value correct';
+    if !check-list($from-hash.raw, $bgp.raw) {
+        note "GENERATED: " ~ $from-hash.raw.perl;
+        note "EXPECTED : " ~ $bgp.raw.perl;
+    }
 
     done-testing;
 };
