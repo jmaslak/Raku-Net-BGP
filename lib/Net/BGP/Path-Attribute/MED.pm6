@@ -24,12 +24,12 @@ method new() {
 }
 
 method from-raw(buf8:D $raw where $raw.bytes == 7, Bool:D :$asn32) {
-    if ! $raw[0] +& 0x80 { die("Optional flag must be set on Next-Hop attribute") }
-    if   $raw[0] +& 0x40 { die("Transitive flag not valid on Next-Hop attribute") }
-    if   $raw[0] +& 0x20 { die("Partial flag not valid on Next-Hop attribute") }
-    if   $raw[0] +& 0x10 { die("Extended length flag not valid on Next-Hop attribute") }
+    if ! $raw[0] +& 0x80 { die("Optional flag must be set on MED attribute") }
+    if   $raw[0] +& 0x40 { die("Transitive flag not valid on MED attribute") }
+    if   $raw[0] +& 0x20 { die("Partial flag not valid on MED attribute") }
+    if   $raw[0] +& 0x10 { die("Extended length flag not valid on MED attribute") }
 
-    if   $raw[1] ≠ 4     { die("Can only create a Next-Hop attribute") }
+    if   $raw[1] ≠ 4     { die("Can only create a MED attribute") }
 
     if ($raw.bytes - 3) ≠ $raw[2] { die("Invalid path-attribute payload length") }
     if $raw[2] ≠ 4                { die("Invalid path-attribute payload length") }
