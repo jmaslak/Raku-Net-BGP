@@ -190,6 +190,7 @@ subtest 'Update-ASN16', {
             origin       => '?',
             as-path      => '258 772',
             next-hop     => '10.0.0.1',
+            med          => 5000,
             community    => [ '2571:258' ],
             nlri         => [
                 '10.0.0.0/8',

@@ -1,14 +1,15 @@
 ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
-00 46                                                   # Length
+00 4D                                                   # Length
 02                                                      # Message Type (Open)
 00 0A                                                   # Withdrawn Length
 00                                                      #   0.0.0.0/0
 18 C0 A8 96                                             #   192.168.150.0/24
 20 C0 A8 96 01                                          #   192.168.150.1/32
-00 1B                                                   # Path Attribute Length
+00 22                                                   # Path Attribute Length
 40 01 01 02                                             # Origin: Unknown
 40 02 06 02 02 01 02 03 04                              # AS Path: 0x0102 0x0304
 40 03 04 0A 00 00 01                                    # Next Hop: 10.0.0.1
+80 04 04 00 00 13 88                                    # MED: 5000
 C0 08 04 0A 0B 01 02                                    # Community: 2571:258
 08 0A                                                   # NLRI 1 10.0.0.0/8
 18 C0 A8 97                                             #      2 192.168.151.0/24

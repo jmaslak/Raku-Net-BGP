@@ -14,6 +14,7 @@ use Net::BGP::Path-Attribute;
 use Net::BGP::Path-Attribute::AS-Path;
 use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
+use Net::BGP::Path-Attribute::MED;
 use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
 
@@ -81,12 +82,13 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy, Bool:D :$asn32) {
-        my @REQUIRED = «withdrawn origin as-path next-hop community nlri»;
+        my @REQUIRED = «withdrawn origin as-path next-hop med community nlri»;
 
         %params<withdrawn> //= [];
         %params<origin>    //= '?';
         %params<as-path>   //= '';
         %params<next-hop>  //= '';
+        %params<med>       //= '';
         %params<community> //= [];
         %params<nlri>      //= [];
 
@@ -142,6 +144,15 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
                 {
                     path-attribute-name => 'Next-Hop',
                     next-hop            => %params<next-hop>,
+                },
+                :$asn32
+            ).raw;
+        }
+        if %params<med> ne '' {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'MED',
+                    med                 => %params<med>,
                 },
                 :$asn32
             ).raw;
