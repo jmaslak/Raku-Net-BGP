@@ -8,8 +8,15 @@ use Test;
 
 use Net::BGP::AS-List;
 
-my $buf = buf8.new( 1, 2, 9, 8, 7, 6 );
+my $buf = buf8.new( 1, 0 );
 my $aslist = Net::BGP::AS-List.new( :raw($buf), :!asn32 );
+is $aslist.ordered,    False,  "(0) ordered";
+is $aslist.asn-size,   2,      "(0) asn-size";
+is $aslist.asn-count,  0,      "(0) asn-count";
+is $aslist.asns.elems, 0,      "(0) elems";
+
+$buf = buf8.new( 1, 2, 9, 8, 7, 6 );
+$aslist = Net::BGP::AS-List.new( :raw($buf), :!asn32 );
 is $aslist.ordered,    False,  "(1) ordered";
 is $aslist.asn-size,   2,      "(1) asn-size";
 is $aslist.asn-count,  2,      "(1) asn-count";
@@ -46,6 +53,9 @@ is @aslists[2].Str, '{101}',   "(B) Third AS Sequence is correct";
 is @aslists[2].ordered, False, "(B) Third AS Sequence Ordering";
 is @aslists[3].Str, "55",      "(B) Forth AS Sequence is correct";
 is @aslists[3].ordered, True,  "(B) Forth AS Sequence Ordering";
+
+@aslists = Net::BGP::AS-List.from-str('', True);
+is @aslists.elems,  0,     "(C) Proper number of AS lists";
 
 
 done-testing;

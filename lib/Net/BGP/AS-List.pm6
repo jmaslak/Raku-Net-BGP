@@ -76,6 +76,8 @@ method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
         token ws { \s+ }
         token comma-sep { \s* ',' \s* }
     }
+    
+    return Array[Net::BGP::AS-List:D].new if $str ~~ m/^ \s* $/;
 
     my $match = AS-Path.parse($str);
     if ! $match.defined { die("Could not parse AS-Path"); }
