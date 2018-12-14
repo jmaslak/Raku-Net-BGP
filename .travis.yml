@@ -2,13 +2,9 @@ os:
   - linux
 #  - osx  # Right now we know it fails the socket test
 language: perl6
-matrix:
-  include:
-    perl6:
-    - 2018.11
-    - latest
-  allow_failures:
-    - perl6: latest
+perl6:
+  - 2018.11
+#  - latest
 install:
   - rakudobrew build zef
   - zef install --deps-only --/test .
