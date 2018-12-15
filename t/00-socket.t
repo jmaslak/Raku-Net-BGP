@@ -10,6 +10,14 @@ use experimental :pack;
 use Net::BGP::Socket;
 use Net::BGP::Socket-Connection;
 
+subtest 'System Info', {
+    note "DISTRO: " ~ $*DISTRO.perl;
+    note "KERNEL: " ~ $*KERNEL.perl;
+
+    ok "System info gathered";
+    done-testing;
+}
+
 subtest 'Basic Server', {
     my $inet = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock = $inet.socket;
