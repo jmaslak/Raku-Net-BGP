@@ -16,6 +16,8 @@ use NativeHelpers::Blob;
 use Net::BGP::IP;
 use Net::BGP::Socket-Connection;
 
+my Bool $supports-md5;
+
 enum States (
     SOCKET_CLOSED    => 0;
     SOCKET_CREATED   => 1;
@@ -508,6 +510,26 @@ method set-md5(Str:D $host, Str $MD5, Int $prefix-len? -->Nil) {
         $size
     );
     if $rv { die("Could not set MD5 socket option - $var"); }
+}
+
+method supports-md5(-->Bool:D) {
+    my $inet = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
+    my $sock = $inet.socket;
+    $inet.bind;
+    {
+        $inet.set-md5('192.0.2.0', 'key key key');
+        CATCH {
+            default {
+                $inet.close;
+                $supports-md5 = False;
+                return False;
+            }
+        }
+    }
+    close $inet;
+
+    $supports-md5 = True;
+    return True;
 }
 
 submethod DESTROY {

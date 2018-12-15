@@ -108,7 +108,9 @@ subtest 'Client/Server', {
     done-testing;
 };
 
-subtest 'Client/Server - MD5 Non-Match', {
+subtest 'Client/Server - MD5 Non-Match', sub {
+    plan :skip-all("No MD5 support") unless Net::BGP::Socket.supports-md5;
+
     my $inet1 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock1 = $inet1.socket;
 
@@ -143,7 +145,9 @@ subtest 'Client/Server - MD5 Non-Match', {
 };
 
 
-subtest 'Client/Server - MD5 Match', {
+subtest 'Client/Server - MD5 Match', sub {
+    plan :skip-all("No MD5 support") unless Net::BGP::Socket.supports-md5;
+
     my $inet1 = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock1 = $inet1.socket;
 
