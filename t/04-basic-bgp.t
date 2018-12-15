@@ -235,6 +235,11 @@ if (!check-compiler-version) {
         is $cr-bgp.message.option-len, 0, 'Option length is zero';
         is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
 
+        # XXX This is temporary to deal with a race condition we need to
+        # handle properly (Maybe controller should be signalling the
+        # user)
+        sleep .1; 
+
         $bgp.peer-get(:peer-ip('127.0.0.1')).lock.protect: {
             is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
             is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
