@@ -10,16 +10,8 @@ use experimental :pack;
 use Net::BGP::Socket;
 use Net::BGP::Socket-Connection;
 
-subtest 'System Info', {
-    note "DISTRO: " ~ $*DISTRO.perl;
-    note "KERNEL: " ~ $*KERNEL.perl;
-    note "KERNEL Name: " ~ $*KERNEL.name;
-    note "KERNEL Release: " ~ $*KERNEL.release;
-    note "KERNEL Version: " ~ $*KERNEL.version;
-
-    ok "System info gathered";
-    done-testing;
-}
+note "KERNEL Name: " ~ $*KERNEL.name;
+plan :skip-all("Non-Linux Host") unless $*KERNEL.name eq 'linux';
 
 subtest 'Basic Server', {
     my $inet = Net::BGP::Socket.new(:my-host('127.0.0.1'), :my-port(0));
