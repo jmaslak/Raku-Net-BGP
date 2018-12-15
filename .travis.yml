@@ -4,7 +4,7 @@ os:
 language: perl6
 perl6:
   - 2018.11
-#  - latest
+  - latest
 install:
   - rakudobrew build zef
   - zef install --deps-only --/test .
