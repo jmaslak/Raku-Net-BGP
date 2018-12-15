@@ -526,7 +526,7 @@ method supports-md5(-->Bool:D) {
             }
         }
     }
-    close $inet;
+    $inet.close;
 
     $supports-md5 = True;
     return True;
