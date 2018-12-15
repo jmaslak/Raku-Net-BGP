@@ -13,6 +13,9 @@ use Net::BGP::Socket-Connection;
 subtest 'System Info', {
     note "DISTRO: " ~ $*DISTRO.perl;
     note "KERNEL: " ~ $*KERNEL.perl;
+    note "KERNEL Name: " ~ $*KERNEL.name;
+    note "KERNEL Release: " ~ $*KERNEL.release;
+    note "KERNEL Version: " ~ $*KERNEL.version;
 
     ok "System info gathered";
     done-testing;
