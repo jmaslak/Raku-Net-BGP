@@ -18,6 +18,8 @@ use Net::BGP::Path-Attribute::Local-Pref;
 use Net::BGP::Path-Attribute::MED;
 use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
+use Net::BGP::Path-Attribute::Originator-ID;
+use Net::BGP::Path-Attribute::Cluster-List;
 
 class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
@@ -83,17 +85,21 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
     };
 
     method from-hash(%params is copy, Bool:D :$asn32) {
-        my @REQUIRED = 
-            «withdrawn origin as-path next-hop med local-pref community nlri»;
+        my @REQUIRED = «
+            withdrawn origin as-path next-hop med local-pref originator-id
+            cluster-list community nlri
+        »;
 
-        %params<withdrawn>  //= [];
-        %params<origin>     //= '?';
-        %params<as-path>    //= '';
-        %params<next-hop>   //= '';
-        %params<local-pref> //= '';
-        %params<med>        //= '';
-        %params<community>  //= [];
-        %params<nlri>       //= [];
+        %params<withdrawn>     //= [];
+        %params<origin>        //= '?';
+        %params<as-path>       //= '';
+        %params<next-hop>      //= '';
+        %params<local-pref>    //= '';
+        %params<med>           //= '';
+        %params<community>     //= [];
+        %params<originator-id> //= '';
+        %params<cluster-list>  //= '';
+        %params<nlri>          //= [];
 
         # Delete unnecessary option
         if %params<message-code>:exists {
@@ -177,6 +183,26 @@ class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
                 {
                     path-attribute-name => 'Community',
                     community           => %params<community>,
+                },
+                :$asn32
+            ).raw;
+        }
+
+        if %params<originator-id> ne '' {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'Originator-ID',
+                    originator-id       => %params<originator-id>,
+                },
+                :$asn32
+            ).raw;
+        }
+
+        if %params<cluster-list> ne '' {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'Cluster-List',
+                    cluster-list        => %params<cluster-list>,
                 },
                 :$asn32
             ).raw;
