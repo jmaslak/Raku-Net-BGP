@@ -62,6 +62,18 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         return :16(@*by16.map({:16(~$_)})».fmt("%04x").join);
     }
 
+    our sub ipv6-to-buf8(ipv6:D $ip -->buf8:D) is export {
+        my $int = ipv6-to-int($ip);
+
+        my @storage;
+        for ^16 {
+            @storage.unshift($int +& 255);
+            $int = $int +> 8;
+        }
+
+        return buf8.new( @storage );
+    }
+
     our sub int-to-ipv6(ipv6_int:D $i -->ipv6:D) is export {
         return ipv6-compact($i.fmt("%032x").comb(4).join(':'));
     }
@@ -166,6 +178,10 @@ Converts an integer into a string representation of an IPv4 address.
 
 Converts an IPv4 string into an integer.
 
+=head2 ipv4-to-buf8
+
+Converts an IPv4 string into a buf8 object (in network byte order).
+
 =head2 int-to-ipv6
 
 Converts an integer into a string representation of an IPv6 address.
@@ -173,6 +189,10 @@ Converts an integer into a string representation of an IPv6 address.
 =head2 ipv6-to-int
 
 Converts an IPv6 string into an integer.
+
+=head2 ipv6-to-buf8
+
+Converts an IPv6 string into a buf8 object (in network byte order).
 
 =head2 ipv6-expand
 

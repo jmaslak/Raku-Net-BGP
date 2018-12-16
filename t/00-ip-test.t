@@ -29,6 +29,8 @@ my @TESTS6 := (
         full    => '2001:0db8:0000:0000:0000:0000:0000:0001',
         val     => 42540766411282592856903984951653826561,
         compact => '2001:db8::1',
+        buf8    => [ 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
+                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ],
     },
     {
         ip      => '2001:db8:0:2:3::1',
@@ -63,6 +65,13 @@ for @TESTS6 -> $test {
     is ipv6-compact($test<ip>), $test<compact>, "$test<ip> ipv6-compact";
     is int-to-ipv6($test<val>), $test<compact>, "$test<ip> int-to-ipv6";
     is ip-valid($test<ip>), True, "$test<ip> ip-valid";
+
+    if $test<buf8>:exists {
+        my $buf = ipv6-to-buf8($test<ip>);
+        for ^16 -> $byte {
+            is $buf[$byte], $test<buf8>[$byte], "$test<ip> $byte ipv6-to-buf8";
+        }
+    }
 }
 
 my @TESTS-CANNONICAL := (
