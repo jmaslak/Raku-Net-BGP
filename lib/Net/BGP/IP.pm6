@@ -62,16 +62,43 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         return :16(@*by16.map({:16(~$_)})».fmt("%04x").join);
     }
 
-    our sub ipv6-to-buf8(ipv6:D $ip -->buf8:D) is export {
-        my $int = ipv6-to-int($ip);
-
+    our sub ipv6-to-buf8(
+        ipv6:D $ip,
+        Int :$bits? = 128
+        -->buf8:D
+    ) is export {
+        my $bytes = (($bits + 7) / 8).Int;
         my @storage;
-        for ^16 {
+
+        my $int = ipv6-to-int($ip);
+        $int = $int +> (128-$bits) +< (128-$bits);
+
+        for ^16 -> $byte {
             @storage.unshift($int +& 255);
             $int = $int +> 8;
         }
 
-        return buf8.new( @storage );
+        return buf8.new( @storage[^$bytes] );
+    }
+
+    our sub buf8-to-ipv6(
+        buf8:D $buf,
+        Int :$bits? = 128
+        --> ipv6:D
+    ) is export {
+        my $bytes = (($bits + 7) / 8).Int;
+        if $buf.bytes ≠ $bytes {
+            die("buf8-to-ipv6 called with wrong length buffer ($bytes ≠ {$buf.bytes})");
+        }
+
+        my $int = 0;
+        for ^16 -> $byte {
+            $int  = $int +< 8;
+            $int += $buf[$byte] unless $byte ≥ $bytes;
+        }
+        $int = $int +> (128-$bits) +< (128-$bits);
+
+        return int-to-ipv6($int);
     }
 
     our sub int-to-ipv6(ipv6_int:D $i -->ipv6:D) is export {

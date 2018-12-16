@@ -25,36 +25,54 @@ for @TESTS -> $test {
 
 my @TESTS6 := (
     {
-        ip      => '2001:db8::1',
-        full    => '2001:0db8:0000:0000:0000:0000:0000:0001',
-        val     => 42540766411282592856903984951653826561,
-        compact => '2001:db8::1',
-        buf8    => [ 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
-                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ],
+        ip        => '2001:db8::1',
+        full      => '2001:0db8:0000:0000:0000:0000:0000:0001',
+        val       => 42540766411282592856903984951653826561,
+        compact   => '2001:db8::1',
+        buf8      => ( 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
+                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 ),
+        buf8-b64  => ( 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00 ),
+        buf8-c64  => '2001:db8::',
+        buf8-b127 => ( 0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
+                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ),
+        buf8-c127 => '2001:db8::',
     },
     {
-        ip      => '2001:db8:0:2:3::1',
-        full    => '2001:0db8:0000:0002:0003:0000:0000:0001',
-        val     => 42540766411282592893798317524003061761,
-        compact => '2001:db8:0:2:3::1',
+        ip        => '2001:db8:0:2:3::1',
+        full      => '2001:0db8:0000:0002:0003:0000:0000:0001',
+        val       => 42540766411282592893798317524003061761,
+        compact   => '2001:db8:0:2:3::1',
     },
     {
-        ip      => '2001:db8:0:002:03::1',
-        full    => '2001:0db8:0000:0002:0003:0000:0000:0001',
-        val     => 42540766411282592893798317524003061761,
-        compact => '2001:db8:0:2:3::1',
+        ip        => '2001:db8:0:002:03::1',
+        full      => '2001:0db8:0000:0002:0003:0000:0000:0001',
+        val       => 42540766411282592893798317524003061761,
+        compact   => '2001:db8:0:2:3::1',
     },
     {
-        ip      => '2001:dB8:0:002:03::1',      # Note upper case B
-        full    => '2001:0db8:0000:0002:0003:0000:0000:0001',
-        val     => 42540766411282592893798317524003061761,
-        compact => '2001:db8:0:2:3::1',
+        ip        => '2001:dB8:0:002:03::1',      # Note upper case B
+        full      => '2001:0db8:0000:0002:0003:0000:0000:0001',
+        val       => 42540766411282592893798317524003061761,
+        compact   => '2001:db8:0:2:3::1',
     },
     {
-        ip      => '2605:2700:0:3::4713:93e3',
-        full    => '2605:2700:0000:0003:0000:0000:4713:93e3',
-        val     => 50537416338094019778974086937420469219,
-        compact => '2605:2700:0:3::4713:93e3',
+        ip        => '2605:2700:0:3::4713:93e3',
+        full      => '2605:2700:0000:0003:0000:0000:4713:93e3',
+        val       => 50537416338094019778974086937420469219,
+        compact   => '2605:2700:0:3::4713:93e3',
+    },
+    {
+        ip        => '::',
+        full      => '0000:0000:0000:0000:0000:0000:0000:0000',
+        val       => 0,
+        compact   => '::',
+        buf8      => ( 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ),
+        buf8-b64  => ( 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ),
+        buf8-c64  => '::',
+        buf8-b127 => ( 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ),
+        buf8-c127 => '::',
     },
 );
 
@@ -66,12 +84,41 @@ for @TESTS6 -> $test {
     is int-to-ipv6($test<val>), $test<compact>, "$test<ip> int-to-ipv6";
     is ip-valid($test<ip>), True, "$test<ip> ip-valid";
 
+    my $buf = ipv6-to-buf8($test<ip>);
     if $test<buf8>:exists {
-        my $buf = ipv6-to-buf8($test<ip>);
+        is $buf.bytes, $test<buf8>.elems, "$test<ip> ipv6-to-buf-length";
         for ^16 -> $byte {
             is $buf[$byte], $test<buf8>[$byte], "$test<ip> $byte ipv6-to-buf8";
         }
     }
+    is buf8-to-ipv6($buf), $test<compact>, "$test<ip> buf8-to-ipv6";
+
+    $buf = ipv6-to-buf8($test<ip>, :0bits);
+    is $buf.bytes, 0, "$test<ip>/0 ipv6-to-buf-length";
+    is buf8-to-ipv6($buf, :0bits), '::', "$test<ip>/0 buf8-to-ipv6";
+    
+    $buf = ipv6-to-buf8($test<ip>, :64bits);
+    if $test<buf8-64>:exists {
+        is $buf.bytes, $test<buf8-b64>.elems, "$test<ip>/64 ipv6-to-buf-length";
+        for ^8 -> $byte {
+            is $buf[$byte], $test<buf8-b64>[$byte], "$test<ip>/64 $byte ipv6-to-buf8";
+        }
+    }
+    if $test<buf8-c64>:exists {
+        is buf8-to-ipv6($buf, :64bits), $test<buf8-c64>, "$test<ip>/64 buf8-to-ipv6";
+    }
+
+    $buf = ipv6-to-buf8($test<ip>, :127bits);
+    if $test<buf8-b127>:exists {
+        is $buf.bytes, $test<buf8-b127>.elems, "$test<ip>/127 ipv6-to-buf-length";
+        for ^16 -> $byte {
+            is $buf[$byte], $test<buf8-b127>[$byte], "$test<ip>/127 $byte ipv6-to-buf8";
+        }
+    }
+    if $test<buf8-c127>:exists {
+        is buf8-to-ipv6($buf, :127bits), $test<buf8-c127>, "$test<ip>/127 buf8-to-ipv6";
+    }
+
 }
 
 my @TESTS-CANNONICAL := (
