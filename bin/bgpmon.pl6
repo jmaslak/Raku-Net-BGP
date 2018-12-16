@@ -58,7 +58,13 @@ sub MAIN(
 
             if @stack.elems == 0 { next; }
 
-            my @str = @stack.hyper(:degree(8), :batch(64)).map: { $^a.Str };
+            my @str;
+            if (@stack.elems > 64) {
+                @str = @stack.hyper(:degree(8), :batch(64)).map: { $^a.Str }
+            } else {
+                @str = @stack.map: { $^a.Str }
+            }
+
             for @str -> $event {
                 logevent($event);
 
