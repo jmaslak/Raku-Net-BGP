@@ -63,8 +63,8 @@ Net::BGP::Message::SAFI - BGP SAFIs
 
   use Net::BGP::SAFI;
 
-  my $name = Net::BGP::SAFI::name(1);         # unicast
-  my $code = Net::BGP::SAFI::code("unicast"); # 2
+  my $name = Net::BGP::SAFI::safi-name(1);         # unicast
+  my $code = Net::BGP::SAFI::safi-code("unicast"); # 2
 
 =head1 DESCRIPTION
 
