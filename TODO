@@ -9,3 +9,5 @@ Todo Items:
     anonymous constraints)
   * If listening port cannot be bound, something bad should happen - it
     should not just silently fail.
+  * In messages, parameters, capabilities, and path attributes, we
+    should test for the message type in a uniform way.

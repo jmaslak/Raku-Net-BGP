@@ -16,6 +16,7 @@ use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
 use Net::BGP::Path-Attribute::Local-Pref;
 use Net::BGP::Path-Attribute::MED;
+use Net::BGP::Path-Attribute::MP-NLRI;
 use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
 use Net::BGP::Path-Attribute::Originator-ID;

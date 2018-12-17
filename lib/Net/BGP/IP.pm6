@@ -101,8 +101,48 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         return int-to-ipv6($int);
     }
 
-    our sub int-to-ipv6(ipv6_int:D $i -->ipv6:D) is export {
-        return ipv6-compact($i.fmt("%032x").comb(4).join(':'));
+    our sub int-to-ipv6(ipv6_int:D $ip is copy -->ipv6:D) is export {
+        if $ip == 0 { return '::' }      # Special case
+
+        my @parts;
+        for ^8 -> $i {
+            my uint16 $part = $ip +& 0xffff;
+            $ip = $ip +> 16;
+            @parts.unshift: $part;
+        }
+
+        my $best-run;
+        my $best-length = 0;
+        my $run-start;
+        my $run-length = 0;
+        for ^8 -> $i {
+            if @parts[$i] ≠ 0 {
+                $run-length = 0;
+            } else {
+                $run-start = $i unless $run-length > 0;
+                $run-length++;
+
+                if $run-length > $best-length {
+                    $best-run    = $run-start;
+                    $best-length = $run-length;
+                }
+            }
+        }
+
+        my $str = '';
+        for ^8 -> $i {
+            if $best-run.defined and $i ≥ $best-run and $i < ($best-run + $best-length) {
+                $str ~= ':' if $i == $best-run;
+            } else {
+                if $i ≠ 7 {
+                    $str ~= @parts[$i].fmt("%x") ~ ':';
+                } else {
+                    $str ~= @parts[$i].fmt("%x");
+                }
+            }
+        }
+
+        return $str;
     }
 
     our sub ipv6-expand(ipv6:D $ip -->ipv6:D) is export {

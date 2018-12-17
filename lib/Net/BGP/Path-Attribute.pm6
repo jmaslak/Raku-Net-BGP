@@ -37,7 +37,7 @@ method data-length(-->Int:D) {
     }
 }
 
-method data(-->Int:D) {
+method data(-->buf8) {
     if self.extended-length {
         return $!raw.subbuf(4, self.data-length);
     } else {
