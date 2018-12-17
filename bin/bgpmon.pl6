@@ -20,6 +20,7 @@ sub MAIN(
     Int:D                :$peer-asn,       # XXX should allow per-per spec
     Int                  :$max-log-messages,
     Net::BGP::IP::ipv4:D :$my-bgp-id,
+    Int:D                :$batch-size = 32,
     *@peers
 ) {
     my $bgp = Net::BGP.new(
@@ -49,7 +50,7 @@ sub MAIN(
             my uint32 $cnt = 0;
             repeat {
                 @stack.push: $event;
-                if $cnt++ ≤ 8*64 {
+                if $cnt++ ≤ 8*2*$batch-size {
                     $event = $channel.poll;
                 } else {
                     $event = Nil;
@@ -59,8 +60,10 @@ sub MAIN(
             if @stack.elems == 0 { next; }
 
             my @str;
-            if (@stack.elems > 64) {
-                @str = @stack.hyper(:degree(8), :batch(64)).map: { $^a.Str }
+            if (@stack.elems > $batch-size) {
+                @str = @stack.hyper(
+                    :degree(8), :batch((@stack.elems / 8).ceiling)
+                ).map: { $^a.Str }
             } else {
                 @str = @stack.map: { $^a.Str }
             }

@@ -101,7 +101,7 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
         return int-to-ipv6($int);
     }
 
-    our sub int-to-ipv6(ipv6_int:D $ip is copy -->ipv6:D) is export {
+    our sub int-to-ipv6(ipv6_int:D $ip is copy -->Str:D) is export {
         if $ip == 0 { return '::' }      # Special case
 
         my @parts;
