@@ -11,3 +11,4 @@ Todo Items:
     should not just silently fail.
   * In messages, parameters, capabilities, and path attributes, we
     should test for the message type in a uniform way.
+  * Allow specifying two next-hop addresses for IPv6 MP-NLRI
