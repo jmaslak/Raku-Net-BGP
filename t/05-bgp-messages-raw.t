@@ -137,6 +137,39 @@ subtest 'Update Message (ASN16)', {
     done-testing;
 };
 
+subtest 'Update Message (MP-BGP)', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('update-mp'), :!asn32 );
+    ok defined($bgp), "BGP message is defined";
+    ok $bgp ~~ Net::BGP::Message::Update, "BGP message is proper type";
+    is $bgp.message-code, 2, 'Message type is correct';
+    is $bgp.message-name, 'UPDATE', 'Message code is correct';
+
+    is $bgp.withdrawn.elems, 0, "Proper number of withdrawn prefixes";
+    is $bgp.path-attributes.elems, 3, "Proper number of path elements";
+    ok $bgp.path-attributes[0] ~~ Net::BGP::Path-Attribute::Origin,
+        "Path Attribute 1 Proper Type";
+    is $bgp.path-attributes[0].origin, '?', "Path Attribute 1 Proper Value";
+
+    ok $bgp.path-attributes[1] ~~ Net::BGP::Path-Attribute::AS-Path,
+        "Path Attribute 2 Proper Type";
+    is $bgp.path-attributes[1].as-path, "{0x0102} {0x0304}", "Path Attribute 2 Proper Value";
+
+    ok $bgp.path-attributes[2] ~~ Net::BGP::Path-Attribute::MP-NLRI,
+        "Path Attribute 3 Proper Type";
+    is $bgp.path-attributes[2].afi, "IPv6", "Path Attribute 3A Proper Value";
+    is $bgp.path-attributes[2].safi, "unicast", "Path Attribute 3B Proper Value";
+    is $bgp.path-attributes[2].next-hop-global, "2001:db8::1", "Path Attribute 3C Proper Value";
+    is $bgp.path-attributes[2].next-hop-local.defined, False, "Path Attribute 3D Proper Value";
+    is $bgp.path-attributes[2].nlri.elems, 1, "Path Attribute 3E Proper Value";
+    is $bgp.path-attributes[2].nlri[0], "2001:db8::/32", "Path Attribute 3F Proper Value";
+
+    is $bgp.nlri.elems, 0, "Proper number of NLRI prefixes";
+
+    ok check-list($bgp.raw, read-message('update-mp')), 'Message value correct';;
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {

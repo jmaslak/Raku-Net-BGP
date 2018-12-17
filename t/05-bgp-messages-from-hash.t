@@ -216,6 +216,37 @@ subtest 'Update-ASN16', {
     done-testing;
 };
 
+subtest 'Update-MP', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('update-mp'), :!asn32 );
+    ok defined($bgp), "BGP message is defined";
+    is $bgp.message-code, 2, 'Message type is correct';
+    is $bgp.message-name, 'UPDATE', 'Message code is correct';
+
+    my $from-hash = Net::BGP::Message.from-hash(
+        {
+            message-name   => 'UPDATE',
+            withdrawn      => [ ],
+            origin         => '?',
+            as-path        => '258 772',
+            next-hop       => '2001:db8::1',
+            nlri           => ( '2001:db8::/32' ),
+            address-family => 'ipv6',
+        },
+        :!asn32,
+    );
+    ok defined($from-hash), "FH BGP message is defined";
+    is $from-hash.message-code, 2, 'FH Message type is correct';
+    is $from-hash.message-name, 'UPDATE', 'FH Message code is correct';
+
+    ok check-list($from-hash.raw, $bgp.raw), 'Message value correct';
+    if !check-list($from-hash.raw, $bgp.raw) {
+        note "GENERATED: " ~ $from-hash.raw.perl;
+        note "EXPECTED : " ~ $bgp.raw.perl;
+    }
+
+    done-testing;
+};
+
 done-testing;
 
 sub read-message($filename) {

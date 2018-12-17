@@ -48,11 +48,11 @@ method from-raw(buf8:D $raw where $raw.bytes ≥ 7, :$asn32) {
 };
 
 method from-hash(%params is copy, Bool:D :$asn32)  {
-    my @REQUIRED = «cluster-list»;
+    my @REQUIRED = «address-family next-hop nlri»;
 
     # Remove path attributes
     if %params<path-attribute-code>:exists {
-        if %params<path-attribute-code> ≠ 10 {
+        if %params<path-attribute-code> ≠ 14 {
             die("Can only create an MP-NLRI attribute");
         }
         %params<path-attribute-code>:delete;
@@ -64,31 +64,48 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
         %params<path-attribute-name>:delete;
     }
 
-    my @clusters = %params<cluster-list>.split(/\s+/);
-    
-    my $cluster-list-buf = buf8.new;
-    for @clusters -> $cluster { $cluster-list-buf.append: ipv4-to-buf8($cluster) }
-
     # Check to make sure attributes are correct
     if @REQUIRED.sort.list !~~ %params.keys.sort.list {
         die("Did not provide proper options");
     }
 
-    if $cluster-list-buf.bytes > 65535 { die "Value is longer than 65535 bytes" }
+    if %params<address-family> ne 'ipv6' { die("Unknown address family") }
+
+    my $nlri = buf8.new;
+    for %params<nlri>.split(/\s+/) -> $cidr {
+        my @parts = $cidr.split('/');
+        my $newbuf = ipv6-to-buf8(@parts[0], :bits(@parts[1].Int));
+        $nlri.append(@parts[1].Int);
+        $nlri.append($newbuf);
+    }
 
     my $flag = 0x80;  # Optional, Non-Transitive
-    if $cluster-list-buf.bytes > 255 { $flag += 0x10 }  # Extended length?
+    if $nlri.bytes > 255 { $flag += 0x10 }  # Extended length?
 
     my buf8 $path-attribute = buf8.new();
     $path-attribute.append( $flag );
-    $path-attribute.append( 10 );
+    $path-attribute.append( 14 );       # Attribute Code
 
-    if $cluster-list-buf.bytes > 255 {
-        $path-attribute.append( nuint16-buf8( $cluster-list-buf.bytes ) );
-    } else {
-        $path-attribute.append( $cluster-list-buf.bytes );
+    my $next-hop = buf8.new;
+    if %params<next-hop> ne '' {
+        $next-hop = ipv6-to-buf8(%params<next-hop>);
     }
-    $path-attribute.append( $cluster-list-buf );
+    
+    my $len = $nlri.bytes + 5 + $next-hop.bytes;
+
+    if $nlri.bytes > 255 {
+        $path-attribute.append( nuint16-buf8( $len ) );
+    } else {
+        $path-attribute.append( $len );
+    }
+
+    $path-attribute.append( 0, 2, 1 ); # IPv6 (0,2), Unicast (1)
+    $path-attribute.append( $next-hop.bytes );
+    $path-attribute.append( $next-hop);
+    $path-attribute.append( 0 );       # Reserved
+    $path-attribute.append( $nlri );
+    
+    if $path-attribute.bytes > (65535-18) { die("Message would be too long") }
 
     return self.bless( :raw( $path-attribute ), :$asn32 );
 };
@@ -209,7 +226,11 @@ Net::BGP::Message::Path-Attribute::MP-NLRI - BGP MP-NLRI Path-Attribute Object
   my $cap = Net::BGP::Path-Attribute::MP-NLRI.from-raw( $raw );
   # or …
   my $cap = Net::BGP::Path-Attribute::MP-NLRI.from-hash(
-    cluster-list => '192.0.2.1 192.0.2.2'
+    {
+        address-family => 'ipv6',
+        next-hop       => '2001:db8::1',
+        nlri           => ( '2001:db8::/32' )
+    }
   );
 
 =head1 DESCRIPTION
@@ -224,9 +245,9 @@ Constructs a new object for a given raw binary buffer.
 
 =head2 from-hash
 
-Constructs a new object for a given hash.  Thakes a hash with a single key,
-C<cluster-list>, a string that contains space-seperated human-readable IP
-addresses.
+Constructs a new object for a given hash.  Thakes a hash with keys for
+C<address-family> (currently only C<ipv6> is recognized), C<next-hop>, and
+C<nlri> (a list of IPv6 addresses).
 
 =head1 Methods
 
@@ -264,10 +285,25 @@ True if the attribute uses a two digit length
 The four flags not defined in RFC4271, represented as a packed integer (values
 will be 0 through 15).
 
-=head2 cluster-list
+=head2 afi
 
-Returns an array of strings representing each cluster member in the cluster
-list.
+The address family (in string form) represented by this attribute.
+
+=head2 safi
+
+The supplimental address family (in string form).
+
+=head2 next-hop-global
+
+The first address in the attribute's next hop field.
+
+=head2 next-hop-local
+
+The second address in the attribute's next hop field.
+
+=head2 nlri
+
+An array of NLRI elements, in string format.
 
 =head2 data-length
 
