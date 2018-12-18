@@ -9,19 +9,16 @@ use Net::BGP::IP;
 
 unit module Net::BGP::Conversions:ver<0.0.1>:auth<cpan:JMASLAK>;
 
-# This is required for 2018.11.
-sub BigEndian {2} unless $*PERL.compiler.version > v2018.11;
+use if;
+
+# Select right helper library based on compiler version
+use Net::BGP::Conversions-Pre201812:if( $*PERL.compiler.version ≤ v2018.11);
+use Net::BGP::Conversions-Post201812:if($*PERL.compiler.version > v2018.11);
 
 multi sub nuint16(@a where @a.elems == 2 --> Int) is export {
     return nuint16(@a[0], @a[1]);
 }
-multi sub nuint16(buf8 $b where $b.bytes == 2 --> Int) is export {
-    if $*PERL.compiler.version > v2018.11 {
-        return $b.read-uint16(0, BigEndian);
-    } else {
-        return nuint16($b[0], $b[1]);
-    }
-}
+multi sub nuint16(buf8 $b where $b.bytes == 2 --> Int) is export { _nuint16($b) }
 multi sub nuint16(byte $a, byte $b --> Int) is export {
     return $a × 2⁸ + $b;
 }
@@ -30,13 +27,7 @@ multi sub nuint16(byte $a, byte $b --> Int) is export {
 multi sub nuint32(@a where @a.elems == 4 --> Int) is export {
     return nuint32(@a[0], @a[1], @a[2], @a[3]);
 }
-multi sub nuint32(buf8 $b where $b.bytes == 4 --> Int) is export {
-    if $*PERL.compiler.version > v2018.11 {
-        return $b.read-uint32(0, BigEndian);
-    } else {
-        return nuint32($b[0], $b[1], $b[2], $b[3]);
-    }
-}
+multi sub nuint32(buf8 $b where $b.bytes == 4 --> Int) is export { _nuint32($b) }
 multi sub nuint32(byte $a, byte $b, byte $c, byte $d --> Int) is export {
     return $a × 2²⁴ + $b × 2¹⁶ + $c × 2⁸ + $d;
 }
@@ -47,13 +38,7 @@ multi sub nuint128(@b where @b.elems == 16 --> Int) is export {
     for @b -> $b { $i = ( $i +< 8 ) + $b }
     return $i;
 }
-multi sub nuint128(buf8 $b where $b.bytes == 16 --> Int) is export {
-    if $*PERL.compiler.version > v2018.11 {
-        return $b.read-uint128(0, BigEndian);
-    } else {
-        return nuint128($b.list);
-    }
-}
+multi sub nuint128(buf8 $b where $b.bytes == 16 --> Int) is export { _nuint128($b) }
 multi sub nuint128(buf8 $b) is export {
     die($b.bytes);
 }

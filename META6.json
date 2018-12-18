@@ -5,6 +5,7 @@
   ],
   "build-depends" : [ ],
   "depends" : [
+    "if",
     "DateTime::Monotonic",
     "NativeHelpers::Blob",
     "OO::Monitors"
