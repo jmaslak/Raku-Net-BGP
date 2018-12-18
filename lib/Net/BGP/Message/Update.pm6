@@ -12,6 +12,7 @@ use Net::BGP::Message;
 use Net::BGP::Parameter;
 use Net::BGP::Path-Attribute;
 use Net::BGP::Path-Attribute::AS-Path;
+use Net::BGP::Path-Attribute::Atomic-Aggregate;
 use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
 use Net::BGP::Path-Attribute::Local-Pref;
@@ -88,21 +89,22 @@ method from-raw(buf8:D $raw where $raw.bytes ≥ 2, Bool:D :$asn32) {
 
 method from-hash(%params is copy, Bool:D :$asn32) {
     my @REQUIRED = «
-        withdrawn origin as-path next-hop med local-pref originator-id
-        cluster-list community nlri address-family
+        withdrawn origin as-path next-hop med local-pref atomic-aggregate
+        originator-id cluster-list community nlri address-family
     »;
 
-    %params<withdrawn>      //= [];
-    %params<origin>         //= '?';
-    %params<as-path>        //= '';
-    %params<next-hop>       //= '';
-    %params<local-pref>     //= '';
-    %params<med>            //= '';
-    %params<community>      //= [];
-    %params<originator-id>  //= '';
-    %params<cluster-list>   //= '';
-    %params<nlri>           //= [];
-    %params<address-family> //= 'ipv4';
+    %params<withdrawn>        //= [];
+    %params<origin>           //= '?';
+    %params<as-path>          //= '';
+    %params<next-hop>         //= '';
+    %params<local-pref>       //= '';
+    %params<atomic-aggregate> //= False;
+    %params<med>              //= '';
+    %params<community>        //= [];
+    %params<originator-id>    //= '';
+    %params<cluster-list>     //= '';
+    %params<nlri>             //= [];
+    %params<address-family>   //= 'ipv4';
 
     # Delete unnecessary option
     if %params<message-code>:exists {
@@ -184,6 +186,15 @@ method from-hash(%params is copy, Bool:D :$asn32) {
             {
                 path-attribute-name => 'Local-Pref',
                 local-pref          => %params<local-pref>,
+            },
+            :$asn32
+        ).raw;
+    }
+
+    if %params<atomic-aggregate> {
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+            {
+                path-attribute-name => 'Atomic-Aggregate',
             },
             :$asn32
         ).raw;

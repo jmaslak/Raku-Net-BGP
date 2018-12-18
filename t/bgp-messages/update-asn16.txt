@@ -1,16 +1,17 @@
 ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
-00 66                                                   # Length
+00 69                                                   # Length
 02                                                      # Message Type (Open)
 00 0A                                                   # Withdrawn Length
 00                                                      #   0.0.0.0/0
 18 C0 A8 96                                             #   192.168.150.0/24
 20 C0 A8 96 01                                          #   192.168.150.1/32
-00 3B                                                   # Path Attribute Length
+00 3E                                                   # Path Attribute Length
 40 01 01 02                                             # Origin: Unknown
 40 02 06 02 02 01 02 03 04                              # AS Path: 0x0102 0x0304
 40 03 04 0A 00 00 01                                    # Next Hop: 10.0.0.1
 80 04 04 00 00 13 88                                    # MED: 5000
 40 05 04 00 00 00 64                                    # Local Pref: 100
+40 06 00                                                # Atomic-Aggregator
 C0 08 04 0A 0B 01 02                                    # Community: 2571:258
 80 09 04 0A 00 00 02                                    # Originator ID: 10.0.0.2
 80 0A 08                                                # Originator List:
