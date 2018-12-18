@@ -31,7 +31,7 @@ method from-raw(buf8:D $raw where $raw.bytes == 4, Bool:D :$asn32) {
     if   $raw[1] ≠ 1     { die("Can only create an Origin attribute") }
 
     if ($raw.bytes - 3) ≠ $raw[2] { die("Invalid path-attribute payload length") }
-    if $raw[2] ≠ 1                { die("Invalid path-attribute payload length") }
+    if $raw[2] ≠ 1              { die("Invalid path-attribute payload length") }
 
     if   $raw[2] !~~ ^2  { die("Invalid origin in Origin attribute") }
 
@@ -166,6 +166,10 @@ True if the attribute uses a two digit length
 
 The four flags not defined in RFC4271, represented as a packed integer (values
 will be 0 through 15).
+
+=head2 origin
+
+Returns C<'I'>, C<'E'>, or C<'?'> based on origin code.
 
 =head2 data-length
 
