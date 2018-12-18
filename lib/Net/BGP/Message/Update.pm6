@@ -17,6 +17,7 @@ use Net::BGP::Path-Attribute::Generic;
 use Net::BGP::Path-Attribute::Local-Pref;
 use Net::BGP::Path-Attribute::MED;
 use Net::BGP::Path-Attribute::MP-NLRI;
+use Net::BGP::Path-Attribute::MP-Unreachable;
 use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
 use Net::BGP::Path-Attribute::Originator-ID;
@@ -125,15 +126,17 @@ method from-hash(%params is copy, Bool:D :$asn32) {
 
     # Prefix parts
     my $withdrawn = buf8.new;
-    for @(%params<withdrawn>) -> $w {
-        $withdrawn.append: Net::BGP::CIDR.from-str($w).to-packed;
-    };
+    if %params<address-family> eq 'ipv4' {
+        for @(%params<withdrawn>) -> $w {
+            $withdrawn.append: Net::BGP::CIDR.from-str($w).to-packed;
+        }
+    }
 
     my $nlri = buf8.new;
     if %params<address-family> eq 'ipv4' {
         for @(%params<nlri>) -> $n {
             $nlri.append: Net::BGP::CIDR.from-str($n).to-packed;
-        };
+        }
     }
 
     # Path Attributes
@@ -224,6 +227,17 @@ method from-hash(%params is copy, Bool:D :$asn32) {
                     address-family      => %params<address-family>,
                     next-hop            => %params<next-hop>,
                     nlri                => %params<nlri>,
+                },
+                :$asn32
+            ).raw;
+        };
+        if %params<withdrawn>.elems {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'MP-Unreachable',
+                    address-family      => %params<address-family>,
+                    next-hop            => %params<next-hop>,
+                    withdrawn           => %params<withdrawn>,
                 },
                 :$asn32
             ).raw;

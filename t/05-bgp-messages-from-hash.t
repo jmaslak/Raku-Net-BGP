@@ -230,6 +230,7 @@ subtest 'Update-MP', {
             as-path        => '258 772',
             next-hop       => '2001:db8::1',
             nlri           => ( '2001:db8::/32' ),
+            withdrawn      => ( '2001:db8::/33' ),
             address-family => 'ipv6',
         },
         :!asn32,

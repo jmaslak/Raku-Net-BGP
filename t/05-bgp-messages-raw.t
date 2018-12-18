@@ -145,7 +145,7 @@ subtest 'Update Message (MP-BGP)', {
     is $bgp.message-name, 'UPDATE', 'Message code is correct';
 
     is $bgp.withdrawn.elems, 0, "Proper number of withdrawn prefixes";
-    is $bgp.path-attributes.elems, 3, "Proper number of path elements";
+    is $bgp.path-attributes.elems, 4, "Proper number of path elements";
     ok $bgp.path-attributes[0] ~~ Net::BGP::Path-Attribute::Origin,
         "Path Attribute 1 Proper Type";
     is $bgp.path-attributes[0].origin, '?', "Path Attribute 1 Proper Value";
@@ -162,6 +162,13 @@ subtest 'Update Message (MP-BGP)', {
     is $bgp.path-attributes[2].next-hop-local.defined, False, "Path Attribute 3D Proper Value";
     is $bgp.path-attributes[2].nlri.elems, 1, "Path Attribute 3E Proper Value";
     is $bgp.path-attributes[2].nlri[0], "2001:db8::/32", "Path Attribute 3F Proper Value";
+
+    ok $bgp.path-attributes[3] ~~ Net::BGP::Path-Attribute::MP-Unreachable,
+        "Path Attribute 4 Proper Type";
+    is $bgp.path-attributes[3].afi, "IPv6", "Path Attribute 4A Proper Value";
+    is $bgp.path-attributes[3].safi, "unicast", "Path Attribute 4B Proper Value";
+    is $bgp.path-attributes[3].withdrawn.elems, 1, "Path Attribute 4E Proper Value";
+    is $bgp.path-attributes[3].withdrawn[0], "2001:db8::/33", "Path Attribute 4F Proper Value";
 
     is $bgp.nlri.elems, 0, "Proper number of NLRI prefixes";
 
