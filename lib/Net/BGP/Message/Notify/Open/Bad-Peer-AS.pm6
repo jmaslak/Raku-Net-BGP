@@ -21,7 +21,7 @@ class Net::BGP::Message::Notify::Open::Bad-Peer-AS:ver<0.0.0>:auth<cpan:JMASLAK>
 
     method error-subname(-->Str) { "Bad-Peer-AS" }
 
-    method from-raw(buf8:D $raw where $raw.bytes == 3) {
+    method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
         my $obj = self.bless(:data( buf8.new($raw) ));
 
         if $raw[0] ≠ 3 { # Not a notify

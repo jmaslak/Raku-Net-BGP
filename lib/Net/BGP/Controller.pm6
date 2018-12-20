@@ -19,7 +19,7 @@ use Net::BGP::Time;
 class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     does Net::BGP::Controller-Handle-BGP
 {
-    has Int:D $.my-asn            is required where ^65536;
+    has Int:D $.my-asn            is required where ^(2³²);
     has Int:D $.identifier        is required where ^(2³²);
 
     has Net::BGP::Peer-List:D       $.peers       = Net::BGP::Peer-List.new(:$!my-asn);

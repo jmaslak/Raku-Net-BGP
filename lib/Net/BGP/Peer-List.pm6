@@ -13,7 +13,7 @@ use OO::Monitors;
 monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
 
     has Net::BGP::Peer:D %!peers;
-    has Int:D $.my-asn is required where ^65536;
+    has Int:D $.my-asn is required where ^(2³²);
 
     method get(Str:D $peer-ip) {
         my $key = self.peer-key($peer-ip);
