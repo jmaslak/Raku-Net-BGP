@@ -56,6 +56,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D $.my-asn     is required where ^(2³²);
     has Int:D $.identifier is required where ^(2³²);
 
+    has Str:D %!md5;
+
     submethod BUILD( *%args ) {
         for %args.keys -> $k {
             given $k {
@@ -102,7 +104,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         my $listen-promise = Promise.new;
 
         start {
-            $listen-socket = Net::BGP::Socket.new(:my-host("::"), :my-port($.port));
+            $listen-socket = Net::BGP::Socket.new(:my-host("0.0.0.0"), :my-port($.port));
+            for %!md5.keys -> $h { $listen-socket.add-md5($h, %!md5{$h}) }
             $listen-socket.listen;
 
             react {
@@ -220,6 +223,9 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
             }
 
             my $obj = Net::BGP::Socket.new(:my-host('::'), :my-port(0));
+            if %!md5{ $p.peer-ip.fc }:exists {
+                $obj.add-md5($p.peer-ip.fc, %!md5{ $p.peer-ip.fc });
+            }
             my $promise = $obj.connect($p.peer-ip, $p.peer-port);
             start self.connection-handler($promise, $p);
         }
@@ -317,5 +323,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         }
     }
 
+    method add-md5(Str:D $host, Str $MD5 -->Nil) {
+        %!md5{ $host.fc } = $MD5;
+    }
 }
 

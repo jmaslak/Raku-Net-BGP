@@ -12,3 +12,6 @@ Todo Items:
   * In messages, parameters, capabilities, and path attributes, we
     should test for the message type in a uniform way.
   * Allow specifying two next-hop addresses for IPv6 MP-NLRI
+  * MD5 socket option is specific to AF we're listening on.  If we
+    listen on ::, but have an IPv4 peer, we need to be able to set the socket
+    options.

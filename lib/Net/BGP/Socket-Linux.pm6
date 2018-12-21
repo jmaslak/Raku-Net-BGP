@@ -32,6 +32,7 @@ has Str:D    $.my-host    is rw is required;
 has Int:D    $.my-port    is rw is required;
 has Int      $.bound-port;
 has States:D $.state      is rw = SOCKET_CLOSED;
+has Str:D    %!md5;
 
 # Supported Domains (Address Families)
 enum AddrInfo-Family (
@@ -192,6 +193,8 @@ method bind(-->Nil) {
     if $result { die("Could not bind") }
 
     $!state = SOCKET_BOUND;
+
+    for %!md5.keys -> $md5host { self.set-md5($md5host, %!md5{ $md5host }) }
 }
 
 sub native-getaddrinfo(
@@ -282,6 +285,11 @@ method connect(Str:D $host, Int:D $port where ^(2¹⁶) -->Promise:D) {
         # Do nothing here.
     } else {
         die "Socket in improper state";
+    }
+
+    # Set up MD5 keys
+    if %!md5{ $host.fc }:exists {
+        self.set-md5($host.fc, %!md5{ $host.fc });
     }
 
     my $promise = Promise.new;
@@ -473,8 +481,12 @@ class TCP-MD5-Sig {
 sub native-setsockopt(int32, int32, int32, Pointer, int32 -->int32)
     is native is symbol('setsockopt') {*}
 
+method add-md5(Str:D $host, Str $MD5) {
+    %!md5{$host.fc} = $MD5;
+}
+
 method set-md5(Str:D $host, Str $MD5, Int $prefix-len? -->Nil) {
-    if $!state ≠ SOCKET_CREATED { die "Socket in improper state" }
+    if $!state == SOCKET_CLOSED { die "Socket in improper state" }
 
     if $MD5.chars > 80 { die("MD5 password must be ≤ 80 characters") }
 

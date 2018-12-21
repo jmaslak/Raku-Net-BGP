@@ -23,6 +23,7 @@ has Str:D     $.my-host     is rw is required;
 has Int:D     $.my-port     is rw is required;
 has Promise:D $.socket-port = Promise.new;
 has           $.sock        is rw;
+has Str:D     %!md5;
 
 # Aliases for socket-(port|host)
 method socket-host { return $.my-host }
@@ -31,6 +32,8 @@ method socket-post { return $.my-post }
 method listen(-->Nil) {
     if $linux {
         $!sock = Net::BGP::Socket-Linux.new(:$.my-host, :$.my-port);
+        for %!md5.keys -> $key { $!sock.add-md5($key, %!md5{$key}) }
+
         $!sock.socket.sink;
         $!sock.set-reuseaddr;
         $!sock.bind;
@@ -60,6 +63,7 @@ method acceptor(-->Supply:D) {
 method connect(Str:D $host, Int:D $port -->Promise) {
     if $linux {
         $!sock = Net::BGP::Socket-Linux.new(:$.my-host, :$.my-port);
+        for %!md5.keys -> $key { $!sock.add-md5($key, %!md5{$key}) }
         # $!sock.socket.sink;
         # $!sock.bind;
         return $!sock.connect($host, $port);
@@ -70,5 +74,11 @@ method connect(Str:D $host, Int:D $port -->Promise) {
 
 method close(-->Nil) {
     $!sock.close;
+}
+
+method add-md5(Str:D $host, Str $MD5 -->Nil) {
+    if ! $linux { die("Cannot configure MD5 on this operating system") }
+
+    %!md5{ $host.fc } = $MD5;
 }
 

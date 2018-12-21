@@ -114,12 +114,10 @@ subtest 'Client/Server - MD5 Non-Match', sub {
     my $sock1 = $inet1.socket;
 
     my $inet2 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
-    my $sock2 = $inet2.socket;
 
+    $inet1.add-md5('192.0.2.1', 'key key key'); # should not match anything
     $inet1.bind;
-    $inet2.bind;
 
-    $inet1.set-md5('192.0.2.1', 'key key key'); # should not match anything
     $inet1.listen;
 
     my $conn2 = await $inet2.connect('127.0.0.1', $inet1.bound-port);
@@ -151,14 +149,11 @@ subtest 'Client/Server - MD5 Match', sub {
     my $sock1 = $inet1.socket;
 
     my $inet2 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
-    my $sock2 = $inet2.socket;
+
+    $inet1.add-md5('127.0.0.1', 'key key key');
+    $inet2.add-md5('127.0.0.1', 'key key key');
 
     $inet1.bind;
-    $inet2.bind;
-
-    $inet1.set-md5('127.0.0.1', 'key key key');
-    $inet2.set-md5('127.0.0.1', 'key key key');
-
     $inet1.listen;
 
     my $conn2 = await $inet2.connect('127.0.0.1', $inet1.bound-port);

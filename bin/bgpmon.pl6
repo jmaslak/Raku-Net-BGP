@@ -21,17 +21,19 @@ sub MAIN(
     Int                  :$max-log-messages,
     Net::BGP::IP::ipv4:D :$my-bgp-id,
     Int:D                :$batch-size = 32,
+    Str                  :$md5?,
     *@peers
 ) {
     my $bgp = Net::BGP.new(
         :$port,
         :$my-asn,
-        :identifier(ipv4-to-int($my-bgp-id))
+        :identifier(ipv4-to-int($my-bgp-id)),
     );
 
     # Add peers
     for @peers -> $peer-ip {
         $bgp.peer-add( :$peer-asn, :$peer-ip :$passive );  # XXX Should allow peer port spec
+        $bgp.add-md5($peer-ip, $md5) if $md5.defined;
     }
 
     # Start the TCP socket
