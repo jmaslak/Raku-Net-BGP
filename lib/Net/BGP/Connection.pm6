@@ -20,7 +20,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
     does Net::BGP::Connection-Role
 {
 
-    has IO::Socket::Async:D $.socket           is required;
+    has                     $.socket           is required;
     has Channel:D           $.command = Channel.new;
     has Channel:D           $.listener-channel is required; # To communicate with listener
     has Supplier:D          $.user-supplier    is required; # To communicate with user

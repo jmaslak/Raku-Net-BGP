@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::Socket-Connection:ver<0.0.1>:auth<cpan:JMASLAK>;
+unit class Net::BGP::Socket-Connection-Linux:ver<0.0.1>:auth<cpan:JMASLAK>;
 
 use NativeCall;
 
@@ -23,6 +23,10 @@ has Int:D    $.socket-fd   is required;
 has Lock:D   $!lock        = Lock.new;
 has Channel  $!out-channel;
 has States:D $.state       is rw = SOCKET_OPEN;
+
+# Aliases for socket-(port|host)
+method socket-host { return $.my-host }
+method socket-port { return $.my-port }
 
 # write(int fd, const void *buf, size_t count)
 sub native-write(int32, Pointer, int32 -->int32) is native is symbol('write') {*}
@@ -74,13 +78,20 @@ method Supply(-->Supply:D) {
     my $supplier = Supplier::Preserving.new;
     my $supply   = $supplier.Supply;
 
-    start loop {
-        my $buf = self.recv;
-        $supplier.emit($buf);
+    start {
+        while $!state == SOCKET_OPEN {
+            my $buf = self.recv;
+            if $buf.bytes == 0 {
+                self.close;
+            } else {
+                $supplier.emit($buf);
+            }
+        }
+        $supplier.done;
 
         CATCH {
             default {
-                $supplier.quit($_);
+                $supplier.done;
                 self.close if $!state ≠ SOCKET_CLOSED;
             }
         }
@@ -110,7 +121,7 @@ method buffered-send(buf8:D $buffer -->Nil) {
 sub native-close(int32 -->int32) is native is symbol('close') {*}
 
 method close(-->Nil) {
-    if $!state ≠ SOCKET_OPEN { die "Socket in wrong state" }
+    if $!state ≠ SOCKET_OPEN { return; }
 
     my $rv = native-close($!socket-fd);
     if $rv { die("close failed") }

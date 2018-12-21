@@ -14,6 +14,7 @@ use Net::BGP::Conversions;
 use Net::BGP::IP;
 use Net::BGP::Event::New-Connection;
 use Net::BGP::Peer;
+use Net::BGP::Socket;
 use Net::BGP::Time;
 
 # We need to register all the parameter types, which happens when the
@@ -101,10 +102,11 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         my $listen-promise = Promise.new;
 
         start {
-            $listen-socket = IO::Socket::Async.listen("::", $.port);
+            $listen-socket = Net::BGP::Socket.new(:my-host("::"), :my-port($.port));
+            $listen-socket.listen;
 
             react {
-                my $listen-tap = do whenever $listen-socket -> $socket {
+                whenever $listen-socket.acceptor -> $socket {
                     my $conn = Net::BGP::Connection.new(
                         :socket($socket),
                         :listener-channel($!listener-channel),
@@ -141,8 +143,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                     }
                 }
 
-                await $listen-tap.socket-port;      # make sure the socket is ready
-                $!port = $listen-tap.socket-port.result;
+                await $listen-socket.socket-port;      # make sure the socket is ready
+                $!port = $listen-socket.socket-port.result;
                 $listen-promise.keep($.port);
 
                 whenever $!listener-channel -> Net::BGP::Command $msg {
@@ -217,7 +219,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
                 $p.last-connect-attempt = monotonic-whole-seconds;
             }
 
-            my $promise = IO::Socket::Async.connect($p.peer-ip, $p.peer-port);
+            my $obj = Net::BGP::Socket.new(:my-host('::'), :my-port(0));
+            my $promise = $obj.connect($p.peer-ip, $p.peer-port);
             start self.connection-handler($promise, $p);
         }
     }
