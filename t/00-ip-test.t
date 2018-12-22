@@ -171,89 +171,180 @@ for @TESTS-INVALID -> $test {
     is ip-valid($test), False, "$test ip-valid (invalid)";
 }
 
-my @CIDRS := «
-    0.0.0.0/0
-    10.0.0.0/8
-    10.0.0.0/24
-    192.0.2.4/30
-    255.255.255.255/32
-»;
+subtest 'IPv4 CIDRs', {
+    my @CIDRS := «
+        0.0.0.0/0
+        10.0.0.0/8
+        10.0.0.0/24
+        192.0.2.4/30
+        255.255.255.255/32
+    »;
 
-    is Net::BGP::CIDR.from-int(0, 0).Str,          "0.0.0.0/0",  "CIDR 0.0.0.0/24";
-    is Net::BGP::CIDR.from-int((10 +< 24), 8).Str, "10.0.0.0/8", "CIDR 10.0.0.0/8";
+        is Net::BGP::CIDR.from-int(0, 0).Str,          "0.0.0.0/0",  "CIDR 0.0.0.0/24";
+        is Net::BGP::CIDR.from-int((10 +< 24), 8).Str, "10.0.0.0/8", "CIDR 10.0.0.0/8";
 
-for @CIDRS -> $cidr {
-    is Net::BGP::CIDR.from-str($cidr).Str, $cidr, "CIDR $cidr maps to CIDR";
+    for @CIDRS -> $cidr {
+        is Net::BGP::CIDR.from-str($cidr).Str, $cidr, "CIDR $cidr maps to CIDR";
+    }
+
+    my @BAD-CIDRS := «
+        0.0.0.0/a
+        192.0.2.1/33
+        3/29
+    »;
+
+    for @BAD-CIDRS -> $cidr {
+        dies-ok { Net::BGP::CIDR.from-str($cidr) }, "CIDR $cidr dies ok";
+    }
+
+    my $buf = buf8.new(24, 192, 168, 1);
+    my $res = Net::BGP::CIDR.packed-to-array($buf);
+    is $res.elems,  1,                "Test 1 - Count Correct";
+    is $res[0].Str, "192.168.1.0/24", "Test 1 - String Correct";
+
+    $buf = buf8.new(23, 192, 168, 1);
+    $res = Net::BGP::CIDR.packed-to-array($buf);
+    is $res.elems,  1,                "Test 2 - Count Correct";
+    is $res[0].Str, "192.168.0.0/23", "Test 2 - String Correct";
+
+    $buf = buf8.new(0);
+    $res = Net::BGP::CIDR.packed-to-array($buf);
+    is $res.elems,  1,           "Test 3 - Count Correct";
+    is $res[0].Str, "0.0.0.0/0", "Test 3 - String Correct";
+
+    $buf = buf8.new(32, 255, 255, 255, 255);
+    $res = Net::BGP::CIDR.packed-to-array($buf);
+    is $res.elems,  1,                    "Test 4 - Count Correct";
+    is $res[0].Str, "255.255.255.255/32", "Test 4 - String Correct";
+
+    $buf = buf8.new(32, 255, 255, 255, 255, 24, 192, 168, 1);
+    $res = Net::BGP::CIDR.packed-to-array($buf);
+    is $res.elems,  2,                    "Test 5 - Count Correct";
+    is $res[0].Str, "255.255.255.255/32", "Test 5a - String Correct";
+    is $res[1].Str, "192.168.1.0/24",     "Test 5b - String Correct";
+
+    my $net = 0;
+    for @CIDRS -> $cidr {
+        my $c1 = Net::BGP::CIDR.from-int(0,0);
+        my $c2 = Net::BGP::CIDR.from-str($cidr);
+        is $c1.contains($c2), True, "0.0.0.0/0 contains {$cidr.Str}";
+        
+        $c1 = Net::BGP::CIDR.from-int(0,32);
+        is $c1.contains($c2), False, "0.0.0.0/32 does not contain {$cidr.Str}";
+    }
+
+    my $src = Net::BGP::CIDR.from-str('4.2.2.0/24');
+    my $dst = Net::BGP::CIDR.from-str('4.2.2.0/24');
+    is $src.contains($dst), True, "{$src.Str} contains {$src.Str}";
+
+    $src = Net::BGP::CIDR.from-str('4.2.2.0/32');
+    $dst = Net::BGP::CIDR.from-str('4.2.2.0/24');
+    is $src.contains($dst), False, "{$src.Str} does not contain {$src.Str}";
+
+    $src = Net::BGP::CIDR.from-str('4.2.2.0/24');
+    $dst = Net::BGP::CIDR.from-str('4.2.2.0/32');
+    is $src.contains($dst), True, "{$src.Str} contains {$src.Str}";
+
+    $src = Net::BGP::CIDR.from-str('4.2.2.0/24');
+    $dst = Net::BGP::CIDR.from-str('4.2.2.0/31');
+    is $src.contains($dst), True, "{$src.Str} contains {$src.Str}";
+
+    done-testing;
 }
 
-my @BAD-CIDRS := «
-    0.0.0.0/a
-    192.0.2.1/33
-    3/29
-»;
 
-for @BAD-CIDRS -> $cidr {
-    dies-ok { Net::BGP::CIDR.from-str($cidr) }, "CIDR $cidr dies ok";
+subtest 'IPv6 CIDRs', {
+    my @CIDRS :=
+        '::/0',
+        '2001:db8::/32',
+        '2001:db8:1234::/48',
+        '2001:db8:4321::ff00/120',
+        'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128',
+    ;
+
+        is Net::BGP::CIDR.from-int(0, 0, 6).Str, "::/0",  "CIDR ::/0";
+        is Net::BGP::CIDR.from-int((0x2001 +< 112), 16, 6).Str, "2001::/16",
+            "CIDR 2001::/16";
+
+    for @CIDRS -> $cidr {
+        is Net::BGP::CIDR.from-str($cidr).Str, $cidr, "CIDR $cidr maps to CIDR";
+    }
+
+    my @BAD-CIDRS := «
+        ::/a
+        2001:db8::/129
+        2001:/16
+    »;
+
+    for @BAD-CIDRS -> $cidr {
+        dies-ok { Net::BGP::CIDR.from-str($cidr) }, "CIDR $cidr dies ok";
+    }
+
+    my $buf = buf8.new(16, 0x20, 0x01);
+    my $res = Net::BGP::CIDR.packed-to-array($buf, 6);
+    is $res.elems,  1,                "Test 1 - Count Correct";
+    is $res[0].Str, "2001::/16",       "Test 1 - String Correct";
+
+    $buf = buf8.new(127,
+        0x20, 0x01, 0x0d, 0xb8,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x02
+    );
+    $res = Net::BGP::CIDR.packed-to-array($buf, 6);
+    is $res.elems,  1,                 "Test 2 - Count Correct";
+    is $res[0].Str, "2001:db8::2/127", "Test 2 - String Correct";
+
+    $buf = buf8.new(0);
+    $res = Net::BGP::CIDR.packed-to-array($buf, 6);
+    is $res.elems,  1,      "Test 3 - Count Correct";
+    is $res[0].Str, "::/0", "Test 3 - String Correct";
+
+    $buf = buf8.new(128,
+        255, 255, 255, 255,
+        255, 255, 255, 255,
+        255, 255, 255, 255,
+        255, 255, 255, 255,
+    );
+    $res = Net::BGP::CIDR.packed-to-array($buf, 6);
+    is $res.elems,  1,                    "Test 4 - Count Correct";
+    is $res[0].Str, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128",
+        "Test 4 - String Correct";
+
+    $buf = buf8.new(32, 0x20, 0x01, 0x0d, 0xb8, 3, 0x20);
+    $res = Net::BGP::CIDR.packed-to-array($buf, 6);
+    is $res.elems,  2,                    "Test 5 - Count Correct";
+    is $res[0].Str, "2001:db8::/32", "Test 5a - String Correct";
+    is $res[1].Str, "2000::/3",      "Test 5b - String Correct";
+
+    my $net = 0;
+    for @CIDRS -> $cidr {
+        my $c1 = Net::BGP::CIDR.from-int(0,0,6);
+        my $c2 = Net::BGP::CIDR.from-str($cidr);
+        is $c1.contains($c2), True, "::/0 contains {$cidr.Str}";
+        
+        $c1 = Net::BGP::CIDR.from-int(0,128,6);
+        is $c1.contains($c2), False, "::/128 does not contain {$cidr.Str}";
+    }
+
+    my $src = Net::BGP::CIDR.from-str('2001:db8::/32');
+    my $dst = Net::BGP::CIDR.from-str('2001:db8::/32');
+    is $src.contains($dst), True, "{$src.Str} contains {$src.Str}";
+
+    $src = Net::BGP::CIDR.from-str('2001:db8::/48');
+    $dst = Net::BGP::CIDR.from-str('2001:db8::/32');
+    is $src.contains($dst), False, "{$src.Str} does not contain {$src.Str}";
+
+    $src = Net::BGP::CIDR.from-str('2001:db8::/32');
+    $dst = Net::BGP::CIDR.from-str('2001:db8::/48');
+    is $src.contains($dst), True, "{$src.Str} contains {$src.Str}";
+
+    $src = Net::BGP::CIDR.from-str('2001:db8::/32');
+    $dst = Net::BGP::CIDR.from-str('2001:db8::/127');
+    is $src.contains($dst), True, "{$src.Str} contains {$src.Str}";
+
+    done-testing;
 }
-
-my $buf = buf8.new(24, 192, 168, 1);
-my $res = Net::BGP::CIDR.packed-to-array($buf);
-is $res.elems,  1,                "Test 1 - Count Correct";
-is $res[0].Str, "192.168.1.0/24", "Test 1 - String Correct";
-
-$buf = buf8.new(23, 192, 168, 1);
-$res = Net::BGP::CIDR.packed-to-array($buf);
-is $res.elems,  1,                "Test 2 - Count Correct";
-is $res[0].Str, "192.168.0.0/23", "Test 2 - String Correct";
-
-$buf = buf8.new(0);
-$res = Net::BGP::CIDR.packed-to-array($buf);
-is $res.elems,  1,           "Test 3 - Count Correct";
-is $res[0].Str, "0.0.0.0/0", "Test 3 - String Correct";
-
-$buf = buf8.new(32, 255, 255, 255, 255);
-$res = Net::BGP::CIDR.packed-to-array($buf);
-is $res.elems,  1,                    "Test 4 - Count Correct";
-is $res[0].Str, "255.255.255.255/32", "Test 4 - String Correct";
-
-$buf = buf8.new(32, 255, 255, 255, 255, 24, 192, 168, 1);
-$res = Net::BGP::CIDR.packed-to-array($buf);
-is $res.elems,  2,                    "Test 5 - Count Correct";
-is $res[0].Str, "255.255.255.255/32", "Test 5a - String Correct";
-is $res[1].Str, "192.168.1.0/24",     "Test 5b - String Correct";
-
-my $net = 0;
-for @CIDRS -> $cidr {
-    my $c = Net::BGP::CIDR.from-str($cidr);
-    is in-ipv4-subnet(0, 0, $c.prefix-int32, $c.prefix-length), True,
-        "0.0.0.0/0 contains {$cidr.Str}";
-    is in-ipv4-subnet(0, 0, $c.prefix-int32, $c.prefix-length), True,
-        "0.0.0.0/32 does not contain {$cidr.Str}";
-}
-
-my $src = Net::BGP::CIDR.from-str('4.2.2.0/24');
-my $dst = Net::BGP::CIDR.from-str('4.2.2.0/24');
-is in-ipv4-subnet(
-        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
-    ), True, "{$src.Str} contains {$src.Str}";
-
-$src = Net::BGP::CIDR.from-str('4.2.2.0/32');
-$dst = Net::BGP::CIDR.from-str('4.2.2.0/24');
-is in-ipv4-subnet(
-        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
-    ), False, "{$src.Str} does not contain {$src.Str}";
-
-$src = Net::BGP::CIDR.from-str('4.2.2.0/24');
-$dst = Net::BGP::CIDR.from-str('4.2.2.0/32');
-is in-ipv4-subnet(
-        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
-    ), True, "{$src.Str} contains {$src.Str}";
-
-$src = Net::BGP::CIDR.from-str('4.2.2.0/24');
-$dst = Net::BGP::CIDR.from-str('4.2.2.0/31');
-is in-ipv4-subnet(
-        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
-    ), True, "{$src.Str} contains {$src.Str}";
 
 done-testing;
 

@@ -5,211 +5,199 @@ use v6;
 # All Rights Reserved - See License
 #
 
-module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
-    # IPv4
-    #
-    #
+unit module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK>;
 
-    our @octet = ^256;
-    our subset ipv4 of Str where / ^ @octet**4 % '.' $ /;
-    our subset ipv4_int of UInt where ^(2³²);
-    our subset ipv4_len of UInt where ^33;
+# IPv4
+#
+#
 
-    our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
-        my uint32 $ipval = 0;
-        for $ip.split('.') -> Int(Str) $part {
-            $ipval = $ipval +< 8 + $part;
-        }
+our @octet = ^256;
+our subset ipv4 of Str where / ^ @octet**4 % '.' $ /;
+our subset ipv4_int of UInt where ^(2³²);
+our subset ipv4_len of UInt where ^33;
 
-        return $ipval;
+our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
+    my uint32 $ipval = 0;
+    for $ip.split('.') -> Int(Str) $part {
+        $ipval = $ipval +< 8 + $part;
     }
 
-    our sub ipv4-to-buf8(ipv4:D $ip -->buf8:D) is export {
-        return buf8.new( $ip.split('.')».Int );
+    return $ipval;
+}
+
+our sub ipv4-to-buf8(ipv4:D $ip -->buf8:D) is export {
+    return buf8.new( $ip.split('.')».Int );
+}
+
+our sub int-to-ipv4(ipv4_int:D $i -->Str:D) is export {
+    my uint32 $ip = $i;
+    return join('.', $ip +> 24, $ip +> 16 +& 255, $ip +> 8 +& 255, $ip +& 255);
+}
+
+# IPv6
+#
+#
+
+# Take from Rosetacode
+#   https://rosettacode.org/wiki/Parse_an_IP_Address#Perl_6
+grammar IPv6 {
+    token TOP { ^ <IPv6Addr> $ }
+
+    token IPv6Addr {
+        | <h16> +% ':' <?{ $<h16> == 8}>
+            { @*by16 = @$<h16> }
+
+        | [ (<h16>) +% ':']? '::' [ (<h16>) +% ':' ]? <?{ @$0 + @$1 ≤ 8 }>
+            { @*by16 = |@$0, |('0' xx 8 - (@$0 + @$1)), |@$1; }
     }
 
-    our sub int-to-ipv4(ipv4_int:D $i -->Str:D) is export {
-        my uint32 $ip = $i;
-        return join('.', $ip +> 24, $ip +> 16 +& 255, $ip +> 8 +& 255, $ip +& 255);
+    token h16 { (<:hexdigit>+) <?{ @$0 ≤ 4 }> }
+}
+
+# Need to define @*by16 to use the IPv6.parse() routine
+our subset ipv6 of Str where { my @*by16; IPv6.parse($_) };
+our subset ipv6_int of UInt where * < 2¹²⁸;
+
+our sub ipv6-to-int(ipv6:D $ip -->ipv6_int) is export {
+    my @*by16;
+    IPv6.parse($ip);
+    return :16(@*by16.map({:16(~$_)})».fmt("%04x").join);
+}
+
+our sub ipv6-to-buf8(
+    ipv6:D $ip,
+    Int :$bits? = 128
+    -->buf8:D
+) is export {
+    my $bytes = (($bits + 7) / 8).Int;
+    my @storage;
+
+    my $int = ipv6-to-int($ip);
+    $int = $int +> (128-$bits) +< (128-$bits);
+
+    for ^16 -> $byte {
+        @storage.unshift($int +& 255);
+        $int = $int +> 8;
     }
 
-    our sub in-ipv4-subnet(
-        uint32 $a, ipv4_len:D $a-len,
-        uint32 $b, ipv4_len:D $b-len
-        --> Bool:D
-    ) is export {
-        if $b-len < $a-len { return False }
+    return buf8.new( @storage[^$bytes] );
+}
 
-        my uint32 $mask = 2³² - 2**(32 - $a-len);
-        if ($a +& $mask) == ($b +& $mask) { return True; }
-
-        return False;
+our sub buf8-to-ipv6(
+    buf8:D $buf,
+    Int :$bits? = 128
+    --> ipv6:D
+) is export {
+    my $bytes = (($bits + 7) / 8).Int;
+    if $buf.bytes ≠ $bytes {
+        die("buf8-to-ipv6 called with wrong length buffer ($bytes ≠ {$buf.bytes})");
     }
 
-    # IPv6
-    #
-    #
+    my $int = 0;
+    for ^16 -> $byte {
+        $int  = $int +< 8;
+        $int += $buf[$byte] unless $byte ≥ $bytes;
+    }
+    $int = $int +> (128-$bits) +< (128-$bits);
 
-    # Take from Rosetacode
-    #   https://rosettacode.org/wiki/Parse_an_IP_Address#Perl_6
-    grammar IPv6 {
-        token TOP { ^ <IPv6Addr> $ }
+    return int-to-ipv6($int);
+}
 
-        token IPv6Addr {
-            | <h16> +% ':' <?{ $<h16> == 8}>
-                { @*by16 = @$<h16> }
+our sub int-to-ipv6(ipv6_int:D $ip is copy -->Str:D) is export {
+    if $ip == 0 { return '::' }      # Special case
 
-            | [ (<h16>) +% ':']? '::' [ (<h16>) +% ':' ]? <?{ @$0 + @$1 ≤ 8 }>
-                { @*by16 = |@$0, |('0' xx 8 - (@$0 + @$1)), |@$1; }
-        }
-
-        token h16 { (<:hexdigit>+) <?{ @$0 ≤ 4 }> }
+    my @parts;
+    for ^8 -> $i {
+        my uint16 $part = $ip +& 0xffff;
+        $ip = $ip +> 16;
+        @parts.unshift: $part;
     }
 
-    # Need to define @*by16 to use the IPv6.parse() routine
-    our subset ipv6 of Str where { my @*by16; IPv6.parse($_) };
-    our subset ipv6_int of UInt where * < 2¹²⁸;
+    my $best-run;
+    my $best-length = 0;
+    my $run-start;
+    my $run-length = 0;
+    for ^8 -> $i {
+        if @parts[$i] ≠ 0 {
+            $run-length = 0;
+        } else {
+            $run-start = $i unless $run-length > 0;
+            $run-length++;
 
-    our sub ipv6-to-int(ipv6:D $ip -->ipv6_int) is export {
-        my @*by16;
-        IPv6.parse($ip);
-        return :16(@*by16.map({:16(~$_)})».fmt("%04x").join);
-    }
-
-    our sub ipv6-to-buf8(
-        ipv6:D $ip,
-        Int :$bits? = 128
-        -->buf8:D
-    ) is export {
-        my $bytes = (($bits + 7) / 8).Int;
-        my @storage;
-
-        my $int = ipv6-to-int($ip);
-        $int = $int +> (128-$bits) +< (128-$bits);
-
-        for ^16 -> $byte {
-            @storage.unshift($int +& 255);
-            $int = $int +> 8;
-        }
-
-        return buf8.new( @storage[^$bytes] );
-    }
-
-    our sub buf8-to-ipv6(
-        buf8:D $buf,
-        Int :$bits? = 128
-        --> ipv6:D
-    ) is export {
-        my $bytes = (($bits + 7) / 8).Int;
-        if $buf.bytes ≠ $bytes {
-            die("buf8-to-ipv6 called with wrong length buffer ($bytes ≠ {$buf.bytes})");
-        }
-
-        my $int = 0;
-        for ^16 -> $byte {
-            $int  = $int +< 8;
-            $int += $buf[$byte] unless $byte ≥ $bytes;
-        }
-        $int = $int +> (128-$bits) +< (128-$bits);
-
-        return int-to-ipv6($int);
-    }
-
-    our sub int-to-ipv6(ipv6_int:D $ip is copy -->Str:D) is export {
-        if $ip == 0 { return '::' }      # Special case
-
-        my @parts;
-        for ^8 -> $i {
-            my uint16 $part = $ip +& 0xffff;
-            $ip = $ip +> 16;
-            @parts.unshift: $part;
-        }
-
-        my $best-run;
-        my $best-length = 0;
-        my $run-start;
-        my $run-length = 0;
-        for ^8 -> $i {
-            if @parts[$i] ≠ 0 {
-                $run-length = 0;
-            } else {
-                $run-start = $i unless $run-length > 0;
-                $run-length++;
-
-                if $run-length > $best-length {
-                    $best-run    = $run-start;
-                    $best-length = $run-length;
-                }
+            if $run-length > $best-length {
+                $best-run    = $run-start;
+                $best-length = $run-length;
             }
         }
+    }
 
-        my $str = '';
-        for ^8 -> $i {
-            if $best-run.defined and $i ≥ $best-run and $i < ($best-run + $best-length) {
-                $str ~= ':' if $i == $best-run;
+    my $str = '';
+    for ^8 -> $i {
+        if $best-run.defined and $i ≥ $best-run and $i < ($best-run + $best-length) {
+            $str ~= ':' if $i == $best-run;
+        } else {
+            if $i ≠ 7 {
+                $str ~= @parts[$i].fmt("%x") ~ ':';
             } else {
-                if $i ≠ 7 {
-                    $str ~= @parts[$i].fmt("%x") ~ ':';
-                } else {
-                    $str ~= @parts[$i].fmt("%x");
-                }
+                $str ~= @parts[$i].fmt("%x");
             }
         }
-
-        return $str;
     }
 
-    our sub ipv6-expand(ipv6:D $ip -->ipv6:D) is export {
-        my @*by16;
-        IPv6.parse($ip);
-        return @*by16.map({:16(~$_)})».fmt("%04x").join(':');
+    return $str;
+}
+
+our sub ipv6-expand(ipv6:D $ip -->ipv6:D) is export {
+    my @*by16;
+    IPv6.parse($ip);
+    return @*by16.map({:16(~$_)})».fmt("%04x").join(':');
+}
+
+our sub ipv6-compact(ipv6:D $ip -->ipv6:D) is export {
+    my @*by16;
+    IPv6.parse($ip);
+    my $compact = @*by16.map({:16(~$_)})».fmt("%x").join(':');
+
+    # This looks weird - basically we try matching from most to
+    # least.
+    if $compact ~~ s/^ '0:0:0:0:0:0:0:0' $/::/ {
+    } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0:0' [ ':' | $ ] /::/ {
+    } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0' [ ':' | $ ] /::/ {
+    } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0' [ ':' | $ ] /::/ {
+    } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0' [ ':' | $ ] /::/ {
+    } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0' [ ':' | $ ] /::/ {
+    } elsif $compact ~~ s/ [ ^ || ':' ] '0:0' [ ':' | $ ] /::/ {
+    } elsif $compact ~~ s/ [ ^ || ':' ] '0' [ ':' | $ ] /::/ {
     }
 
-    our sub ipv6-compact(ipv6:D $ip -->ipv6:D) is export {
-        my @*by16;
-        IPv6.parse($ip);
-        my $compact = @*by16.map({:16(~$_)})».fmt("%x").join(':');
+    return $compact;
+}
 
-        # This looks weird - basically we try matching from most to
-        # least.
-        if $compact ~~ s/^ '0:0:0:0:0:0:0:0' $/::/ {
-        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0:0' [ ':' | $ ] /::/ {
-        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0:0' [ ':' | $ ] /::/ {
-        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0:0' [ ':' | $ ] /::/ {
-        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0:0' [ ':' | $ ] /::/ {
-        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0:0' [ ':' | $ ] /::/ {
-        } elsif $compact ~~ s/ [ ^ || ':' ] '0:0' [ ':' | $ ] /::/ {
-        } elsif $compact ~~ s/ [ ^ || ':' ] '0' [ ':' | $ ] /::/ {
-        }
+our subset ipv4_as_ipv6 of Str where m:i/ ^ '::ffff:' @octet**4 % '.' $ /;
 
-        return $compact;
-    }
+sub ip-cannonical(Str:D $ip -->Str) is export {
+    state %cached;
 
-    our subset ipv4_as_ipv6 of Str where m:i/ ^ '::ffff:' @octet**4 % '.' $ /;
+    return %cached{$ip} || ( %cached{$ip} = _ip-cannonical($ip) );
+}
 
-    sub ip-cannonical(Str:D $ip -->Str) is export {
-        state %cached;
+multi _ip-cannonical(ipv6:D $ip -->Str) {
+    return ipv6-compact($ip);
+}
+multi _ip-cannonical(ipv4:D $ip -->Str) {
+    return $ip;
+}
+multi _ip-cannonical(ipv4_as_ipv6:D $ip -->Str) {
+    return S:i/^ '::ffff:' // given $ip;
+}
 
-        return %cached{$ip} || ( %cached{$ip} = _ip-cannonical($ip) );
-    }
+our proto ip-valid(Str:D $ip -->Bool) is export {*};
 
-    multi _ip-cannonical(ipv6:D $ip -->Str) {
-        return ipv6-compact($ip);
-    }
-    multi _ip-cannonical(ipv4:D $ip -->Str) {
-        return $ip;
-    }
-    multi _ip-cannonical(ipv4_as_ipv6:D $ip -->Str) {
-        return S:i/^ '::ffff:' // given $ip;
-    }
+multi ip-valid(ipv6:D $ip         -->Bool) { True }
+multi ip-valid(ipv4:D $ip         -->Bool) { True }
+multi ip-valid(ipv4_as_ipv6:D $ip -->Bool) { True }
+multi ip-valid(Str:D $ip          -->Bool) { False }
 
-    our proto ip-valid(Str:D $ip -->Bool) is export {*};
-
-    multi ip-valid(ipv6:D $ip         -->Bool) { True }
-    multi ip-valid(ipv4:D $ip         -->Bool) { True }
-    multi ip-valid(ipv4_as_ipv6:D $ip -->Bool) { True }
-    multi ip-valid(Str:D $ip          -->Bool) { False }
-};
 
 =begin pod
 
@@ -254,12 +242,6 @@ Net::BGP::IP - IP Address Handling Functionality
 =head2 int-to-ipv4
 
 Converts an integer into a string representation of an IPv4 address.
-
-=head2 in-ipv4-subnet
-    if in-ipv4-submet($net-int, 24, $int-int, 32) { … }
-
-Determines if the first two arguments, a network address and length, contain
-the second element entirely.  Returns True if they do, false otherwise.
 
 =head2 ipv4-to-int
 
