@@ -222,5 +222,38 @@ is $res.elems,  2,                    "Test 5 - Count Correct";
 is $res[0].Str, "255.255.255.255/32", "Test 5a - String Correct";
 is $res[1].Str, "192.168.1.0/24",     "Test 5b - String Correct";
 
+my $net = 0;
+for @CIDRS -> $cidr {
+    my $c = Net::BGP::CIDR.from-str($cidr);
+    is in-ipv4-subnet(0, 0, $c.prefix-int32, $c.prefix-length), True,
+        "0.0.0.0/0 contains {$cidr.Str}";
+    is in-ipv4-subnet(0, 0, $c.prefix-int32, $c.prefix-length), True,
+        "0.0.0.0/32 does not contain {$cidr.Str}";
+}
+
+my $src = Net::BGP::CIDR.from-str('4.2.2.0/24');
+my $dst = Net::BGP::CIDR.from-str('4.2.2.0/24');
+is in-ipv4-subnet(
+        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
+    ), True, "{$src.Str} contains {$src.Str}";
+
+$src = Net::BGP::CIDR.from-str('4.2.2.0/32');
+$dst = Net::BGP::CIDR.from-str('4.2.2.0/24');
+is in-ipv4-subnet(
+        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
+    ), False, "{$src.Str} does not contain {$src.Str}";
+
+$src = Net::BGP::CIDR.from-str('4.2.2.0/24');
+$dst = Net::BGP::CIDR.from-str('4.2.2.0/32');
+is in-ipv4-subnet(
+        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
+    ), True, "{$src.Str} contains {$src.Str}";
+
+$src = Net::BGP::CIDR.from-str('4.2.2.0/24');
+$dst = Net::BGP::CIDR.from-str('4.2.2.0/31');
+is in-ipv4-subnet(
+        $src.prefix-int32, $src.prefix-length, $dst.prefix-int32, $dst.prefix-length
+    ), True, "{$src.Str} contains {$src.Str}";
+
 done-testing;
 

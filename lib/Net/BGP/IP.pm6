@@ -12,7 +12,8 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
 
     our @octet = ^256;
     our subset ipv4 of Str where / ^ @octet**4 % '.' $ /;
-    our subset ipv4_int of UInt where * < 2³²;
+    our subset ipv4_int of UInt where ^(2³²);
+    our subset ipv4_len of UInt where ^33;
 
     our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
         my uint32 $ipval = 0;
@@ -30,6 +31,19 @@ module Net::BGP::IP:ver<0.0.1>:auth<cpan:JMASLAK> {
     our sub int-to-ipv4(ipv4_int:D $i -->Str:D) is export {
         my uint32 $ip = $i;
         return join('.', $ip +> 24, $ip +> 16 +& 255, $ip +> 8 +& 255, $ip +& 255);
+    }
+
+    our sub in-ipv4-subnet(
+        uint32 $a, ipv4_len:D $a-len,
+        uint32 $b, ipv4_len:D $b-len
+        --> Bool:D
+    ) is export {
+        if $b-len < $a-len { return False }
+
+        my uint32 $mask = 2³² - 2**(32 - $a-len);
+        if ($a +& $mask) == ($b +& $mask) { return True; }
+
+        return False;
     }
 
     # IPv6
@@ -240,6 +254,12 @@ Net::BGP::IP - IP Address Handling Functionality
 =head2 int-to-ipv4
 
 Converts an integer into a string representation of an IPv4 address.
+
+=head2 in-ipv4-subnet
+    if in-ipv4-submet($net-int, 24, $int-int, 32) { … }
+
+Determines if the first two arguments, a network address and length, contain
+the second element entirely.  Returns True if they do, false otherwise.
 
 =head2 ipv4-to-int
 
