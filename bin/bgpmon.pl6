@@ -91,7 +91,7 @@ sub MAIN(
             my uint32 $cnt = 0;
             repeat {
                 if $event ~~ Net::BGP::Event::BGP-Message {
-                    if $event.message ~~ Net::BGP::Message::Keep-Alive {
+                    if $event.message ~~ Net::BGP::Message::Open {
                         if %sent-connections{ $event.connection-id }:!exists {
                             for @announcements -> $bgpmsg {
                                 say "Sending announcement for {$bgpmsg.nlri[0]}";

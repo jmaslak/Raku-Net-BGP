@@ -7,9 +7,11 @@ use v6.d;
 
 use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
+use Net::BGP::Event::BGP-Message;
 use Net::BGP::Peer-List;
 use Net::BGP::IP;
 use Net::BGP::Message::Keep-Alive;
+use Net::BGP::Message::Update;
 use Net::BGP::Parameter::Capabilities;
 use Net::BGP::Time;
 
@@ -19,8 +21,9 @@ use Net::BGP::Time;
 class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     does Net::BGP::Controller-Handle-BGP
 {
-    has Int:D $.my-asn            is required where ^(2³²);
-    has Int:D $.identifier        is required where ^(2³²);
+    has Int:D      $.my-asn          is required where ^(2³²);
+    has Int:D      $.identifier      is required where ^(2³²);
+    has Supplier:D $.user-supplier   is required;
 
     has Net::BGP::Peer-List:D       $.peers       = Net::BGP::Peer-List.new(:$!my-asn);
     has Net::BGP::Connection-List:D $.connections = Net::BGP::Connection-List.new;
@@ -121,6 +124,11 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
             self.send-keep-alive($connection);
         }
+        
+        $.user-supplier.emit: Net::BGP::Event::BGP-Message.new(
+            :message( $open ),
+            :connection-id( $connection.id ),
+        );
 
         # Add the connection to the connection table
         $!connections.add: $connection;
@@ -152,6 +160,15 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         }
     }
 
+    multi method receive-bgp(
+        Net::BGP::Connection-Role:D $connection,
+        Net::BGP::Message::Update:D $update
+    ) {
+        $.user-supplier.emit: Net::BGP::Event::BGP-Message.new(
+            :message( $update ),
+            :connection-id( $connection.id ),
+        );
+    }
 
     multi method receive-bgp(
         Net::BGP::Connection-Role:D $connection,

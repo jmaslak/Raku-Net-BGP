@@ -38,13 +38,6 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                 loop {
                     my $bgpmsg = self.pop-bgp-message();
                     if ! $bgpmsg.defined { last; } # Exit loop
-                    # Send message to client
-                    $.user-supplier.emit(
-                        Net::BGP::Event::BGP-Message.new(
-                            :message( $bgpmsg ),
-                            :connection-id( self.id ),
-                        ),
-                    );
                     $.bgp-handler.receive-bgp(self, $bgpmsg);
                 }
                 CATCH {

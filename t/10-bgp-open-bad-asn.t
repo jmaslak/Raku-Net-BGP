@@ -30,18 +30,19 @@ if (!check-compiler-version) {
 
         $client.write( read-message('t/bgp-messages/open-message-no-opt.msg') );
         
-        my $cr-bgp = $uc.receive;
-        is $cr-bgp.message-name, 'BGP-Message', 'BGP message type is as expected';
-        is $cr-bgp.is-error, False, 'Is not an error';
-        is $cr-bgp.message.message-name, 'OPEN', 'BGP Message is proper name';
-        is $cr-bgp.message.message-code, 1, 'BGP Message is proper type';
-        is $cr-bgp.message.option-len, 0, 'Option length is zero';
-        is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
+        # my $cr-bgp = $uc.receive;
+        # is $cr-bgp.message-name, 'BGP-Message', 'BGP message type is as expected';
+        # is $cr-bgp.is-error, False, 'Is not an error';
+        # is $cr-bgp.message.message-name, 'OPEN', 'BGP Message is proper name';
+        # is $cr-bgp.message.message-code, 1, 'BGP Message is proper type';
+        # is $cr-bgp.message.option-len, 0, 'Option length is zero';
+        # is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
+
+        my $cr-bad = $uc.receive;
 
         is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
         is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::Idle, 'Peer is Idle';
         
-        my $cr-bad = $uc.receive;
         is $cr-bad.message-name, 'Closed-Connection', 'Close message type is as expected';
         is $cr-bad.is-error, False, 'Is not an error';
         

@@ -72,7 +72,8 @@ class Net::BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
         $!user-channel  = $!user-supplier.Supply.Channel;
         $!controller    = Net::BGP::Controller.new(
             :$!my-asn,
-            :identifier($!identifier),
+            :$!identifier,
+            :$!user-supplier,
         );
     }
 

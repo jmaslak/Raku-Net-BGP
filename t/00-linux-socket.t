@@ -101,7 +101,6 @@ subtest 'Client/Server', {
     is $conn1.recv, $buf, "Read line 2";
 
     lives-ok { $conn1.close }, "Connection 1 closed";
-    sleep .5;
     lives-ok { $conn2.close }, "Connection 2 closed";
    
     done-testing;
@@ -135,7 +134,6 @@ subtest 'Client/Server - MD5 Non-Match', sub {
     is $conn2.recv, $buf, "Read line 1";
 
     lives-ok { $conn1.close }, "Connection 1 closed";
-    sleep .5;
     lives-ok { $conn2.close }, "Connection 2 closed";
    
     done-testing;
@@ -171,7 +169,6 @@ subtest 'Client/Server - MD5 Match', sub {
     is $conn2.recv, $buf, "Read line 1";
 
     lives-ok { $conn1.close }, "Connection 1 closed";
-    sleep .5;
     lives-ok { $conn2.close }, "Connection 2 closed";
    
     done-testing;
