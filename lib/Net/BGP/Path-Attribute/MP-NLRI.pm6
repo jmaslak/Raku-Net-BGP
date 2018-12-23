@@ -11,6 +11,7 @@ unit class Net::BGP::Path-Attribute::MP-NLRI:ver<0.0.0>:auth<cpan:JMASLAK>
 is Net::BGP::Path-Attribute;
 
 use Net::BGP::AFI :ALL;
+use Net::BGP::CIDR;
 use Net::BGP::Conversions;
 use Net::BGP::IP;
 use Net::BGP::SAFI :ALL;
@@ -190,18 +191,23 @@ method nlri(-->Array[Str:D]) {
     # We also don't handle IPv4 in MP-NLRIs because, in theory, nobody
     # does that.  I'll probably be proven wrong.
     if self.afi eq 'IPv6' and self.safi eq 'unicast' {
-        while $buf.bytes > 0 {
-            my $bits  = $buf[0];
-            my $bytes = (($bits + 7) / 8).Int;
-            if $buf.bytes < ($bytes+1) {
-                die("Invalid length of NLRI information {$buf.bytes} ≠ $bytes");
-            }
-
-            @return.push: buf8-to-ipv6($buf.subbuf(1, $bytes), :$bits) ~ "/" ~ $bits;
-            $buf = $buf.subbuf($bytes+1);
-        }
+        my Str:D @return = Net::BGP::CIDR.packed-to-array($buf, 6).map( { $^a.Str } );
+        return @return;
     } else {
-        @return.push: $buf».fmt("%02x").join;
+        my Str:D @return = $buf».fmt("%02x").join;
+        return @return;
+    }
+}
+
+method nlri-cidrs(-->Array[Net::BGP::CIDR:D]) {
+    ### XXX Should do length check
+    my $buf = buf8.new: self.data.subbuf( self.nlri-start );
+    my Net::BGP::CIDR:D @return;
+
+    if self.afi eq 'IPv6' and self.safi eq 'unicast' {
+        @return = Net::BGP::CIDR.packed-to-array($buf, 6);
+    } else {
+        # Do nothing here;
     }
     return @return;
 }

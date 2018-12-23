@@ -1,6 +1,5 @@
 Todo Items:
 
-  * Make it work!
   * OPEN:
     * Notify upon invalid (too short) of message data
   * Detect BGP identifier clashes
@@ -15,3 +14,6 @@ Todo Items:
   * MD5 socket option is specific to AF we're listening on.  If we
     listen on ::, but have an IPv4 peer, we need to be able to set the socket
     options.
+  * Allow specification of address families on a per-peer basis
+  * Pause recept of incoming TCP packets while waiting for
+    user/controller to process existing backlog

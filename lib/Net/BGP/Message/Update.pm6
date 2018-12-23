@@ -269,8 +269,36 @@ method nlri(-->Array[Net::BGP::CIDR:D]) {
     Net::BGP::CIDR.packed-to-array( $.data.subbuf( self.nlri-start(), self.nlri-length() ));
 }
 
+method nlri6(-->Array[Net::BGP::CIDR:D]) {
+    my Net::BGP::CIDR:D @ret;
+
+    my @attrs = self.path-attributes.grep(
+        { $^a ~~ Net::BGP::Path-Attribute::MP-NLRI }
+    );
+    for @attrs -> $attr {
+        my @cidrs = $attr.nlri-cidrs;
+        @ret.push(|@cidrs) if @cidrs.elems;
+    }
+
+    return @ret;
+}
+
 method withdrawn(-->Array[Net::BGP::CIDR:D]) {
     Net::BGP::CIDR.packed-to-array( $.data.subbuf( self.withdrawn-start(), self.withdrawn-length() ));
+}
+
+method withdrawn6(-->Array[Net::BGP::CIDR:D]) {
+    my Net::BGP::CIDR:D @ret;
+
+    my @attrs = self.path-attributes.grep(
+        { $^a ~~ Net::BGP::Path-Attribute::MP-Unreachable }
+    );
+    for @attrs -> $attr {
+        my @cidrs = $attr.withdrawn-cidrs;
+        @ret.push(|@cidrs) if @cidrs.elems;
+    }
+
+    return @ret;
 }
 
 method raw() { return $.data; }
