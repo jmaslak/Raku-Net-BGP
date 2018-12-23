@@ -21,6 +21,7 @@ sub MAIN(
     Net::BGP::IP::ipv4:D :$my-bgp-id,
     Int:D                :$batch-size = 32,
     Str                  :$cidr-filter,
+    Str                  :$announce,
     *@args is copy
 ) {
     my $bgp = Net::BGP.new(
@@ -54,6 +55,24 @@ sub MAIN(
         }
     }
 
+    # Build the announcements
+    my @announce-str = $announce.split(',') if $announce.defined;
+    my @announcements = @announce-str.map: -> $info {
+        my @parts = $info.split('-');
+        if @parts.elems ≠ 2 { die("Ammouncement must be in format <ip>-<nexthop>") }
+        Net::BGP::Message.from-hash(
+            {
+                message-name => 'UPDATE',
+                as-path      => '',             # XXX We do something different for eBGP
+                local-pref   => 100,            # XXX Set localpref
+                origin       => 'I',
+                next-hop     => @parts[1],
+                nlri         => @parts[0],
+            },
+            :asn32,     # Should change depending on host
+        );
+    }
+
     # Start the TCP socket
     $bgp.listen();
     lognote("Listening");
@@ -64,11 +83,25 @@ sub MAIN(
     my $start = monotonic-whole-seconds;
 
     react {
+        my %sent-connections;
+
         whenever $channel -> $event is copy {
             my @stack;
 
             my uint32 $cnt = 0;
             repeat {
+                if $event ~~ Net::BGP::Event::BGP-Message {
+                    if $event.message ~~ Net::BGP::Message::Keep-Alive {
+                        if %sent-connections{ $event.connection-id }:!exists {
+                            for @announcements -> $bgpmsg {
+                                say "Sending announcement for {$bgpmsg.nlri[0]}";
+                                $bgp.send-bgp( $event.connection-id, $bgpmsg );
+                            }
+                            %sent-connections{ $event.connection-id } = True;
+                        }
+                    }
+                }
+
                 @stack.push: $event;
                 if $cnt++ ≤ 8*2*$batch-size {
                     $event = $channel.poll;
