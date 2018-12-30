@@ -122,7 +122,8 @@ subtest 'Update Message (ASN16)', {
 
     ok $bgp.path-attributes[6] ~~ Net::BGP::Path-Attribute::Community,
         "Path Attribute 7 Proper Type";
-    is $bgp.path-attributes[6].community-list, "2571:258", "Path Attribute 7 Proper Value";
+    is $bgp.path-attributes[6].community-list.join(" "), "2571:258", "Path Attribute 7 Proper Value";
+    is $bgp.community-list.join(" "), "2571:258", "Communities are proper";
 
     ok $bgp.path-attributes[7] ~~ Net::BGP::Path-Attribute::Originator-ID,
         "Path Attribute 8 Proper Type";

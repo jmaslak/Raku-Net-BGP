@@ -94,9 +94,9 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
     return self.bless(:raw( $path-attribute ), :$asn32);
 };
 
-method community-list(-->Str:D) {
+method community-list(-->Array[Str:D]) {
     # XXX Should store these as pairs and sort them.
-    my @elems = gather {
+    my Str:D @elems = gather {
         for ^(self.payload-length / 4) -> $i {
             my $base = self.offset + $i * 4;
             take nuint16( self.raw.subbuf( $base, 2 ) ) ~ ':'
@@ -104,10 +104,10 @@ method community-list(-->Str:D) {
         }
     }
 
-    return @elems.join(' ');
+    return @elems;
 }
 
-method Str(-->Str:D) { "Community=" ~ self.community-list }
+method Str(-->Str:D) { "Community=" ~ self.community-list.join(" ") }
 
 # Register path-attribute
 INIT { Net::BGP::Path-Attribute.register(Net::BGP::Path-Attribute::Community) }

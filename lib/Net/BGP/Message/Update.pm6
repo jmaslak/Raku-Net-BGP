@@ -69,9 +69,19 @@ method Str(-->Str) {
     if $nlri.elems {
         push @lines, "NLRI: " ~ $nlri.join(" ");
     }
+   
+    my $path = self.path;
+    push @lines, "Path: $path" if $path.defined;
+
+    my @comm = self.community-list;
+    push @lines, "Communities: " ~ @comm.join(" ") if @comm.elems;
 
     my $path-attributes = self.path-attributes;
     for $path-attributes.sort( { $^a.path-attribute-code <=> $^b.path-attribute-code } ) -> $attr {
+        next if $attr ~~ Net::BGP::Path-Attribute::AS-Path;
+        next if $attr ~~ Net::BGP::Path-Attribute::Origin;
+        next if $attr ~~ Net::BGP::Path-Attribute::Community;
+
         push @lines, "  ATTRIBUTE: " ~ $attr.Str;
     }
 
@@ -318,8 +328,17 @@ method path(-->Str) {
     return Str unless $as-path.defined;
 
     my $origin = self.origin // '?';
+    return $origin if $as-path eq '';
 
     return "$as-path $origin";
+}
+
+method community-list(-->Array[Str:D]) {
+    my Str:D @ret;
+
+    my $communities = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Community );
+    @ret = $communities.community-list if $communities.defined;
+    return @ret;
 }
 
 method raw() { return $.data; }
@@ -405,6 +424,11 @@ IGP, EGP, or unknown).
 =head2 path-attributes
 
 Returns an array of path attributes.
+
+=head2 community-list
+
+Returns an array of strings representing the communities in the BGP Community
+attribute.
 
 =head2 raw
 
