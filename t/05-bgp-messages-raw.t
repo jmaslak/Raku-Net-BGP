@@ -97,10 +97,13 @@ subtest 'Update Message (ASN16)', {
     ok $bgp.path-attributes[0] ~~ Net::BGP::Path-Attribute::Origin,
         "Path Attribute 1 Proper Type";
     is $bgp.path-attributes[0].origin, '?', "Path Attribute 1 Proper Value";
+    is $bgp.origin, '?', "Origin is valid";
 
     ok $bgp.path-attributes[1] ~~ Net::BGP::Path-Attribute::AS-Path,
         "Path Attribute 2 Proper Type";
     is $bgp.path-attributes[1].as-path, "{0x0102} {0x0304}", "Path Attribute 2 Proper Value";
+    is $bgp.as-path, "{0x0102} {0x0304}", "as-path is valid";
+    is $bgp.path, "{0x0102} {0x0304} ?", "path is valid";
 
     ok $bgp.path-attributes[2] ~~ Net::BGP::Path-Attribute::Next-Hop,
         "Path Attribute 3 Proper Type";

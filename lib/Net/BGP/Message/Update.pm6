@@ -301,6 +301,27 @@ method withdrawn6(-->Array[Net::BGP::CIDR:D]) {
     return @ret;
 }
 
+method as-path(-->Str) {
+    my $attr = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
+    return Str unless $attr.defined;
+
+    return $attr.as-path;
+}
+
+method origin(-->Str) {
+    my $attr = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Origin );
+    return $attr.defined ?? $attr.origin !! Str;
+}
+
+method path(-->Str) {
+    my $as-path = self.as-path;
+    return Str unless $as-path.defined;
+
+    my $origin = self.origin // '?';
+
+    return "$as-path $origin";
+}
+
 method raw() { return $.data; }
 
 
@@ -347,6 +368,39 @@ Currently understood types include C<UPDATE>.
 =head2 message-code
 
 Contains an integer that corresponds to the message-code.
+
+=head nlri
+
+Returns an array of L<Net::BGP::CIDR> objects for IPv4 addresses in the NLRI
+section of the BGP message (I.E. BGP route advertisements).
+
+=head nlri6
+
+Returns an array of L<Net::BGP::CIDR> objects for IPv6 addresses announced in
+this BGP message.
+
+=head withdrawn
+
+Returns an array of L<Net::BGP::CIDR> objects for IPv4 prefixes withdrawn by
+this BGP message.
+
+=head withdrawn6
+
+Returns an array of L<Net::BGP::CIDR> objects for IPv6 prefixes withdrawn by
+this BGP message.
+
+=head2 origin
+
+Returns the origin present in this message.
+
+=head as-path
+
+Returns a string representation of the AS path.
+
+=head path
+
+Returns a string representation of the AS path along with the origin type (I.E.
+IGP, EGP, or unknown).
 
 =head2 path-attributes
 
