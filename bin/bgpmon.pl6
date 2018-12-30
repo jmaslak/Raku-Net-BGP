@@ -183,7 +183,7 @@ sub lognote(Str:D $msg) {
 }
 
 sub log(Str:D $type, Str:D $msg) {
-    say "[$type] $msg";
+    say "{DateTime.now.Str} [$type] $msg";
 }
 
 
