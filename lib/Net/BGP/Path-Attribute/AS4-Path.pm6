@@ -7,94 +7,93 @@ use v6;
 
 use Net::BGP::Path-Attribute;
 
-unit class Net::BGP::Path-Attribute::AS-Path:ver<0.0.0>:auth<cpan:JMASLAK>
+unit class Net::BGP::Path-Attribute::AS4-Path:ver<0.0.0>:auth<cpan:JMASLAK>
 is Net::BGP::Path-Attribute;
 
 use Net::BGP::Conversions;
 use Net::BGP::AS-List;
 
-# AS-Path Types
-method implemented-path-attribute-code(-->Int) { 2 }
-method implemented-path-attribute-name(-->Str) { "AS-Path" }
+# AS4-Path Types
+method implemented-path-attribute-code(-->Int) { 17 }
+method implemented-path-attribute-name(-->Str) { "AS4-Path" }
 
-method path-attribute-name(-->Str:D) { "AS-Path" }
+method path-attribute-name(-->Str:D) { "AS4-Path" }
 
 method new() {
     die("Must use from-raw or from-hash to construct a new object");
 }
 
 method from-raw(buf8:D $raw where $raw.bytes ≥ 3, :$asn32) {
-    if   $raw[0] +& 0x80 { die("Optional flag not valid on AS-Path attribute") }
-    if ! $raw[0] +& 0x40 { die("Transitive flag must be set on AS-Path attribute") }
-    if   $raw[0] +& 0x20 { die("Partial flag not valid on AS-Path attribute") }
+    if ! $raw[0] +& 0x80 { die("Optional flag must be set on AS4-Path attribute") }
+    if ! $raw[0] +& 0x40 { die("Transitive flag must be set on AS4-Path attribute") }
 
     my $aslist;
     if $raw[0] +& 0x10 { # XXX Should check length field, but we skip it
-        $aslist = Net::BGP::AS-List.as-lists( buf8.new($raw[4..*]), $asn32 );
+        $aslist = Net::BGP::AS-List.as-lists( buf8.new($raw[4..*]), True );
     } else {
-        $aslist = Net::BGP::AS-List.as-lists( buf8.new($raw[3..*]), $asn32 );
+        $aslist = Net::BGP::AS-List.as-lists( buf8.new($raw[3..*]), True );
     }
 
-    if $raw[1] ≠ 2 { die("Can only create a AS-Path attribute") }
+    if $raw[1] ≠ 17 { die("Can only create a AS4-Path attribute") }
 
     @$aslist».check;     # Validate all are proper
 
-    my $obj = self.bless(:$raw, :$asn32);
+    my $obj = self.bless(:$raw, :asn32);
     return $obj;
 };
 
 method from-hash(%params is copy, Bool:D :$asn32)  {
-    my @REQUIRED = «as-path»;
+    my @REQUIRED = «as4-path»;
 
     # Remove path attributes
     if %params<path-attribute-code>:exists {
-        if %params<path-attribute-code> ≠ 2 {
-            die("Can only create an AS-Path attribute");
+        if %params<path-attribute-code> ≠ 17 {
+            die("Can only create an AS4-Path attribute");
         }
         %params<path-attribute-code>:delete;
     }
     if %params<path-attribute-name>:exists {
-        if %params<path-attribute-name> ≠ 'AS-Path' {
-            die("Can only create an AS-Path attribute");
+        if %params<path-attribute-name> ≠ 'AS4-Path' {
+            die("Can only create an AS4-Path attribute");
         }
         %params<path-attribute-name>:delete;
     }
 
-    my @aslists = Net::BGP::AS-List.from-str(%params<as-path>, $asn32);
-    my $as-path-buf = buf8.new;
-    for @aslists -> $aslist { $as-path-buf.append: $aslist.raw }
+    my @aslists = Net::BGP::AS-List.from-str(%params<as4-path>, True);
+    my $as4-path-buf = buf8.new;
+    for @aslists -> $aslist { $as4-path-buf.append: $aslist.raw }
 
     # Check to make sure attributes are correct
     if @REQUIRED.sort.list !~~ %params.keys.sort.list {
         die("Did not provide proper options");
     }
 
-    if $as-path-buf.bytes > 65535 { die "Value is longer than 65535 bytes" }
+    if $as4-path-buf.bytes > 65535 { die "Value is longer than 65535 bytes" }
 
     my $flag = 0x40;  # Transitive
-    if $as-path-buf.bytes > 255 { $flag += 0x10 }  # Extended length?
+    if $as4-path-buf.bytes > 255 { $flag += 0x10 }  # Extended length?
 
     my buf8 $path-attribute = buf8.new();
     $path-attribute.append( $flag );
-    $path-attribute.append( 2 );
+    $path-attribute.append( 17 );
 
-    if $as-path-buf.bytes > 255 {
-        $path-attribute.append( nuint16-buf8( $as-path-buf.bytes ) );
+    if $as4-path-buf.bytes > 255 {
+        $path-attribute.append( nuint16-buf8( $as4-path-buf.bytes ) );
     } else {
-        $path-attribute.append( $as-path-buf.bytes );
+        $path-attribute.append( $as4-path-buf.bytes );
     }
-    $path-attribute.append( $as-path-buf );
+    $path-attribute.append( $as4-path-buf );
 
-    return self.bless( :raw( $path-attribute ), :$asn32 );
+    return self.bless( :raw( $path-attribute ), :asn32 );
 };
 
 method as-lists(-->Array[Net::BGP::AS-List:D]) {
     my Net::BGP::AS-List:D @return;
 
     if $.raw[0] +& 0x10 { # XXX Should check length field, but we skip it
-        @return = Net::BGP::AS-List.as-lists( buf8.new($.raw[4..*]), $.asn32 );
+        @return = Net::BGP::AS-List.as-lists( buf8.new($.raw[4..*]), True);
     } else {
-        @return = Net::BGP::AS-List.as-lists( buf8.new($.raw[3..*]), $.asn32 );
+        @return = Net::BGP::AS-List.as-lists( buf8.new($.raw[3..*]), True);
     }
 }
 
@@ -103,47 +102,26 @@ method path-length(-->Int:D) {
     return @(self.as-lists».path-length).sum;
 }
 
-method as-path(-->Str:D) { (join " ", self.as-lists».Str) }
-method as-path-first(UInt:D $len is copy -->Str:D) {
-    my Net::BGP::AS-List:D @all = self.as-lists;
+method as4-path(-->Str:D) { (join " ", self.as-lists».Str) }
 
-    my @array = gather {
-        while $len {
-            if ! @all.elems {
-                die("No elements left in AS-Path array");
-            }
-            my $top = @all.shift;
-            if $top.path-length ≤ $len {
-                $len -= $top.path-length;
-                take $top.Str;
-            } else {
-                take $top.Str(:elems($len));
-                $len = 0;
-            }
-        }
-    }
-
-    return @array.join(" ");
-}
-
-method Str(-->Str:D) { "AS-Path=" ~ self.as-path }
+method Str(-->Str:D) { "AS4-Path=" ~ self.as4-path }
 
 # Register path-attribute
-INIT { Net::BGP::Path-Attribute.register(Net::BGP::Path-Attribute::AS-Path) }
+INIT { Net::BGP::Path-Attribute.register(Net::BGP::Path-Attribute::AS4-Path) }
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Message::Path-Attribute::AS-Path - BGP AS-Path Path-Attribute Object
+Net::BGP::Message::Path-Attribute::AS4-Path - BGP AS4-Path Path-Attribute Object
 
 =head1 SYNOPSIS
 
-  use Net::BGP::Path-Attribute::AS-Path;
+  use Net::BGP::Path-Attribute::AS4-Path;
 
-  my $cap = Net::BGP::Path-Attribute::AS-Path.from-raw( $raw );
+  my $cap = Net::BGP::Path-Attribute::AS4-Path.from-raw( $raw );
   # or …
-  my $cap = Net::BGP::Path-Attribute::AS-Path.from-hash(
+  my $cap = Net::BGP::Path-Attribute::AS4-Path.from-hash(
     !!! # NOT YET IMPLEMENTED
   );
 
@@ -214,9 +192,9 @@ This returns a C<buf8> containing the data in the attribute.
 
 =head2 raw
 
-Returns the raw (wire format) data for this path-attribute.
+ Returns the raw (wire format) data for this path-attribute.
 
-=head2 as-path
+=head2 as4-path
 
 Returns a string representation of the AS path.
 

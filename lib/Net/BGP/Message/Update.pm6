@@ -12,6 +12,7 @@ use Net::BGP::Message;
 use Net::BGP::Parameter;
 use Net::BGP::Path-Attribute;
 use Net::BGP::Path-Attribute::AS-Path;
+use Net::BGP::Path-Attribute::AS4-Path;
 use Net::BGP::Path-Attribute::Atomic-Aggregate;
 use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
@@ -79,6 +80,7 @@ method Str(-->Str) {
     my $path-attributes = self.path-attributes;
     for $path-attributes.sort( { $^a.path-attribute-code <=> $^b.path-attribute-code } ) -> $attr {
         next if $attr ~~ Net::BGP::Path-Attribute::AS-Path;
+        next if $attr ~~ Net::BGP::Path-Attribute::AS4-Path;
         next if $attr ~~ Net::BGP::Path-Attribute::Origin;
         next if $attr ~~ Net::BGP::Path-Attribute::Community;
 
@@ -99,13 +101,15 @@ method from-raw(buf8:D $raw where $raw.bytes ≥ 2, Bool:D :$asn32) {
 
 method from-hash(%params is copy, Bool:D :$asn32) {
     my @REQUIRED = «
-        withdrawn origin as-path next-hop med local-pref atomic-aggregate
-        originator-id cluster-list community nlri address-family
+        withdrawn origin as-path as4-path next-hop med local-pref
+        atomic-aggregate originator-id cluster-list community nlri
+        address-family
     »;
 
     %params<withdrawn>        //= [];
     %params<origin>           //= '?';
     %params<as-path>          //= '';
+    %params<as4-path>         //= '';
     %params<next-hop>         //= '';
     %params<local-pref>       //= '';
     %params<atomic-aggregate> //= False;
@@ -264,6 +268,26 @@ method from-hash(%params is copy, Bool:D :$asn32) {
             ).raw;
         };
     }
+   
+    if %params<as4-path> eq '' { 
+        if !$asn32 and %params<as-path>.comb(/ <[0..9]>+ /).first(* ≥ 2¹⁶).defined {
+            $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+                {
+                    path-attribute-name => 'AS4-Path',
+                    as4-path            => %params<as-path>,
+                },
+                :asn32
+            ).raw;
+        }
+    } else {
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+            {
+                path-attribute-name => 'AS4-Path',
+                as4-path            => %params<as4-path>,
+            },
+            :asn32
+        ).raw;
+    }
 
     my $msg = buf8.new( 2 );                        # Message type
     $msg.append(nuint16-buf8( $withdrawn.bytes ) ); # Length of withdraw
@@ -315,7 +339,32 @@ method as-path(-->Str) {
     my $attr = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
     return Str unless $attr.defined;
 
-    return $attr.as-path;
+    if self.asn32 {
+        # We don't need to look at AS4-Path.
+        return $attr.as-path;
+    } else {
+        # So we're a 16 bit ASN BGP speaker.  Let's look at AS4.
+        
+        # Do we have an AS4-Path?
+        my $as4 = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS4-Path );
+
+        if ! $as4.defined {
+            return $attr.as-path;  # Just use the AS-Path.
+        }
+
+        # XXX We need to look for AS4_Aggregator and check that
+        # Aggregator, if found, is 23456.
+        
+        if $attr.path-length < $as4.path-length {
+            return $attr.as-path;
+        } elsif $attr.path-length == $as4.path-length {
+            return $as4.as4-path;
+        } else {
+            my $prefix = $attr.as-path-first($attr.path-length - $as4.path-length);
+            return "$prefix " ~ $as4.as4-path;
+        }
+    }
+
 }
 
 method origin(-->Str) {

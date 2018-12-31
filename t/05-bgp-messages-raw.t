@@ -160,6 +160,7 @@ subtest 'Update Message (MP-BGP)', {
     ok $bgp.path-attributes[1] ~~ Net::BGP::Path-Attribute::AS-Path,
         "Path Attribute 2 Proper Type";
     is $bgp.path-attributes[1].as-path, "{0x0102} {0x0304}", "Path Attribute 2 Proper Value";
+    is $bgp.path-attributes[1].path-length, 2, "AS Path has proper length";
 
     ok $bgp.path-attributes[2] ~~ Net::BGP::Path-Attribute::MP-NLRI,
         "Path Attribute 3 Proper Type";

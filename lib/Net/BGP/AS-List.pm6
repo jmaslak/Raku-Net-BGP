@@ -22,9 +22,12 @@ method check(-->Bool:D) {
     return True;
 }
 
-method ordered(-->Bool:D)  { return ($.raw[0] == 2) }
-method asn-size(-->Int:D)  { return $!asn32 ?? 4 !! 2 }
-method asn-count(-->Int:D) { return $.raw[1] }
+method ordered(-->Bool:D)    { return ($.raw[0] == 2) }
+method asn-size(-->Int:D)    { return $!asn32 ?? 4 !! 2 }
+method asn-count(-->Int:D)   { return $.raw[1] }
+
+# Per RFC4271 9.1.2.2.a
+method path-length(-->Int:D) { return self.ordered ?? self.asn-count !! 1 }
 
 method asns(-->Array[Int:D]) {
     if self.asn-size * self.asn-count + 2 ≠ $!raw.bytes {
@@ -42,14 +45,16 @@ method asns(-->Array[Int:D]) {
    return @result;
 } 
 
-method Str(-->Str:D) {
+method Str(UInt :$elems? -->Str:D) {
     if ! self.defined { return "Net::BGP::AS-List" }
 
     my $sep   = self.ordered ?? " " !! ",";
     my $start = self.ordered ?? ""  !! '{';
     my $end   = self.ordered ?? ""  !! '}';
+
+    my @asns = $elems.defined ?? self.asns[0..^$elems] !! self.asns;
     
-    return $start ~ self.asns.join($sep) ~ $end;
+    return $start ~ @asns.join($sep) ~ $end;
 }
 
 method from-str(Str:D $str, Bool:D $asn32 -->Array[Net::BGP::AS-List:D]) {
@@ -98,9 +103,9 @@ method from-list(
     $buf.append( $ordered ?? 2 !! 1 );
     $buf.append( @list.elems );
 
-    for @list -> $ele {
-        if  $asn32 { die unless $ele ~~ ^(2³²) };
-        if !$asn32 { die unless $ele ~~ ^(2¹⁶) };
+    for @list -> $ele is copy {
+        die unless $ele ~~ ^(2³²);
+        if (!$asn32) and ($ele ≥ 2¹⁶) { $ele = 23456; }
 
         $buf.append( $asn32 ?? nuint32-buf8($ele) !! nuint16-buf8($ele) );
     }
@@ -182,6 +187,11 @@ Returns 4 if C<asn32> is set to C<True>, 2 otherwise.
 =head2 asn-count
 
 Returns the number of ASNs present in the packed raw structure.
+
+=head2 path-length
+
+Returns the number of ASNs present in the list, using RFC4271 semmantics.  That
+is, the path length is 1 if this is an AS-SET (rather than an AS-SEQUENCE).
 
 =head2 asns
 
