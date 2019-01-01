@@ -16,7 +16,18 @@ our subset ipv4 of Str where / ^ @octet**4 % '.' $ /;
 our subset ipv4_int of UInt where ^(2³²);
 our subset ipv4_len of UInt where ^33;
 
-our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
+use NativeCall;
+sub inet_aton(Str $str is encoded('utf8'), uint32 $addr is rw -->uint32) is native {*};
+sub ntohl(uint32 $net -->uint32) is native {*};
+
+# XXX - Regexes are way slow.
+# our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
+our sub ipv4-to-int(Str:D $ip -->uint32) is export {
+    my uint32 $result = 0;
+    my $ret = inet_aton($ip, $result);
+    die("Could not convert name to IP") if $ret == 0;
+    return ntohl($result);
+
     my uint32 $ipval = 0;
     for $ip.split('.') -> Int(Str) $part {
         $ipval = $ipval +< 8 + $part;
@@ -25,7 +36,9 @@ our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
     return $ipval;
 }
 
-our sub ipv4-to-buf8(ipv4:D $ip -->buf8:D) is export {
+# XXX - Regexes are way slow.
+# our sub ipv4-to-buf8(Str:D $ip -->buf8:D) is export {
+our sub ipv4-to-buf8(Str:D $ip -->buf8:D) is export {
     return buf8.new( $ip.split('.')».Int );
 }
 
@@ -173,22 +186,25 @@ our sub ipv6-compact(ipv6:D $ip -->ipv6:D) is export {
     return $compact;
 }
 
-our subset ipv4_as_ipv6 of Str where m:i/ ^ '::ffff:' @octet**4 % '.' $ /;
+our subset ipv4_as_ipv6 of Str where {
+    $_.fc.starts-with("::ffff:") and m:i/ ^ '::ffff:' @octet**4 % '.' $ /
+};
 
 sub ip-cannonical(Str:D $ip -->Str) is export {
     state %cached;
 
-    return %cached{$ip} || ( %cached{$ip} = _ip-cannonical($ip) );
+    return $ip unless $ip.contains(':');
+    
+    return %cached{$ip} //= ipv6-cannonical($ip);
 }
 
-multi _ip-cannonical(ipv6:D $ip -->Str) {
-    return ipv6-compact($ip);
+multi ipv6-cannonical(ipv6:D $ip -->Str) {
+    state %cached;
+    return %cached{$ip} //= ipv6-compact($ip);
 }
-multi _ip-cannonical(ipv4:D $ip -->Str) {
-    return $ip;
-}
-multi _ip-cannonical(ipv4_as_ipv6:D $ip -->Str) {
-    return S:i/^ '::ffff:' // given $ip;
+multi ipv6-cannonical(ipv4_as_ipv6:D $ip -->Str) {
+    state %cached;
+    return %cached{$ip} //= (S:i/^ '::ffff:' // given $ip);
 }
 
 our proto ip-valid(Str:D $ip -->Bool) is export {*};

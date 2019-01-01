@@ -106,7 +106,9 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
             if $p.connection.defined && ($p.connection.id ≠ $connection.id) {
                 # So we have a connection already to this peer.
                 # We would do our collision detection here.
-                !!!; # XXX
+                # XXX We're just going to close the old connection here.
+                # That may not be the right thing (it isn't)
+                $p.connection.close;
             }
 
             # So we know we're the best connection to be active

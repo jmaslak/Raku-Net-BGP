@@ -50,11 +50,15 @@ method path-length(-->Int:D) { nuint16( $.data.subbuf(3+self.withdrawn-length, 2
 method nlri-start(-->Int:D)  { self.path-start() + self.path-length; }
 method nlri-length(-->Int:D) { $.data.bytes - self.nlri-start() + 1; }
 
+has Net::BGP::Path-Attribute:D @!cached-path-attributes;
 method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
-    return Net::BGP::Path-Attribute.path-attributes(
+    return @!cached-path-attributes if @!cached-path-attributes;
+
+    @!cached-path-attributes = Net::BGP::Path-Attribute.path-attributes(
         self.data.subbuf( self.path-start, self.path-length),
         :$!asn32
     );
+    return @!cached-path-attributes;
 }
 
 method Str(-->Str) {
@@ -74,6 +78,9 @@ method Str(-->Str) {
     my $path = self.path;
     push @lines, "Path: $path" if $path.defined;
 
+    my $nh = self.next-hop;
+    push @lines, "Next-Hop: $nh" if $nh.defined;
+
     my @comm = self.community-list;
     push @lines, "Communities: " ~ @comm.join(" ") if @comm.elems;
 
@@ -83,6 +90,7 @@ method Str(-->Str) {
         next if $attr ~~ Net::BGP::Path-Attribute::AS4-Path;
         next if $attr ~~ Net::BGP::Path-Attribute::Origin;
         next if $attr ~~ Net::BGP::Path-Attribute::Community;
+        next if $attr ~~ Net::BGP::Path-Attribute::Next-Hop;
 
         push @lines, "  ATTRIBUTE: " ~ $attr.Str;
     }
@@ -299,22 +307,30 @@ method from-hash(%params is copy, Bool:D :$asn32) {
     return self.bless(:data( buf8.new($msg) ), :$asn32);
 };
 
+has Array[Net::BGP::CIDR:D] $!cached-nlri;
 method nlri(-->Array[Net::BGP::CIDR:D]) {
-    Net::BGP::CIDR.packed-to-array( $.data.subbuf( self.nlri-start(), self.nlri-length() ));
+    return $!cached-nlri if $!cached-nlri;
+
+    $!cached-nlri = Net::BGP::CIDR.packed-to-array(
+        $.data.subbuf( self.nlri-start, self.nlri-length )
+    );
+    return $!cached-nlri;
 }
 
+has Array[Net::BGP::CIDR:D] $!cached-nlri6;
 method nlri6(-->Array[Net::BGP::CIDR:D]) {
-    my Net::BGP::CIDR:D @ret;
+    return $!cached-nlri6 if $!cached-nlri6;
 
+    $!cached-nlri6 = Array[Net::BGP::CIDR:D].new;
     my @attrs = self.path-attributes.grep(
         { $^a ~~ Net::BGP::Path-Attribute::MP-NLRI }
     );
     for @attrs -> $attr {
         my @cidrs = $attr.nlri-cidrs;
-        @ret.push(|@cidrs) if @cidrs.elems;
+        $!cached-nlri6.push(|@cidrs) if @cidrs;
     }
 
-    return @ret;
+    return $!cached-nlri6;
 }
 
 method withdrawn(-->Array[Net::BGP::CIDR:D]) {
@@ -388,6 +404,13 @@ method community-list(-->Array[Str:D]) {
     my $communities = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Community );
     @ret = $communities.community-list if $communities.defined;
     return @ret;
+}
+
+method next-hop(-->Str) {
+    my $nh = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Next-Hop );
+    return unless $nh.defined;
+    
+    return $nh.ip;
 }
 
 method raw() { return $.data; }

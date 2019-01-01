@@ -39,9 +39,6 @@ multi sub nuint128(@b where @b.elems == 16 --> Int) is export {
     return $i;
 }
 multi sub nuint128(buf8 $b where $b.bytes == 16 --> Int) is export { _nuint128($b) }
-multi sub nuint128(buf8 $b) is export {
-    die($b.bytes);
-}
 multi sub nuint128(*@b where @b.elems == 16 --> Int) is export {
     return nuint128(@b);
 }
@@ -55,7 +52,12 @@ sub nuint16-buf8(Int $n where * < 2¹⁶ --> buf8) is export {
 multi sub nuint32-buf8(Int $n where * < 2³² --> buf8) is export {
     return buf8.new($n +> 24 +& 255, $n +> 16 +& 255, $n +> 8 +& 255, $n +& 255);
 }
-multi sub nuint32-buf8(Net::BGP::IP::ipv4 $ip --> buf8) is export {
+multi sub nuint32-buf8(Int $n --> buf8) is export {
+    return buf8.new($n +> 24 +& 255, $n +> 16 +& 255, $n +> 8 +& 255, $n +& 255);
+}
+# XXX Regexes are slow.
+#multi sub nuint32-buf8(Net::BGP::IP::ipv4 $ip --> buf8) is export {
+multi sub nuint32-buf8(Str:D $ip --> buf8) is export {
     return nuint32-buf8(ipv4-to-int($ip));
 }
 sub nuint128-buf8(Int $n where * < 2¹²⁸ --> buf8) is export {
