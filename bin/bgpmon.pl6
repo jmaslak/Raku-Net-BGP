@@ -22,6 +22,7 @@ sub MAIN(
     Int:D                :$batch-size = 32,
     Str                  :$cidr-filter,
     Str                  :$announce,
+    Bool:D               :$short-format = False,
     *@args is copy
 ) {
     my $bgp = Net::BGP.new(
@@ -75,7 +76,7 @@ sub MAIN(
 
     # Start the TCP socket
     $bgp.listen();
-    lognote("Listening");
+    lognote("Listening") unless $short-format;
 
     my $channel = $bgp.user-channel;
 
@@ -94,7 +95,6 @@ sub MAIN(
                     if $event.message ~~ Net::BGP::Message::Open {
                         if %sent-connections{ $event.connection-id }:!exists {
                             for @announcements -> $bgpmsg {
-                                say "Sending announcement for {$bgpmsg.nlri[0]}";
                                 $bgp.send-bgp( $event.connection-id, $bgpmsg );
                             }
                             %sent-connections{ $event.connection-id } = True;
@@ -118,20 +118,26 @@ sub MAIN(
                     :degree(8), :batch((@stack.elems / 8).ceiling)
                 ).grep(
                     { is-filter-match($^a, :@cidr-filter) }
-                ).map: { $^a.Str };
+                ).map({ $short-format ?? short-lines($^a) !! $^a.Str }).flat;
             } else {
                 @str = @stack.map: { $^a.Str }
                 @str = @stack.grep(
                     { is-filter-match($^a, :@cidr-filter) }
-                ).map: { $^a.Str };
+                ).map({ $short-format ?? short-lines($^a) !! $^a.Str }).flat;
             }
 
             for @str -> $event {
-                logevent($event);
+                if $short-format {
+                    short-format-output($event);
+                } else {
+                    logevent($event);
+                }
 
                 $messages-logged++;
                 if $max-log-messages.defined && ($messages-logged ≥ $max-log-messages) {
-                    log('*', "RUN TIME: " ~ (monotonic-whole-seconds() - $start) );
+                    if ! $short-format {
+                        log('*', "RUN TIME: " ~ (monotonic-whole-seconds() - $start) );
+                    }
                     exit;
                 }
             }
@@ -185,5 +191,34 @@ sub lognote(Str:D $msg) {
 sub log(Str:D $type, Str:D $msg) {
     say "{DateTime.now.Str} [$type] $msg";
 }
+
+sub short-format-output(Str:D $line -->Nil) {
+    say $line;
+}
+
+multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
+    my Str:D @out;
+
+    my $bgp = $event.message;
+    if $bgp ~~ Net::BGP::Message::Update {
+        if $bgp.nlri.elems {
+            for @($bgp.nlri) -> $prefix {
+                push @out, join("|",
+                    "A",
+                    $prefix,
+                    $bgp.next-hop,
+                    $bgp.path,
+                    $bgp.community-list.join(" "),
+                );
+            }
+        }
+    } else {
+        # Do nothing for other types of messgaes
+    }
+
+    return @out;
+}
+
+multi short-lines($event -->Array[Str:D]) { return Array[Str:D].new; }
 
 
