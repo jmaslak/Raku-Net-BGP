@@ -108,6 +108,7 @@ subtest 'Update Message (ASN16)', {
     ok $bgp.path-attributes[2] ~~ Net::BGP::Path-Attribute::Next-Hop,
         "Path Attribute 3 Proper Type";
     is $bgp.path-attributes[2].ip, "10.0.0.1", "Path Attribute 3 Proper Value";
+    is $bgp.next-hop, "10.0.0.1", "next-hop is valid";
 
     ok $bgp.path-attributes[3] ~~ Net::BGP::Path-Attribute::MED,
         "Path Attribute 4 Proper Type";
