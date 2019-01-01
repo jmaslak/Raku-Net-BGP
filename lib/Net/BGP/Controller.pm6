@@ -31,7 +31,8 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     # Handle open messages
     multi method receive-bgp(
         Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Message::Open:D $open
+        Net::BGP::Message::Open:D $open,
+        Str:D $peer,
     ) {
         # Does the peer exist?
         my $p = self.peers.get($connection.remote-ip);
@@ -130,6 +131,7 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
         $.user-supplier.emit: Net::BGP::Event::BGP-Message.new(
             :message( $open ),
             :connection-id( $connection.id ),
+            :peer( $peer ),
         );
 
         # Add the connection to the connection table
@@ -137,8 +139,9 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
     }
 
     multi method receive-bgp(
-        Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Message::Keep-Alive:D $keep-alive
+        Net::BGP::Connection-Role:D     $connection,
+        Net::BGP::Message::Keep-Alive:D $keep-alive,
+        Str:D                           $peer,
     ) {
         # Does the peer exist?
         my $p = self.peers.get($connection.remote-ip);
@@ -164,17 +167,20 @@ class Net::BGP::Controller:ver<0.0.0>:auth<cpan:JMASLAK>
 
     multi method receive-bgp(
         Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Message::Update:D $update
+        Net::BGP::Message::Update:D $update,
+        Str:D                       $peer-ip,
     ) {
         $.user-supplier.emit: Net::BGP::Event::BGP-Message.new(
             :message( $update ),
             :connection-id( $connection.id ),
+            :peer( $peer-ip ),
         );
     }
 
     multi method receive-bgp(
         Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Message:D $msg
+        Net::BGP::Message:D         $msg,
+        Str:D                       $peer-ip,
     ) {
         # Does the peer exist?
         my $p = self.peers.get($connection.remote-ip);
@@ -355,7 +361,7 @@ BGP errors, and manages the conflict resolution.
 
 =head1 METHODS
 
-=head2 receive-bgp(Net::BGP::Connection-Role:D, Net::BGP::Message:D)
+=head2 receive-bgp(Net::BGP::Connection-Role:D, Net::BGP::Message:D, Str)
 
 Processes a received BGP message.
 

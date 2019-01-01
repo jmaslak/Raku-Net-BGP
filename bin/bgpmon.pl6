@@ -77,6 +77,7 @@ sub MAIN(
     # Start the TCP socket
     $bgp.listen();
     lognote("Listening") unless $short-format;
+    short-format-output(short-line-header) if $short-format;
 
     my $channel = $bgp.user-channel;
 
@@ -200,16 +201,24 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
     my Str:D @out;
 
     my $bgp = $event.message;
-    if $bgp ~~ Net::BGP::Message::Update {
+    if $bgp ~~ Net::BGP::Message::Open {
+        push @out, short-line-open($event.peer);
+    } elsif $bgp ~~ Net::BGP::Message::Update {
         if $bgp.nlri.elems {
             for @($bgp.nlri) -> $prefix {
-                push @out, join("|",
-                    "A",
-                    $prefix,
-                    $bgp.next-hop,
-                    $bgp.path,
-                    $bgp.community-list.join(" "),
-                );
+                push @out, short-line-announce($prefix, $event.peer, $bgp);
+            }
+        } elsif $bgp.nlri6.elems {
+            for @($bgp.nlri6) -> $prefix {
+                push @out, short-line-announce6($prefix, $event.peer, $bgp);
+            }
+        } elsif $bgp.withdrawn.elems {
+            for @($bgp.withdrawn6) -> $prefix {
+                push @out, short-line-withdrawn($prefix, $event.peer);
+            }
+        } elsif $bgp.withdrawn6.elems {
+            for @($bgp.withdrawn6) -> $prefix {
+                push @out, short-line-withdrawn($prefix, $event.peer);
             }
         }
     } else {
@@ -221,4 +230,73 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
 
 multi short-lines($event -->Array[Str:D]) { return Array[Str:D].new; }
 
+sub short-line-header(-->Str:D) {
+    return join("|",
+        "Type",
+        "Date",
+        "Peer",
+        "Prefix",
+        "Next-Hop",
+        "Path",
+        "Communities",
+    );
+}
+
+sub short-line-announce(
+    Net::BGP::CIDR $prefix,
+    Str:D $peer,
+    Net::BGP::Message::Update $bgp
+    -->Str:D
+) {
+    return join("|",
+        "A",
+        DateTime.now.posix,
+        $peer,
+        $prefix,
+        $bgp.next-hop,
+        $bgp.path,
+        $bgp.community-list.join(" "),
+    );
+}
+
+sub short-line-announce6(
+    Net::BGP::CIDR $prefix,
+    Str:D $peer,
+    Net::BGP::Message::Update $bgp
+    -->Str:D
+) {
+    return join("|",
+        "A",
+        DateTime.now.posix,
+        $peer,
+        $prefix,
+        $bgp.next-hop6,
+        $bgp.path,
+        $bgp.community-list.join(" "),
+    );
+}
+
+sub short-line-withdrawn(
+    Net::BGP::CIDR $prefix,
+    Str:D $peer,
+    -->Str:D
+) {
+    return join("|",
+        "W",
+        DateTime.now.posix,
+        $peer,
+        $prefix,
+    );
+}
+
+sub short-line-open(
+    Str:D $peer,
+    -->Str:D
+) {
+    return join("|",
+        "O",
+        DateTime.now.posix,
+        $peer
+    );
+}
 

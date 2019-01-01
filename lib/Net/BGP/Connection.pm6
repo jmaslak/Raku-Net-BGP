@@ -12,6 +12,7 @@ use Net::BGP::Conversions;
 use Net::BGP::Error::Length-Too-Long;
 use Net::BGP::Error::Length-Too-Short;
 use Net::BGP::Error::Marker-Format;
+use Net::BGP::IP;
 use Net::BGP::Message;
 use Net::BGP::Event::BGP-Message;
 use Net::BGP::Event::Closed-Connection;
@@ -21,6 +22,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
 {
 
     has                     $.socket           is required;
+    has Str:D               $.peer-ip = ip-cannonical($!socket.peer-host);
     has Channel:D           $.command = Channel.new;
     has Channel:D           $.listener-channel is required; # To communicate with listener
     has Supplier:D          $.user-supplier    is required; # To communicate with user
@@ -38,7 +40,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                 loop {
                     my $bgpmsg = self.pop-bgp-message();
                     if ! $bgpmsg.defined { last; } # Exit loop
-                    $.bgp-handler.receive-bgp(self, $bgpmsg);
+                    $.bgp-handler.receive-bgp(self, $bgpmsg, $!peer-ip);
                 }
                 CATCH {
                     when Net::BGP::Error {
@@ -59,6 +61,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                             :client-ip($ip),
                             :client-port($port),
                             :connection-id( self.id ),
+                            :peer($!peer-ip),
                         ),
                     );
 
@@ -74,6 +77,7 @@ class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
                             :client-ip($ip),
                             :client-port($port),
                             :connection-id( self.id ),
+                            :peer($!peer-ip),
                         ),
                     );
 

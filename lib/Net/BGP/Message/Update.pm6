@@ -322,7 +322,7 @@ method nlri6(-->Array[Net::BGP::CIDR:D]) {
     return $!cached-nlri6 if $!cached-nlri6;
 
     $!cached-nlri6 = Array[Net::BGP::CIDR:D].new;
-    my @attrs = self.path-attributes.grep(
+    my @attrs = self.path-attributes.first(
         { $^a ~~ Net::BGP::Path-Attribute::MP-NLRI }
     );
     for @attrs -> $attr {
@@ -331,6 +331,18 @@ method nlri6(-->Array[Net::BGP::CIDR:D]) {
     }
 
     return $!cached-nlri6;
+}
+
+has Str $!cached-next-hop6;
+method next-hop6(-->Str) {
+    return $!cached-next-hop6 if $!cached-next-hop6;
+
+    my $attr = self.path-attributes.first(
+        { $^a ~~ Net::BGP::Path-Attribute::MP-NLRI }
+    );
+    $!cached-next-hop6 = $attr.next-hop-global;
+
+    return $!cached-next-hop6;
 }
 
 method withdrawn(-->Array[Net::BGP::CIDR:D]) {

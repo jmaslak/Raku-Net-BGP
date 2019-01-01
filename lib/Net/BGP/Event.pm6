@@ -7,6 +7,7 @@ use v6;
 
 class Net::BGP::Event:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int $.connection-id;
+    has Str $.peer;
 
     method message-name(-->Str) { 'NOOP' };
     method is-error(-->Bool)    { False  };
@@ -34,6 +35,10 @@ server code to the user code.
 =head2 connection-id
 
 This contains the appropriate connection ID associated with the notification.
+
+=head2 peer
+
+This contains the IP address of the peer.
 
 =head1 METHODS
 

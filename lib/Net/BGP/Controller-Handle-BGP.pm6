@@ -13,7 +13,8 @@ role Net::BGP::Controller-Handle-BGP:ver<0.0.0>:auth<cpan:JMASLAK> {
     # Receive Messages
     multi method receive-bgp(
         Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Message:D $msg
+        Net::BGP::Message:D $msg,
+        Str:D $peer,
     ) { … }
 
     # Handle errors
