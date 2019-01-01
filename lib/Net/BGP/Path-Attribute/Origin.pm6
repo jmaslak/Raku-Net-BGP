@@ -82,8 +82,8 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
 
 method origin(-->Str:D) {
     given self.raw[3] {
-        when 0  { return 'I' }
-        when 1  { return 'E' }
+        when 0  { return 'i' }
+        when 1  { return 'e' }
         when 2  { return '?' }
         default { die("Invalid origin value") }
     }
@@ -169,7 +169,7 @@ will be 0 through 15).
 
 =head2 origin
 
-Returns C<'I'>, C<'E'>, or C<'?'> based on origin code.
+Returns C<'i'>, C<'e'>, or C<'?'> based on origin code.
 
 =head2 data-length
 
