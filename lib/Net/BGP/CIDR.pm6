@@ -43,7 +43,6 @@ method from-str(Str:D $ip) {
         # IPv4
         return self.from-int(ipv4-to-int(@parts[0]), @parts[1].Int, 4);
     }
-
 }
 
 method packed-to-array(
