@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (C) 2018 Joelle Maslak
+# Copyright (C) 2018-2019 Joelle Maslak
 # All Rights Reserved - See License
 #
 

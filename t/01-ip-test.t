@@ -2,7 +2,7 @@ use v6.d;
 use Test;
 
 #
-# Copyright © 2018 Joelle Maslak
+# Copyright © 2018-2019 Joelle Maslak
 # All Rights Reserved - See License
 #
 

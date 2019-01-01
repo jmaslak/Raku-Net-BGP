@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018 Joelle Maslak
+# Copyright © 2018-2019 Joelle Maslak
 # All Rights Reserved - See License
 #
 # Some of this is "borrowed" from https://docs.perl6.org/language/nativecall .
