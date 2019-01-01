@@ -17,7 +17,7 @@ use Net::BGP::Message;
 use Net::BGP::Event::BGP-Message;
 use Net::BGP::Event::Closed-Connection;
 
-class Net::BGP::Connection:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Connection:ver<0.0.1>:auth<cpan:JMASLAK>
     does Net::BGP::Connection-Role
 {
 

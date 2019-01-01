@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::Path-Attribute:ver<0.0.0>:auth<cpan:JMASLAK>;
+unit class Net::BGP::Path-Attribute:ver<0.0.1>:auth<cpan:JMASLAK>;
 
 use Net::BGP::Conversions;
 

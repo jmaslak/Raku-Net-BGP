@@ -15,7 +15,7 @@ use Net::BGP::Message;
 use Net::BGP::Parameter;
 use Net::BGP::Parameter::Capabilities;
 
-class Net::BGP::Message::Open:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Message::Open:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message
 {
     method new() {

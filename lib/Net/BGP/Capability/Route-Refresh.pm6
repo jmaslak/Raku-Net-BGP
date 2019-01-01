@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Capability;
 
-class Net::BGP::Capability::Route-Refresh:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Capability::Route-Refresh:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
 {
     # Generic Types

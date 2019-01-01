@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Command;
 
-class Net::BGP::Command::Stop:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Command {
+class Net::BGP::Command::Stop:ver<0.0.1>:auth<cpan:JMASLAK> is Net::BGP::Command {
     method message-name(-->Str) { 'Stop' };
 }
 

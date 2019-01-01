@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify::Header;
 
-class Net::BGP::Message::Notify::Header::Connection-Not-Syncronized:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Message::Notify::Header::Connection-Not-Syncronized:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify::Header
 {
     method new() {

@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Bad-Parameter-Length:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Error {
+class Net::BGP::Error::Bad-Parameter-Length:ver<0.0.1>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.length;  # Set to the length in the OPEN message
 
     method message-name(-->Str) { 'Bad-Parameter-Length' };

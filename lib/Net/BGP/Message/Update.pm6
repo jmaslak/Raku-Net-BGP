@@ -25,7 +25,7 @@ use Net::BGP::Path-Attribute::Origin;
 use Net::BGP::Path-Attribute::Originator-ID;
 use Net::BGP::Path-Attribute::Cluster-List;
 
-unit class Net::BGP::Message::Update:ver<0.0.0>:auth<cpan:JMASLAK>
+unit class Net::BGP::Message::Update:ver<0.0.1>:auth<cpan:JMASLAK>
 is Net::BGP::Message;
 
 has Bool:D $.asn32 is required;

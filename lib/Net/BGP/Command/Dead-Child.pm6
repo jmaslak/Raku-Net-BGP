@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Command;
 
-class Net::BGP::Command::Dead-Child:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Command {
+class Net::BGP::Command::Dead-Child:ver<0.0.1>:auth<cpan:JMASLAK> is Net::BGP::Command {
     has Int $.connection-id;
 
     method message-name(-->Str) { 'Dead-Child' };

@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Error::Bad-Parameter-Length;
 use Net::BGP::Parameter;
 
-class Net::BGP::Parameter::Generic:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Parameter {
+class Net::BGP::Parameter::Generic:ver<0.0.1>:auth<cpan:JMASLAK> is Net::BGP::Parameter {
     method new() {
         die("Must use from-raw or from-hash to construct a new object");
     }

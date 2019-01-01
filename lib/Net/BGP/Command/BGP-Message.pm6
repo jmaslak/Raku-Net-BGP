@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Message;
 use Net::BGP::Command;
 
-class Net::BGP::Command::BGP-Message:ver<0.0.0>:auth<cpan:JMASLAK> is Net::BGP::Command {
+class Net::BGP::Command::BGP-Message:ver<0.0.1>:auth<cpan:JMASLAK> is Net::BGP::Command {
     has Net::BGP::Message $.message;
 
     method message-name(-->Str) { 'BGP-Message' };

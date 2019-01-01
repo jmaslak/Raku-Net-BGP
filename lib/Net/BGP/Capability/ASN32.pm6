@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Capability;
 use Net::BGP::Conversions;
 
-class Net::BGP::Capability::ASN32:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Capability::ASN32:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
 {
     # Generic Types

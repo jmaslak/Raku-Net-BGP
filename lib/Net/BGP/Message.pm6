@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Message:ver<0.0.0>:auth<cpan:JMASLAK> {
+class Net::BGP::Message:ver<0.0.1>:auth<cpan:JMASLAK> {
     my %registrations := Hash[Net::BGP::Message:U,Int].new;
     my %message-names := Hash[Net::BGP::Message:U,Str].new;
 

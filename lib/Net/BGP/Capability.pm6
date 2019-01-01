@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Capability:ver<0.0.0>:auth<cpan:JMASLAK>
+class Net::BGP::Capability:ver<0.0.1>:auth<cpan:JMASLAK>
 {
     my %capability-codes := Hash[Net::BGP::Capability:U,Int].new;
     my %capability-names := Hash[Net::BGP::Capability:U,Str].new;
