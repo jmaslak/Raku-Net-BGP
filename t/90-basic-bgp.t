@@ -236,9 +236,13 @@ if (!check-compiler-version) {
         is $cr-bgp.message.option-len, $cr-bgp.message.option.bytes, 'Option bytes = len';
 
         $bgp.peer-get(:peer-ip('127.0.0.1')).lock.protect: {
-            is $bgp.peer-get(:peer-ip('127.0.0.1')).defined, True, 'Peer is defined';
-            is $bgp.peer-get(:peer-ip('127.0.0.1')).state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
-            is $bgp.peer-get(:peer-ip('127.0.0.1')).connection.asn32, False, 'Connection does not support ASN32';
+            my $peer = $bgp.peer-get(:peer-ip<127.0.0.1>);
+            is $peer.defined, True, 'Peer is defined';
+            is $peer.state, Net::BGP::Peer::OpenConfirm, 'Peer is OpenConfirm';
+            is $peer.connection.asn32, False, 'Connection does not support ASN32';
+            is $peer.peer-af.elems, 1, "One AF present";
+            is $peer.peer-af[0].afi-code, 1, "AFI correct";
+            is $peer.peer-af[0].safi-code, 1, "SAFI correct";
         }
        
         my $pkt = $client.read(16); # Read (and silently discard) header

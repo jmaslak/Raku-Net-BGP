@@ -9,6 +9,7 @@ use OO::Monitors;
 
 monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
 
+    use Net::BGP::AFI-SAFI;
     use Net::BGP::Connection;
     use Net::BGP::IP;
 
@@ -37,11 +38,20 @@ monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
     has Int:D  $.last-message-sent is rw = 0;
     has Bool:D $.local-supports-asn32 is rw = True;
 
+    # Address Families
+    has Net::BGP::AFI-SAFI @.peer-af;
+    has Net::BGP::AFI-SAFI @.my-af   = @( Net::BGP::AFI-SAFI.from-str('IP', 'unicast') );
+
     # Channel from server component
     has Channel $.channel is rw;
 
     # Current "up" connection - in OpenConfirm or Established
     has Net::BGP::Connection $.connection is rw;
+
+    method supports-afi-safi($afi, $safi -->Bool:D) {
+        my $af = Net::BGP::AFI-SAFI.from-str($afi, $safi);
+        return @.peer-af.first( { $^a == $af } ).so;
+    }
 
     method set-channel($channel) {
         if $.channel.defined { die("A channel is already defined for peer") }
@@ -91,9 +101,17 @@ The port of the peer (passive side).
 
 The ASN belonging to the peer.
 
+=head2 peer-af
+
+The AFI/SAFI combinations supported by the peer.
+
 =head2 my-asn
 
 The ASN belonging to the server process.
+
+=head2 my-af
+
+The AFI/SAFI combinations supported by us.
 
 =head2 supports-capabilities
 
@@ -115,6 +133,11 @@ Sets the channel that is connected to the BGP server component.
   $peer.remove-peer
 
 Does an ungraceful shutdown of the peer (if open).
+
+=head1 supports-afi-safi($afi, $safi)
+
+Returns true if the peer has indicated support for this AFI/SAFI address
+family specification.
 
 =head1 AUTHOR
 

@@ -269,6 +269,7 @@ class Net::BGP:ver<0.0.1>:auth<cpan:JMASLAK> {
         $!controller.send-open($conn,
             :hold-time($peer.my-hold-time),
             :supports-capabilities($peer.supports-capabilities),
+            :af($peer.peer-af),
         );
 
         # Let user know.

@@ -5,6 +5,7 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
+use Net::BGP::AFI-SAFI;
 use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
 use Net::BGP::Event::BGP-Message;
@@ -99,6 +100,18 @@ class Net::BGP::Controller:ver<0.0.1>:auth<cpan:JMASLAK>
                 $connection.close;
                 return;
             }
+            
+            my Net::BGP::Capability::MPBGP @afcap =
+                @capabilities.grep( { $^c ~~ Net::BGP::Capability::MPBGP } );
+
+            if ! @afcap.elems {
+                $p.peer-af = @( Net::BGP::AFI-SAFI.from-str("IP", "unicast") );
+            }
+            for @afcap -> $cap {
+                $p.peer-af.push: Net::BGP::AFI-SAFI.new(
+                    :afi-code($cap.afi), :safi-code($cap.safi)
+                );
+            }
 
             $p.last-message-received = monotonic-whole-seconds;
 
@@ -121,6 +134,7 @@ class Net::BGP::Controller:ver<0.0.1>:auth<cpan:JMASLAK>
                     $connection,
                     :supports-capabilities($p.supports-capabilities),
                     :hold-time($p.my-hold-time),
+                    :af($p.my-af),
                 );
             }
             $p.state = Net::BGP::Peer::OpenConfirm;
@@ -268,7 +282,8 @@ class Net::BGP::Controller:ver<0.0.1>:auth<cpan:JMASLAK>
     method send-open(
         Net::BGP::Connection-Role:D $connection,
         Bool                        :$supports-capabilities,
-        Int:D                       :$hold-time
+        Int:D                       :$hold-time,
+        Net::BGP::AFI-SAFI:D        :@af,
         -->Nil
     ) { 
         my $asn16 = $.my-asn ≥ (2¹⁶) ?? 23456 !! $.my-asn;
@@ -287,22 +302,15 @@ class Net::BGP::Controller:ver<0.0.1>:auth<cpan:JMASLAK>
                     capability-name => 'ASN32',
                     asn             => $asn32,
                 },
-                %{
-                    capability-name => 'MPBGP',
-                    afi             => 'IP',
-                    safi            => 'unicast',
-                },
-                {
-                    capability-name => 'MPBGP',
-                    afi             => 'IPv6',
-                    safi            => 'unicast',
-                },
-                %{
-                    capability-name => 'MPBGP',
-                    afi             => 'L2VPN',
-                    safi            => 'VPLS',
-                },
             );
+
+            for @af -> $family {
+                %msg-hash<capabilities>.push: %{
+                    capability-name => 'MPBGP',
+                    afi             => $family.afi-code,
+                    safi            => $family.safi-code,
+                };
+            };
         }
         
         my $msg = Net::BGP::Message.from-hash(%msg-hash);
