@@ -7,62 +7,61 @@ use v6;
 
 use OO::Monitors;
 
-monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK> {
+unit monitor Net::BGP::Peer:ver<0.0.0>:auth<cpan:JMASLAK>;
 
-    use Net::BGP::AFI-SAFI;
-    use Net::BGP::Connection;
-    use Net::BGP::IP;
+use Net::BGP::AFI-SAFI;
+use Net::BGP::Connection;
+use Net::BGP::IP;
 
-    has Lock:D $.lock is rw = Lock.new;
+has Lock:D $.lock is rw = Lock.new;
 
-    # We need to track state of the connection.
-    enum PeerState is export «Idle Connect Active OpenSent OpenConfirm Established»;
-    has PeerState $.state is rw = Idle;
+# We need to track state of the connection.
+enum PeerState is export «Idle Connect Active OpenSent OpenConfirm Established»;
+has PeerState $.state is rw = Idle;
 
-    # Their side
-    has Str:D  $.peer-ip is required where { ip-valid($^a) };
-    has Int:D  $.peer-port where ^65536 = 179;
-    has Int:D  $.peer-asn is required where ^(2³²);
-    has Int    $.peer-identifier is rw where ^(2³²);
-    has Int    $.peer-hold-time where { $^h == 0 or $^h ~~ 3..65535 };
-    has Int    $.last-connect-attempt is rw;
-    has UInt:D $.connect-retry-time is rw = 60;
-    has Bool:D $.passive = False;
-    has Bool   $.supports-capabilities is rw;
-    has Bool:D $.peer-supports-asn32 is rw = False;
-    has Int:D  $.last-message-received is rw = 0;
+# Their side
+has Str:D  $.peer-ip is required where { ip-valid($^a) };
+has Int:D  $.peer-port where ^65536 = 179;
+has Int:D  $.peer-asn is required where ^(2³²);
+has Int    $.peer-identifier is rw where ^(2³²);
+has Int    $.peer-hold-time where { $^h == 0 or $^h ~~ 3..65535 };
+has Int    $.last-connect-attempt is rw;
+has UInt:D $.connect-retry-time is rw = 60;
+has Bool:D $.passive = False;
+has Bool   $.supports-capabilities is rw;
+has Bool:D $.peer-supports-asn32 is rw = False;
+has Int:D  $.last-message-received is rw = 0;
 
-    # My side
-    has Int:D  $.my-asn is required where ^(2³²);
-    has Int:D  $.my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60;
-    has Int:D  $.last-message-sent is rw = 0;
-    has Bool:D $.local-supports-asn32 is rw = True;
+# My side
+has Int:D  $.my-asn is required where ^(2³²);
+has Int:D  $.my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60;
+has Int:D  $.last-message-sent is rw = 0;
+has Bool:D $.local-supports-asn32 is rw = True;
 
-    # Address Families
-    has Net::BGP::AFI-SAFI @.peer-af;
-    has Net::BGP::AFI-SAFI @.my-af   = @( Net::BGP::AFI-SAFI.from-str('IP', 'unicast') );
+# Address Families
+has Net::BGP::AFI-SAFI:D @.peer-af;
+has Net::BGP::AFI-SAFI:D @.my-af   = @( Net::BGP::AFI-SAFI.from-str('IP', 'unicast') );
 
-    # Channel from server component
-    has Channel $.channel is rw;
+# Channel from server component
+has Channel $.channel is rw;
 
-    # Current "up" connection - in OpenConfirm or Established
-    has Net::BGP::Connection $.connection is rw;
+# Current "up" connection - in OpenConfirm or Established
+has Net::BGP::Connection $.connection is rw;
 
-    method supports-afi-safi($afi, $safi -->Bool:D) {
-        my $af = Net::BGP::AFI-SAFI.from-str($afi, $safi);
-        return @.peer-af.first( { $^a == $af } ).so;
-    }
+method supports-afi-safi($afi, $safi -->Bool:D) {
+    my $af = Net::BGP::AFI-SAFI.from-str($afi, $safi);
+    return @.peer-af.first( { $^a == $af } ).so;
+}
 
-    method set-channel($channel) {
-        if $.channel.defined { die("A channel is already defined for peer") }
-        $!channel = $channel;
-    }
+method set-channel($channel) {
+    if $.channel.defined { die("A channel is already defined for peer") }
+    $!channel = $channel;
+}
 
-    method remove-peer() {
-        # We currently don't do anything
-        # XXX We should close the channel and any other cleanup.
-        # XXX We should also add this in the destructor.
-    }
+method remove-peer() {
+    # We currently don't do anything
+    # XXX We should close the channel and any other cleanup.
+    # XXX We should also add this in the destructor.
 }
 
 =begin pod
