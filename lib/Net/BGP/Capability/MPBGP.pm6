@@ -58,9 +58,9 @@ class Net::BGP::Capability::MPBGP:ver<0.0.1>:auth<cpan:JMASLAK>
         my buf8 $capability = buf8.new();
         $capability.append( 1 );  # Code
         $capability.append( 4 );  # Length
-        $capability.append( nuint16-buf8(afi-code(%params<afi>)) );
+        $capability.append( nuint16-buf8(afi-code(~%params<afi>)) );
         $capability.append( %params<reserved> );
-        $capability.append( safi-code(%params<safi>) );
+        $capability.append( safi-code(~%params<safi>) );
 
         return self.bless(:raw( $capability ));
     };
