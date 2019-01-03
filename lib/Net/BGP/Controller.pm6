@@ -108,9 +108,7 @@ multi method receive-bgp(
             $p.peer-af = @( Net::BGP::AFI-SAFI.from-str("IP", "unicast") );
         }
         for @afcap -> $cap {
-            $p.peer-af.push: Net::BGP::AFI-SAFI.new(
-                :afi-code($cap.afi), :safi-code($cap.safi)
-            );
+            $p.peer-af.push: Net::BGP::AFI-SAFI.from-str($cap.afi, $cap.safi);
         }
 
         $p.last-message-received = monotonic-whole-seconds;
