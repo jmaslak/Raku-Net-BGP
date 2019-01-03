@@ -29,6 +29,8 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
         Str:D  :$peer-ip,
         Int:D  :$peer-port? = 179,
         Bool:D :$passive?   = False,
+        Bool:D :$ipv4?      = True,
+        Bool:D :$ipv6?      = False,
     ) {
         my $key = self.peer-key($peer-ip);
 
@@ -36,12 +38,19 @@ monitor Net::BGP::Peer-List:ver<0.0.0>:auth<cpan:JMASLAK> {
             die("Peer was already defined - IP: $peer-ip");
         }
 
+        my @af;
+        if ! ($ipv4 or $ipv6) { die("Must specify one address family"); }
+
+        @af.push( Net::BGP::AFI-SAFI.from-str('IP',   'unicast') ) if $ipv4;
+        @af.push( Net::BGP::AFI-SAFI.from-str('IPv6', 'unicast') ) if $ipv6;
+
         %!peers{$key} = Net::BGP::Peer.new(
             :$peer-ip,
             :$peer-port,
             :$peer-asn,
             :$!my-asn,
             :$passive,
+            :my-af(@af),
         );
     }
 

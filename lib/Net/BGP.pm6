@@ -197,8 +197,17 @@ class Net::BGP:ver<0.0.1>:auth<cpan:JMASLAK> {
         Str:D  :$peer-ip,
         Int:D  :$peer-port? = 179,
         Bool:D :$passive? = False,
+        Bool:D :$ipv4? = True,
+        Bool:D :$ipv6? = False,
     ) {
-        $.controller.peers.add(:$peer-asn, :$peer-ip, :$peer-port, :$passive);
+        $.controller.peers.add(
+            :$peer-asn,
+            :$peer-ip,
+            :$peer-port,
+            :$passive,
+            :$ipv4,
+            :$ipv6
+        );
     }
 
     method peer-remove ( Str:D :$peer-ip, Int:D :$peer-port? = 179 ) {
@@ -269,7 +278,7 @@ class Net::BGP:ver<0.0.1>:auth<cpan:JMASLAK> {
         $!controller.send-open($conn,
             :hold-time($peer.my-hold-time),
             :supports-capabilities($peer.supports-capabilities),
-            :af($peer.peer-af),
+            :af($peer.my-af),
         );
 
         # Let user know.

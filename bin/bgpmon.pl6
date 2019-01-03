@@ -23,6 +23,7 @@ sub MAIN(
     Str                  :$cidr-filter,
     Str                  :$announce,
     Bool:D               :$short-format = False,
+    Bool:D               :$af-ipv6 = False,
     *@args is copy
 ) {
     my $bgp = Net::BGP.new(
@@ -45,7 +46,7 @@ sub MAIN(
             }
         }
 
-        $bgp.peer-add( :$peer-asn, :$peer-ip :$passive );
+        $bgp.peer-add( :$peer-asn, :$peer-ip, :$passive, :ipv6($af-ipv6) );
     }
 
     # Build CIDR filter
