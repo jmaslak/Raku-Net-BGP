@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.0.2  2019-01-02T20:35:31-07:00
     - Fix crash when receiving packet with no NLRI6 data
     - Allow specification of IPv6 address family to bgpmon (--af-ipv6)
     - Reduce bloat

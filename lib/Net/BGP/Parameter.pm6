@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Parameter:ver<0.0.1>:auth<cpan:JMASLAK> {
+class Net::BGP::Parameter:ver<0.0.2>:auth<cpan:JMASLAK> {
     my %registrations;
     my %parameter-codes;
 

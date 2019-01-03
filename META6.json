@@ -17,6 +17,7 @@
   "provides" : {
     "Net::BGP" : "lib/Net/BGP.pm6",
     "Net::BGP::AFI" : "lib/Net/BGP/AFI.pm6",
+    "Net::BGP::AFI-SAFI" : "lib/Net/BGP/AFI-SAFI.pm6",
     "Net::BGP::AS-List" : "lib/Net/BGP/AS-List.pm6",
     "Net::BGP::CIDR" : "lib/Net/BGP/CIDR.pm6",
     "Net::BGP::Capability" : "lib/Net/BGP/Capability.pm6",
@@ -94,5 +95,5 @@
   "source-url" : "https://github.com/jmaslak/Perl6-Net-BGP.git",
   "tags" : [ ],
   "test-depends" : [ ],
-  "version" : "0.0.1"
+  "version" : "0.0.2"
 }

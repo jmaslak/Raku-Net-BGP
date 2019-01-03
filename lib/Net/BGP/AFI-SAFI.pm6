@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::AFI-SAFI:ver<0.0.1>:auth<cpan:JMASLAK>;
+unit class Net::BGP::AFI-SAFI:ver<0.0.2>:auth<cpan:JMASLAK>;
 
 use Net::BGP::AFI  :ALL;
 use Net::BGP::SAFI :ALL;

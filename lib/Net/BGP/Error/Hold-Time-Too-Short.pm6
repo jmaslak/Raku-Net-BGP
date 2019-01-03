@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Hold-Time-Too-Short:ver<0.0.1>:auth<cpan:JMASLAK> is Net::BGP::Error {
+class Net::BGP::Error::Hold-Time-Too-Short:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.hold-time;  # Set to the hold-time value in the OPEN message
 
     method message-name(-->Str) { 'Hold-Time-Too-Short' };

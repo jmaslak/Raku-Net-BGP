@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify::Open;
 
-class Net::BGP::Message::Notify::Open::Generic:ver<0.0.1>:auth<cpan:JMASLAK>
+class Net::BGP::Message::Notify::Open::Generic:ver<0.0.2>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify::Open
 {
     method new() {

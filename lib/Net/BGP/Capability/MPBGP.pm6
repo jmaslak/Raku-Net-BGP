@@ -10,7 +10,7 @@ use Net::BGP::SAFI :ALL;
 use Net::BGP::Capability;
 use Net::BGP::Conversions;
 
-class Net::BGP::Capability::MPBGP:ver<0.0.1>:auth<cpan:JMASLAK>
+class Net::BGP::Capability::MPBGP:ver<0.0.2>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
 {
     # Generic Types

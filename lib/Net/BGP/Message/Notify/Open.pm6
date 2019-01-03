@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify;
 
-class Net::BGP::Message::Notify::Open:ver<0.0.1>:auth<cpan:JMASLAK>
+class Net::BGP::Message::Notify::Open:ver<0.0.2>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify
 {
     my %error-subcodes := Hash[Net::BGP::Message::Notify::Open:U,Int].new;

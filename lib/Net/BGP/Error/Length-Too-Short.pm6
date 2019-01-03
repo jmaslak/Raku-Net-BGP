@@ -7,7 +7,7 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Length-Too-Short:ver<0.0.1>:auth<cpan:JMASLAK> is Net::BGP::Error {
+class Net::BGP::Error::Length-Too-Short:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Error {
     has $.length;  # Set to the length value in the header
 
     method message-name(-->Str) { 'Length-Too-Short' };
