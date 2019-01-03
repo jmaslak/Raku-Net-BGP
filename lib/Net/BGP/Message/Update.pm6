@@ -322,10 +322,8 @@ method nlri6(-->Array[Net::BGP::CIDR:D]) {
     return $!cached-nlri6 if $!cached-nlri6;
 
     $!cached-nlri6 = Array[Net::BGP::CIDR:D].new;
-    my @attrs = self.path-attributes.first(
-        { $^a ~~ Net::BGP::Path-Attribute::MP-NLRI }
-    );
-    for @attrs -> $attr {
+    my $attr = self.path-attributes.first( { $^a ~~ Net::BGP::Path-Attribute::MP-NLRI } );
+    if $attr.defined {
         my @cidrs = $attr.nlri-cidrs;
         $!cached-nlri6.push(|@cidrs) if @cidrs;
     }

@@ -35,6 +35,7 @@ is $bgp.message-code, 2, 'Message type is correct';
 is $bgp.message-name, 'UPDATE', 'Message code is correct';
 is $bgp.nlri[0], '5.39.176.0/21', 'NLRI right';
 is $bgp.path-attributes.elems, 4, 'right number of path elems';
+is $bgp.nlri6.elems, 0, 'No NLRI6 Elements';
 
 done-testing;
 
