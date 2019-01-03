@@ -295,12 +295,11 @@ method send-open(
         identifier    => $.identifier;
 
     if $supports-capabilities // True {
-        %msg-hash<capabilities> = (
-            %{
-                capability-name => 'ASN32',
-                asn             => $asn32,
-            },
-        );
+        %msg-hash<capabilities> = Array.new;
+        %msg-hash<capabilities>.push: %{
+            capability-name => 'ASN32',
+            asn             => $asn32,
+        };
 
         for @af -> $family {
             %msg-hash<capabilities>.push: %{
