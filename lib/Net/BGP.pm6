@@ -241,12 +241,67 @@ method connect-if-needed(-->Nil) {
         my $promise = $obj.connect($p.peer-ip, $p.peer-port);
         start self.connection-handler($promise, $p);
     }
+}
+
+method connection-handler(Promise:D $socket-promise, Net::BGP::Peer:D $peer) {
+    my $socket;
+    {
+	$socket = $socket-promise.result;
+	CATCH {
+	    default {
+		# XXX We should log better
+		# But we know...Connection failed.
+		return;
+	    }
+	}
+    }
+
+    my $conn;
+    if $peer.connection.defined { return } # Just in case it got defined
+
+    $conn = Net::BGP::Connection.new(
+	:socket($socket),
+	:listener-channel($!listener-channel),
+	:user-supplier($!user-supplier),
+	:bgp-handler($.controller),
+	:remote-ip($socket.peer-host),
+	:remote-port($socket.peer-port),
+	:inbound(False),
+    );
+
+    # Add peer to connection
+    $peer.connection = $conn;
+
+    # Set up connection object
+    $!controller.connections.add($conn);
+
+    # Send Open
+    $peer.state = Net::BGP::Peer::OpenSent;
+    $!controller.send-open($conn,
+	:hold-time($peer.my-hold-time),
+	:supports-capabilities($peer.supports-capabilities),
+	:af($peer.my-af),
+    );
+
+    # Let user know.
+    $!user-supplier.emit(
+	Net::BGP::Event::New-Connection.new(
+	    :client-ip( $socket.peer-host ),
+	    :client-port( $socket.peer-port ),
+	    :connection-id( $conn.id ),
+	),
+    );
+
+    $conn.handle-messages;
+
     CATCH {
-        default {
-            # XXX We should log better
-            # But we know...Connection failed.
-            return;
-        }
+	default {
+	    # We should log better
+	    $*ERR.say("Error in child process!");
+	    $*ERR.say(.message);
+	    $*ERR.say(.backtrace.join);
+	    .rethrow;
+	}
     }
 }
 
