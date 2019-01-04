@@ -1,6 +1,7 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Improve documentation
     - Reformatting class modules (mostly whitespace and adding
       StrictClass)
 
