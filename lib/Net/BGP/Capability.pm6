@@ -5,64 +5,64 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Capability:ver<0.0.2>:auth<cpan:JMASLAK>
-{
-    my %capability-codes := Hash[Net::BGP::Capability:U,Int].new;
-    my %capability-names := Hash[Net::BGP::Capability:U,Str].new;
+use StrictClass;
+unit class Net::BGP::Capability:ver<0.0.1>:auth<cpan:JMASLAK> does StrictClass;
 
-    has buf8:D $.raw is required;
+my %capability-codes := Hash[Net::BGP::Capability:U,Int].new;
+my %capability-names := Hash[Net::BGP::Capability:U,Str].new;
 
-    # Generic Types
-    method implemented-capability-code(-->Int)   { … }
-    method implemented-capability-name(-->Str)   { … }
-    method capability-code\           (-->Int:D) { $!raw[0] }
-    method capability-name\           (-->Str:D) { $!raw[0] }
-    method capability-length\         (-->Int:D) { $!raw[1] }
-    
-    method payload(-->buf8:D) {
-        if $.raw[1] == 0 { return buf8.new }
-        return $.raw[2..*];
+has buf8:D $.raw is required;
+
+# Generic Types
+method implemented-capability-code(-->Int)   { … }
+method implemented-capability-name(-->Str)   { … }
+method capability-code\           (-->Int:D) { $!raw[0] }
+method capability-name\           (-->Str:D) { $!raw[0] }
+method capability-length\         (-->Int:D) { $!raw[1] }
+
+method payload(-->buf8:D) {
+    if $.raw[1] == 0 { return buf8.new }
+    return $.raw[2..*];
+}
+
+method register( Net::BGP::Capability:U $class -->Nil) {
+    %capability-codes{ $class.implemented-capability-code } = $class;
+    %capability-names{ $class.implemented-capability-name } = $class;
+}
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
+    if %capability-codes{ $raw[0] }:exists {
+        return %capability-codes{ $raw[0] }.from-raw($raw);
+    } else {
+        return %capability-codes{ Int }.from-raw($raw);
     }
-    
-    method register( Net::BGP::Capability:U $class -->Nil) {
-        %capability-codes{ $class.implemented-capability-code } = $class;
-        %capability-names{ $class.implemented-capability-name } = $class;
+};
+
+method from-hash(%params is copy)  {
+    # Delete unnecessary options
+    if %params<capability-code>:exists and %params<capability-name>:exists {
+        if %capability-codes{ %params<capability-code> } ≠ %capability-names{ %params<capability-name> } {
+            die("Capability code and capability name do not match");
+        }
+        %params<capability-name>:delete
     }
 
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+    if %params<capability-name>:exists and %params<capability-code>:!exists {
+        %params<capability-code> = %capability-names{ %params<capability-name> }.implemented-capability-code;
+        %params<capability-name>:delete
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
-        if %capability-codes{ $raw[0] }:exists {
-            return %capability-codes{ $raw[0] }.from-raw($raw);
-        } else {
-            return %capability-codes{ Int }.from-raw($raw);
-        }
-    };
+    if %params<capability-code>:!exists { die("Must provide capability code { %params.keys.join(" ") }") }
 
-    method from-hash(%params is copy)  {
-        # Delete unnecessary options
-        if %params<capability-code>:exists and %params<capability-name>:exists {
-            if %capability-codes{ %params<capability-code> } ≠ %capability-names{ %params<capability-name> } {
-                die("Capability code and capability name do not match");
-            }
-            %params<capability-name>:delete
-        }
-
-        if %params<capability-name>:exists and %params<capability-code>:!exists {
-            %params<capability-code> = %capability-names{ %params<capability-name> }.implemented-capability-code;
-            %params<capability-name>:delete
-        }
-
-        if %params<capability-code>:!exists { die("Must provide capability code { %params.keys.join(" ") }") }
-
-        if %capability-codes{ %params<capability-code> }:exists {
-            return %capability-codes{ %params<capability-code> }.from-hash(%params);
-        } else {
-            return %capability-codes{ Int }.from-hash(%params);
-        }
-    };
+    if %capability-codes{ %params<capability-code> }:exists {
+        return %capability-codes{ %params<capability-code> }.from-hash(%params);
+    } else {
+        return %capability-codes{ Int }.from-hash(%params);
+    }
 }
 
 =begin pod

@@ -7,14 +7,17 @@ use v6;
 
 use Net::BGP::Event;
 
-class Net::BGP::Event::Closed-Connection:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Event {
-    has Str $.client-ip;
-    has Int $.client-port;
+use StrictClass;
+unit class Net::BGP::Event::Closed-Connection:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Event
+    does StrictClass;
 
-    method message-name(-->Str) { 'Closed-Connection' };
+has Str $.client-ip;
+has Int $.client-port;
 
-    method Str(-->Str) { "Closed connection { self.connection-id }" }
-}
+method message-name(-->Str) { 'Closed-Connection' };
+
+method Str(-->Str) { "Closed connection { self.connection-id }" }
 
 =begin pod
 

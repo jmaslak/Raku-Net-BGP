@@ -5,11 +5,11 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Command:ver<0.0.2>:auth<cpan:JMASLAK> {
-    has Int $.connection-id;
+unit class Net::BGP::Command:ver<0.0.1>:auth<cpan:JMASLAK>;
 
-    method message-name(-->Str) { 'NOOP' };
-}
+has Int $.connection-id;
+
+method message-name(-->Str) { 'NOOP' };
 
 =begin pod
 

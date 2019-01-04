@@ -7,12 +7,15 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Hold-Time-Too-Short:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Error {
-    has $.hold-time;  # Set to the hold-time value in the OPEN message
+use StrictClass;
+unit class Net::BGP::Error::Hold-Time-Too-Short:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Error
+    does StrictClass;
 
-    method message-name(-->Str) { 'Hold-Time-Too-Short' };
-    method message(-->Str)      { 'Hold-Time in OPEN is too short (RFC4271)' };
-}
+has $.hold-time;  # Set to the hold-time value in the OPEN message
+
+method message-name(-->Str) { 'Hold-Time-Too-Short' };
+method message(-->Str)      { 'Hold-Time in OPEN is too short (RFC4271)' };
 
 =begin pod
 

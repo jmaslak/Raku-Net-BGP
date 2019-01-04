@@ -8,73 +8,76 @@ use v6;
 use Net::BGP::Error::Bad-Parameter-Length;
 use Net::BGP::Parameter;
 
-class Net::BGP::Parameter::Generic:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Parameter {
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+use StrictClass;
+unit class Net::BGP::Parameter::Generic:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Parameter
+    does StrictClass;
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+has buf8 $.data is rw;
+
+method parameter-code() {
+    return $.data[0];
+}
+
+method parameter-name() {
+    return "$.parameter-code";
+}
+
+method from-raw(buf8:D $raw) {
+    # Validate length
+    if $raw.bytes < 2 {
+        die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw.bytes)));
+    }
+    if $raw.bytes < ($raw[1] + 2) {
+        die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw[1])));
     }
 
-    has buf8 $.data is rw;
+    return self.bless( :data(buf8.new($raw)) );
+};
 
-    method parameter-code() {
-        return $.data[0];
-    }
+method from-hash(%params)  {
+    my @REQUIRED = «parameter-code parameter-value»;
 
-    method parameter-name() {
-        return "$.parameter-code";
-    }
-
-    method from-raw(buf8:D $raw) {
-        # Validate length
-        if $raw.bytes < 2 {
-            die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw.bytes)));
+    # Delete unnecessary option
+    if %params<parameter-name>:exists {
+        if %params<parameter-code>.Str ≠ %params<parameter-name> {
+            die("Parameter type and code don't match");
         }
-        if $raw.bytes < ($raw[1] + 2) {
-            die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw[1])));
-        }
-
-        return self.bless( :data(buf8.new($raw)) );
-    };
-
-    method from-hash(%params)  {
-        my @REQUIRED = «parameter-code parameter-value»;
-
-        # Delete unnecessary option
-        if %params<parameter-name>:exists {
-            if %params<parameter-code>.Str ≠ %params<parameter-name> {
-                die("Parameter type and code don't match");
-            }
-            %params<parameter-code> = %params<parameter-name>.Int;
-            %params<parameter-name>:delete
-        }
-
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper parameter options");
-        }
-        
-        # Max length is 253, because 253 + one byte type + one byte len = 255
-        if %params<parameter-value>.bytes > 253 { die("Parameter too long"); }
-
-        my buf8 $parameter = buf8.new();
-        $parameter.append( %params<parameter-code> );
-        $parameter.append( %params<parameter-value>.bytes );
-        $parameter.append( %params<parameter-value> );
-
-        return self.bless(:data( buf8.new($parameter) ));
-    };
-
-    method raw() { return $.data; }
-
-    method parameter-length() {
-        return $.data[1];
+        %params<parameter-code> = %params<parameter-name>.Int;
+        %params<parameter-name>:delete
     }
 
-    method parameter-value() {
-        return $.data.subbuf(2, $.data[1]);
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper parameter options");
     }
+    
+    # Max length is 253, because 253 + one byte type + one byte len = 255
+    if %params<parameter-value>.bytes > 253 { die("Parameter too long"); }
 
-    method Str(-->Str) {
-        "Type={ self.parameter-code } Len={ self.parameter-length }";
-    }
+    my buf8 $parameter = buf8.new();
+    $parameter.append( %params<parameter-code> );
+    $parameter.append( %params<parameter-value>.bytes );
+    $parameter.append( %params<parameter-value> );
+
+    return self.bless(:data( buf8.new($parameter) ));
+};
+
+method raw() { return $.data; }
+
+method parameter-length() {
+    return $.data[1];
+}
+
+method parameter-value() {
+    return $.data.subbuf(2, $.data[1]);
+}
+
+method Str(-->Str) {
+    "Type={ self.parameter-code } Len={ self.parameter-length }";
 }
 
 # Register handler

@@ -7,10 +7,13 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Marker-Format:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Error {
-    method message-name(-->Str) { 'Marker-Format' };
-    method message(-->Str)      { 'Invalid header marker format (RFC4271)' };
-}
+use StrictClass;
+unit class Net::BGP::Error::Marker-Format:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Error
+    does StrictClass;
+
+method message-name(-->Str) { 'Marker-Format' };
+method message(-->Str)      { 'Invalid header marker format (RFC4271)' };
 
 =begin pod
 

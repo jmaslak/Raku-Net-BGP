@@ -7,48 +7,49 @@ use v6;
 
 use Net::BGP::Message;
 
-class Net::BGP::Message::Keep-Alive:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Message::Keep-Alive:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message
-{
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+    does StrictClass;
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+method implemented-message-code(--> Int) { 4 }
+method implemented-message-name(--> Str) { "KEEP-ALIVE" }
+
+method message-code() { 4 }
+method message-name() { "KEEP-ALIVE" }
+
+method from-raw(buf8:D $raw) {
+    return self.bless(:data( buf8.new($raw) ));
+};
+
+method from-hash(%params is copy)  {
+    my @REQUIRED = «»;
+
+    # Delete unnecessary option
+    if %params<message-code>:exists {
+        if (%params<message-code> ≠ 4) { die("Invalid message type for Keep-Alive"); }
+        %params<message-code>:delete
     }
 
-    method implemented-message-code(--> Int) { 4 }
-    method implemented-message-name(--> Str) { "KEEP-ALIVE" }
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper options");
+    }
 
-    method message-code() { 4 }
-    method message-name() { "KEEP-ALIVE" }
+    # Now we need to build the raw data.
+    my $data = buf8.new();
 
-    method from-raw(buf8:D $raw) {
-        return self.bless(:data( buf8.new($raw) ));
-    };
+    $data.append( 4 );   # Message type (KEEP-ALIVE)
 
-    method from-hash(%params is copy)  {
-        my @REQUIRED = «»;
+    return self.bless(:data( buf8.new($data) ));
+};
 
-        # Delete unnecessary option
-        if %params<message-code>:exists {
-            if (%params<message-code> ≠ 4) { die("Invalid message type for Keep-Alive"); }
-            %params<message-code>:delete
-        }
+method raw() { return $.data; }
 
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
-        }
-
-        # Now we need to build the raw data.
-        my $data = buf8.new();
-
-        $data.append( 4 );   # Message type (KEEP-ALIVE)
-
-        return self.bless(:data( buf8.new($data) ));
-    };
-
-    method raw() { return $.data; }
-
-    method Str(-->Str) { "KEEP-ALIVE" }
-}
+method Str(-->Str) { "KEEP-ALIVE" }
 
 # Register handler
 INIT { Net::BGP::Message.register: Net::BGP::Message::Keep-Alive }

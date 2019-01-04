@@ -7,8 +7,10 @@ use v6;
 
 use Net::BGP::Path-Attribute;
 
-unit class Net::BGP::Path-Attribute::Next-Hop:ver<0.0.2>:auth<cpan:JMASLAK>
-is Net::BGP::Path-Attribute;
+use StrictClass;
+unit class Net::BGP::Path-Attribute::Next-Hop:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Path-Attribute
+    does StrictClass;
 
 use Net::BGP::Conversions;
 use Net::BGP::IP;

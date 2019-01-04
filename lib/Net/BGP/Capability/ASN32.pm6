@@ -8,63 +8,64 @@ use v6;
 use Net::BGP::Capability;
 use Net::BGP::Conversions;
 
-class Net::BGP::Capability::ASN32:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Capability::ASN32:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
-{
-    # Generic Types
-    method implemented-capability-code(-->Int) { 65 }
-    method implemented-capability-name(-->Str) { "ASN32" }
+    does StrictClass;
 
-    method capability-name(-->Str:D) { "ASN32" }
-    
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+# Generic Types
+method implemented-capability-code(-->Int) { 65 }
+method implemented-capability-name(-->Str) { "ASN32" }
+
+method capability-name(-->Str:D) { "ASN32" }
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+method from-raw(buf8:D $raw where $raw.bytes == 6) {
+    if $raw[0] ≠ 65 { die("Can only build a ASN32 capability"); }
+    if $raw[1] ≠  4 { die("Bad capability length"); }
+
+    my $obj = self.bless(:$raw);
+    return $obj;
+};
+
+method from-hash(%params is copy)  {
+    my @REQUIRED = «asn»;
+
+    if %params<capability-code>:exists {
+        if %params<capability-code> ≠ 65 {
+            die "Can only create a ASN32 capability";
+        }
+        %params<capability-code>:delete;
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes == 6) {
-        if $raw[0] ≠ 65 { die("Can only build a ASN32 capability"); }
-        if $raw[1] ≠  4 { die("Bad capability length"); }
-
-        my $obj = self.bless(:$raw);
-        return $obj;
-    };
-
-    method from-hash(%params is copy)  {
-        my @REQUIRED = «asn»;
-
-        if %params<capability-code>:exists {
-            if %params<capability-code> ≠ 65 {
-                die "Can only create a ASN32 capability";
-            }
-            %params<capability-code>:delete;
+    if %params<capability-name>:exists {
+        if %params<capability-name> ne "ASN32" {
+            die "Can only create a ASN32 capability";
         }
-
-        if %params<capability-name>:exists {
-            if %params<capability-name> ne "ASN32" {
-                die "Can only create a ASN32 capability";
-            }
-            %params<capability-name>:delete;
-        }
-
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
-        }
-
-        my buf8 $capability = buf8.new();
-        $capability.append( 65 );  # Code
-        $capability.append( 4 );   # Length
-        $capability.append( nuint32-buf8(%params<asn>) );
-
-        return self.bless(:raw( $capability ));
-    };
-
-    method asn(-->Int:D) {
-        return nuint32($.raw[2..5]);
+        %params<capability-name>:delete;
     }
 
-    method Str(-->Str:D) {
-        "ASN32=" ~ self.asn;
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper options");
     }
+
+    my buf8 $capability = buf8.new();
+    $capability.append( 65 );  # Code
+    $capability.append( 4 );   # Length
+    $capability.append( nuint32-buf8(%params<asn>) );
+
+    return self.bless(:raw( $capability ));
+};
+
+method asn(-->Int:D) {
+    return nuint32($.raw[2..5]);
+}
+
+method Str(-->Str:D) {
+    "ASN32=" ~ self.asn;
 }
 
 # Register capability

@@ -7,11 +7,14 @@ use v6;
 
 use Net::BGP::Command;
 
-class Net::BGP::Command::Dead-Child:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Command {
-    has Int $.connection-id;
+use StrictClass;
+unit class Net::BGP::Command::Dead-Child:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Command
+    does StrictClass;
 
-    method message-name(-->Str) { 'Dead-Child' };
-}
+has Int $.connection-id;
+
+method message-name(-->Str) { 'Dead-Child' };
 
 =begin pod
 

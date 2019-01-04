@@ -19,7 +19,9 @@ use Net::BGP::Time;
 # NOTE: The controller is running on the connection thread, for any
 # method that takes a controller.
 
-unit class Net::BGP::Controller:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Controller:ver<0.0.1>:auth<cpan:JMASLAK>
+    does StrictClass
     does Net::BGP::Controller-Handle-BGP;
 
 has Int:D      $.my-asn          is required where ^(2³²);

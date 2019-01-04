@@ -7,12 +7,15 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Unknown-Version:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Error {
-    has $.version;  # Set to the version in the OPEN message
+use StrictClass;
+unit class Net::BGP::Error::Unknown-Version:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Error
+    does StrictClass;
 
-    method message-name(-->Str) { 'Unknown-Version' };
-    method message(-->Str)      { 'BGP Version in OPEN is not supported' };
-}
+has $.version;  # Set to the version in the OPEN message
+
+method message-name(-->Str) { 'Unknown-Version' };
+method message(-->Str)      { 'BGP Version in OPEN is not supported' };
 
 =begin pod
 

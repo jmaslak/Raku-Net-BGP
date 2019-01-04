@@ -5,7 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::Socket-Connection-Linux:ver<0.0.2>:auth<cpan:JMASLAK>;
+use StrictClass;
+unit class Net::BGP::Socket-Connection-Linux:ver<0.0.1>:auth<cpan:JMASLAK>
+    does StrictClass;
 
 use NativeCall;
 

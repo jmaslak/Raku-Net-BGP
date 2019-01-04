@@ -5,79 +5,80 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Message:ver<0.0.2>:auth<cpan:JMASLAK> {
-    my %registrations := Hash[Net::BGP::Message:U,Int].new;
-    my %message-names := Hash[Net::BGP::Message:U,Str].new;
+use StrictClass;
+unit class Net::BGP::Message:ver<0.0.1>:auth<cpan:JMASLAK> does StrictClass;
 
-    # Message type Nil = handle all unhandled messages
-    method register( Net::BGP::Message:U $class ) {
-        %registrations{ $class.implemented-message-code } = $class;
-        %message-names{ $class.implemented-message-name } = $class;
+my %registrations := Hash[Net::BGP::Message:U,Int].new;
+my %message-names := Hash[Net::BGP::Message:U,Str].new;
+
+# Message type Nil = handle all unhandled messages
+method register( Net::BGP::Message:U $class ) {
+    %registrations{ $class.implemented-message-code } = $class;
+    %message-names{ $class.implemented-message-name } = $class;
+}
+
+has buf8 $.data is rw;
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+method raw() {
+    die("Not implemented for parent class");
+}
+
+method implemented-message-code(--> Int) { … }
+method implemented-message-name(--> Str) { … }
+
+method from-raw(buf8:D $raw, Bool:D :$asn32) {
+    if %registrations{ $raw[0] }:exists {
+        return %registrations{ $raw[0] }.from-raw($raw, :$asn32);
+    } else {
+        return %registrations{Int}.from-raw($raw, :$asn32);
     }
+};
 
-    has buf8 $.data is rw;
-
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+method from-hash(%params is copy, :$asn32)  {
+    if %params<message-code>:!exists and %params<message-name>:!exists {
+        die "Could not determine message type";
     }
-
-    method raw() {
-        die("Not implemented for parent class");
-    }
-
-    method implemented-message-code(--> Int) { … }
-    method implemented-message-name(--> Str) { … }
-
-    method from-raw(buf8:D $raw, Bool:D :$asn32) {
-        if %registrations{ $raw[0] }:exists {
-            return %registrations{ $raw[0] }.from-raw($raw, :$asn32);
+        
+    # Normalize message-name
+    if %params<message-name>:exists and %params<message-name> ~~ m/^ <[0..9]>+ $/ {
+        if %params<message-code>:exists and %params<message-code> ≠ %params<message-name> {
+            die("Message type and code don't agree");
         } else {
-            return %registrations{Int}.from-raw($raw, :$asn32);
+            %params<message-code> = Int(%params<message-name>);
+            %params<message-name>:delete;
         }
-    };
-
-    method from-hash(%params is copy, :$asn32)  {
-        if %params<message-code>:!exists and %params<message-name>:!exists {
-            die "Could not determine message type";
-        }
-            
-        # Normalize message-name
-        if %params<message-name>:exists and %params<message-name> ~~ m/^ <[0..9]>+ $/ {
-            if %params<message-code>:exists and %params<message-code> ≠ %params<message-name> {
-                die("Message type and code don't agree");
-            } else {
-                %params<message-code> = Int(%params<message-name>);
-                %params<message-name>:delete;
-            }
-        }
-
-        # Fill in message type if needed
-        if %params<message-code>:!exists {
-            if %message-names{ %params<message-name> }:!exists {
-                die("Unknown message name: %params<message-name>");
-            }
-            %params<message-code> = %message-names{ %params<message-name> }.implemented-message-code;
-        }
-
-        # Make sure we have agreement 
-        if %params<message-name>:exists and %params<message-code>:exists {
-            if %message-names{ %params<message-name> }.implemented-message-name ne %params<message-name> {
-                die("Message code and type don't agree");
-            }
-        }
-
-        %params<message-name>:delete; # We don't use this in children.
-
-        return %registrations{ %params<message-code> }.from-hash( %params, :$asn32 );
-    };
-
-    method message-code() {
-        die("Not implemented for parent class");
     }
 
-    method message-name() {
-        die("Not implemented for parent class");
+    # Fill in message type if needed
+    if %params<message-code>:!exists {
+        if %message-names{ %params<message-name> }:!exists {
+            die("Unknown message name: %params<message-name>");
+        }
+        %params<message-code> = %message-names{ %params<message-name> }.implemented-message-code;
     }
+
+    # Make sure we have agreement 
+    if %params<message-name>:exists and %params<message-code>:exists {
+        if %message-names{ %params<message-name> }.implemented-message-name ne %params<message-name> {
+            die("Message code and type don't agree");
+        }
+    }
+
+    %params<message-name>:delete; # We don't use this in children.
+
+    return %registrations{ %params<message-code> }.from-hash( %params, :$asn32 );
+};
+
+method message-code() {
+    die("Not implemented for parent class");
+}
+
+method message-name() {
+    die("Not implemented for parent class");
 }
 
 =begin pod

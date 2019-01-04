@@ -7,58 +7,59 @@ use v6;
 
 use Net::BGP::Capability;
 
-class Net::BGP::Capability::Route-Refresh:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Capability::Route-Refresh:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
-{
-    # Generic Types
-    method implemented-capability-code(-->Int) { 2 }
-    method implemented-capability-name(-->Str) { "Route-Refresh" }
+    does StrictClass;
 
-    method capability-name(-->Str:D) { "Route-Refresh" }
-    
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+# Generic Types
+method implemented-capability-code(-->Int) { 2 }
+method implemented-capability-name(-->Str) { "Route-Refresh" }
+
+method capability-name(-->Str:D) { "Route-Refresh" }
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+method from-raw(buf8:D $raw where $raw.bytes == 2) {
+    if $raw[0] ≠ 2 { die("Can only build a Route-Refresh capability"); }
+    if $raw[1] ≠ 0 { die("Bad capability length"); }
+
+    my $obj = self.bless(:$raw);
+    return $obj;
+};
+
+method from-hash(%params is copy)  {
+    my @REQUIRED = «»;
+
+    if %params<capability-code>:exists {
+        if %params<capability-code> ≠ 2 {
+            die "Can only create a route-refresh capability";
+        }
+        %params<capability-code>.delete;
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes == 2) {
-        if $raw[0] ≠ 2 { die("Can only build a Route-Refresh capability"); }
-        if $raw[1] ≠ 0 { die("Bad capability length"); }
-
-        my $obj = self.bless(:$raw);
-        return $obj;
-    };
-
-    method from-hash(%params is copy)  {
-        my @REQUIRED = «»;
-
-        if %params<capability-code>:exists {
-            if %params<capability-code> ≠ 2 {
-                die "Can only create a route-refresh capability";
-            }
-            %params<capability-code>.delete;
+    if %params<capability-name>:exists {
+        if %params<capability-name> ne "Route-Refresh" {
+            die "Can only create a route-refresh capability";
         }
-
-        if %params<capability-name>:exists {
-            if %params<capability-name> ne "Route-Refresh" {
-                die "Can only create a route-refresh capability";
-            }
-            %params<capability-name>.delete;
-        }
-
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
-        }
-
-        my buf8 $capability = buf8.new();
-        $capability.append( 2 );  # Code
-        $capability.append( 0 );  # Length
-
-        return self.bless(:raw( $capability ));
-    };
-
-    method Str(-->Str:D) {
-        "Route-Refresh";
+        %params<capability-name>.delete;
     }
+
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper options");
+    }
+
+    my buf8 $capability = buf8.new();
+    $capability.append( 2 );  # Code
+    $capability.append( 0 );  # Length
+
+    return self.bless(:raw( $capability ));
+};
+
+method Str(-->Str:D) {
+    "Route-Refresh";
 }
 
 # Register capability

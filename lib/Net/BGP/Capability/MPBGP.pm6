@@ -10,76 +10,77 @@ use Net::BGP::SAFI :ALL;
 use Net::BGP::Capability;
 use Net::BGP::Conversions;
 
-class Net::BGP::Capability::MPBGP:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Capability::MPBGP:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
-{
-    # Generic Types
-    method implemented-capability-code(-->Int) { 1 }
-    method implemented-capability-name(-->Str) { "MPBGP" }
+    does StrictClass;
 
-    method capability-name(-->Str:D) { "MPBGP" }
-    
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
-    }
+# Generic Types
+method implemented-capability-code(-->Int) { 1 }
+method implemented-capability-name(-->Str) { "MPBGP" }
 
-    method from-raw(buf8:D $raw where $raw.bytes == 6) {
-        if $raw[0] ≠ 1 { die("Can only build a MPBGP capability"); }
-        if $raw[1] ≠ 4 { die("Bad capability length"); }
+method capability-name(-->Str:D) { "MPBGP" }
 
-        my $obj = self.bless(:$raw);
-        return $obj;
-    };
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
 
-    method from-hash(%params is copy)  {
-        my @REQUIRED = «afi safi reserved»;
+method from-raw(buf8:D $raw where $raw.bytes == 6) {
+    if $raw[0] ≠ 1 { die("Can only build a MPBGP capability"); }
+    if $raw[1] ≠ 4 { die("Bad capability length"); }
 
-        # Optional
-        %params<reserved> //= 0;
+    my $obj = self.bless(:$raw);
+    return $obj;
+};
 
-        if %params<capability-code>:exists {
-            if %params<capability-code> ≠ 1 {
-                die "Can only create a MPBGP capability";
-            }
-            %params<capability-code>:delete;
+method from-hash(%params is copy)  {
+    my @REQUIRED = «afi safi reserved»;
+
+    # Optional
+    %params<reserved> //= 0;
+
+    if %params<capability-code>:exists {
+        if %params<capability-code> ≠ 1 {
+            die "Can only create a MPBGP capability";
         }
+        %params<capability-code>:delete;
+    }
 
-        if %params<capability-name>:exists {
-            if %params<capability-name> ne "MPBGP" {
-                die "Can only create a MPBGPcapability";
-            }
-            %params<capability-name>:delete;
+    if %params<capability-name>:exists {
+        if %params<capability-name> ne "MPBGP" {
+            die "Can only create a MPBGPcapability";
         }
-
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
-        }
-
-        my buf8 $capability = buf8.new();
-        $capability.append( 1 );  # Code
-        $capability.append( 4 );  # Length
-        $capability.append( nuint16-buf8(afi-code(~%params<afi>)) );
-        $capability.append( %params<reserved> );
-        $capability.append( safi-code(~%params<safi>) );
-
-        return self.bless(:raw( $capability ));
-    };
-
-    method afi(-->Str:D) {
-        return afi-name($.raw[2] * (2⁸) + $.raw[3]);
+        %params<capability-name>:delete;
     }
 
-    method safi(-->Str:D) {
-        return safi-name($.raw[5]);
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper options");
     }
 
-    method reserved(-->Int:D) {
-        return $.raw[4];
-    }
+    my buf8 $capability = buf8.new();
+    $capability.append( 1 );  # Code
+    $capability.append( 4 );  # Length
+    $capability.append( nuint16-buf8(afi-code(~%params<afi>)) );
+    $capability.append( %params<reserved> );
+    $capability.append( safi-code(~%params<safi>) );
 
-    method Str(-->Str:D) {
-        "MPBGP={ self.afi }/{ self.safi }";
-    }
+    return self.bless(:raw( $capability ));
+};
+
+method afi(-->Str:D) {
+    return afi-name($.raw[2] * (2⁸) + $.raw[3]);
+}
+
+method safi(-->Str:D) {
+    return safi-name($.raw[5]);
+}
+
+method reserved(-->Int:D) {
+    return $.raw[4];
+}
+
+method Str(-->Str:D) {
+    "MPBGP={ self.afi }/{ self.safi }";
 }
 
 # Register capability

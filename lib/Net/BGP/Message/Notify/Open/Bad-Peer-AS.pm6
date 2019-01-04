@@ -8,75 +8,76 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify::Open;
 
-class Net::BGP::Message::Notify::Open::Bad-Peer-AS:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Message::Notify::Open::Bad-Peer-AS:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify::Open
-{
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+    does StrictClass;
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+# Generic Types
+method implemented-error-subcode(-->Int) { 2 }
+method implemented-error-subname(-->Str) { "Bad-Peer-AS" }
+
+method error-subname(-->Str) { "Bad-Peer-AS" }
+
+method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
+    my $obj = self.bless(:data( buf8.new($raw) ));
+
+    if $raw[0] ≠ 3 { # Not a notify
+        die("Can only build a notification message");
+    }
+    if $raw[1] ≠ 2 { # Not an Open error
+        die("Can only build an Open error notification message");
+    }
+    if $raw[2] ≠ 2 { # Not a bad peer AS
+        die("Can only build an Open Bad Peer AS error notification message");
     }
 
-    # Generic Types
-    method implemented-error-subcode(-->Int) { 2 }
-    method implemented-error-subname(-->Str) { "Bad-Peer-AS" }
+    # Validate the parameters parse.
+    # We could probably defer this - the controller will get to it,
+    # but this is safer.
+    # $obj.parameters;
 
-    method error-subname(-->Str) { "Bad-Peer-AS" }
+    return $obj;
+};
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
-        my $obj = self.bless(:data( buf8.new($raw) ));
-
-        if $raw[0] ≠ 3 { # Not a notify
-            die("Can only build a notification message");
-        }
-        if $raw[1] ≠ 2 { # Not an Open error
-            die("Can only build an Open error notification message");
-        }
-        if $raw[2] ≠ 2 { # Not a bad peer AS
-            die("Can only build an Open Bad Peer AS error notification message");
-        }
-
-        # Validate the parameters parse.
-        # We could probably defer this - the controller will get to it,
-        # but this is safer.
-        # $obj.parameters;
-
-        return $obj;
-    };
-
-    method from-hash(%params is copy)  {
-        # Delete unnecessary options
-        if %params<message-code>:exists {
-            if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
-            %params<message-code>:delete
-        }
-        if %params<error-code>:exists {
-            if (%params<error-code> ≠ 2) { die("Invalid error type for Open"); }
-            %params<error-code>:delete
-        }
-        if %params<error-subcode>:exists {
-            if (%params<error-subcode> ≠ 2) { die("Invalid error type for Bad Peer AS"); }
-            %params<error-subcode>:delete
-        }
-
-        my @REQUIRED = «»;
-
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            warn %params.keys.sort.list;
-            die("Did not provide proper options");
-        }
-
-        # Now we need to build the raw data.
-        my $data = buf8.new();
-
-        $data.append( 3 );   # Message type (NOTIFY)
-        $data.append( 2 );   # Error code (Open)
-        $data.append( 2 );   # Bad Peer AS
-
-        return self.bless(:data( buf8.new($data) ));
-    };
-
-    method max-supported-version(-->Int) {
-        return nuint16(self.data[2..3]);
+method from-hash(%params is copy)  {
+    # Delete unnecessary options
+    if %params<message-code>:exists {
+        if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
+        %params<message-code>:delete
     }
+    if %params<error-code>:exists {
+        if (%params<error-code> ≠ 2) { die("Invalid error type for Open"); }
+        %params<error-code>:delete
+    }
+    if %params<error-subcode>:exists {
+        if (%params<error-subcode> ≠ 2) { die("Invalid error type for Bad Peer AS"); }
+        %params<error-subcode>:delete
+    }
+
+    my @REQUIRED = «»;
+
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        warn %params.keys.sort.list;
+        die("Did not provide proper options");
+    }
+
+    # Now we need to build the raw data.
+    my $data = buf8.new();
+
+    $data.append( 3 );   # Message type (NOTIFY)
+    $data.append( 2 );   # Error code (Open)
+    $data.append( 2 );   # Bad Peer AS
+
+    return self.bless(:data( buf8.new($data) ));
+};
+
+method max-supported-version(-->Int) {
+    return nuint16(self.data[2..3]);
 }
 
 # Register handler

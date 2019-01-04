@@ -7,11 +7,13 @@ use v6;
 
 use Net::BGP::Event;
 
-class Net::BGP::Error:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Event is Exception {
-    method message-name(-->Str) { 'NOOP'  };
-    method is-error(-->Bool)    { True    };
-    method message(-->Str)      { 'No-Op' };
-}
+unit class Net::BGP::Error:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Event
+    is Exception;
+
+method message-name(-->Str) { 'NOOP'  };
+method is-error(-->Bool)    { True    };
+method message(-->Str)      { 'No-Op' };
 
 =begin pod
 

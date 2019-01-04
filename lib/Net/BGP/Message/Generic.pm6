@@ -7,34 +7,35 @@ use v6;
 
 use Net::BGP::Message;
 
-class Net::BGP::Message::Generic:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Message::Generic:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message
-{
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
-    }
+    does StrictClass;
 
-    method implemented-message-code(--> Int) { Int }
-    method implemented-message-name(--> Str) { Str }
-
-    method message-code() {
-        return $.data[0];
-    }
-
-    method message-name() {
-        return "$.message-code";
-    }
-
-    method from-raw(buf8:D $raw) {
-        return self.bless(:data( buf8.new($raw) ));
-    };
-
-    method from-hash(%params)  {
-        die("Not implemented for generic BGP messages");
-    };
-
-    method raw() { return $.data; }
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
 }
+
+method implemented-message-code(--> Int) { Int }
+method implemented-message-name(--> Str) { Str }
+
+method message-code() {
+    return $.data[0];
+}
+
+method message-name() {
+    return "$.message-code";
+}
+
+method from-raw(buf8:D $raw) {
+    return self.bless(:data( buf8.new($raw) ));
+};
+
+method from-hash(%params)  {
+    die("Not implemented for generic BGP messages");
+};
+
+method raw() { return $.data; }
 
 # Register handler
 INIT { Net::BGP::Message.register: Net::BGP::Message::Generic }

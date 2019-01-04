@@ -5,7 +5,9 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::Path-Attribute:ver<0.0.2>:auth<cpan:JMASLAK>;
+use StrictClass;
+unit class Net::BGP::Path-Attribute:ver<0.0.1>:auth<cpan:JMASLAK>
+    does StrictClass;
 
 use Net::BGP::Conversions;
 
@@ -22,12 +24,12 @@ method path-attribute-code\           (-->Int:D) { $!raw[1] }
 method path-attribute-name\           (-->Str:D) { ~$!raw[1] }
 
 # Generic Methods
-method flags\           (-->Int:D)  { $!raw[0] }
+method flags\           (-->Int:D)  {   $!raw[0]              }
 method optional\        (-->Bool:D) { ( $!raw[0] +& 0x80 ).so }
 method transitive\      (-->Bool:D) { ( $!raw[0] +& 0x40 ).so }
 method partial\         (-->Bool:D) { ( $!raw[0] +& 0x20 ).so }
 method extended-length\ (-->Bool:D) { ( $!raw[0] +& 0x10 ).so }
-method reserved-flags\  (-->Int:D)  { $!raw[0] +& 0x0f }
+method reserved-flags\  (-->Int:D)  {   $!raw[0] +& 0x0f      }
 
 method data-length(-->Int:D) {
     if self.extended-length {

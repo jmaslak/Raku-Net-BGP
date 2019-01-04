@@ -8,14 +8,17 @@ use v6;
 use Net::BGP::Message;
 use Net::BGP::Event;
 
-class Net::BGP::Event::BGP-Message:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Event {
-    has Net::BGP::Message $.message;
+use StrictClass;
+unit class Net::BGP::Event::BGP-Message:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Event
+    does StrictClass;
 
-    method message-name(-->Str) { 'BGP-Message' };
+has Net::BGP::Message $.message;
 
-    method Str(-->Str) {
-        "{ self.connection-id } BGP { self.message.Str }";
-    }
+method message-name(-->Str) { 'BGP-Message' };
+
+method Str(-->Str) {
+    "{ self.connection-id } BGP { self.message.Str }";
 }
 
 =begin pod

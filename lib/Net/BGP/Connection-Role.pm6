@@ -5,19 +5,19 @@ use v6;
 # All Rights Reserved - See License
 #
 
-role Net::BGP::Connection-Role:ver<0.0.2>:auth<cpan:JMASLAK> {
-    use Net::BGP::Message;
+unit role Net::BGP::Connection-Role:ver<0.0.1>:auth<cpan:JMASLAK>;
 
-    my Int $last_id = 0;
+use Net::BGP::Message;
 
-    has Int:D  $.id = $last_id++;
-    has Bool:D $.inbound     is required;
-    has Str:D  $.remote-ip   is required;
-    has Int:D  $.remote-port is required where ^65536;
+my Int $last_id = 0;
 
-    method close(-->Nil) { … }
-    method send-bgp(Net::BGP::Message:D $msg -->Nil) { … }
-}
+has Int:D  $.id = $last_id++;
+has Bool:D $.inbound     is required;
+has Str:D  $.remote-ip   is required;
+has Int:D  $.remote-port is required where ^65536;
+
+method close(-->Nil) { … }
+method send-bgp(Net::BGP::Message:D $msg -->Nil) { … }
 
 =begin pod
 

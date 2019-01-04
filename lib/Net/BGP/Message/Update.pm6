@@ -14,6 +14,7 @@ use Net::BGP::Path-Attribute;
 use Net::BGP::Path-Attribute::AS-Path;
 use Net::BGP::Path-Attribute::AS4-Path;
 use Net::BGP::Path-Attribute::Atomic-Aggregate;
+use Net::BGP::Path-Attribute::Cluster-List;
 use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
 use Net::BGP::Path-Attribute::Local-Pref;
@@ -23,10 +24,11 @@ use Net::BGP::Path-Attribute::MP-Unreachable;
 use Net::BGP::Path-Attribute::Next-Hop;
 use Net::BGP::Path-Attribute::Origin;
 use Net::BGP::Path-Attribute::Originator-ID;
-use Net::BGP::Path-Attribute::Cluster-List;
 
-unit class Net::BGP::Message::Update:ver<0.0.2>:auth<cpan:JMASLAK>
-is Net::BGP::Message;
+use StrictClass;
+unit class Net::BGP::Message::Update:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Message
+    does StrictClass;
 
 has Bool:D $.asn32 is required;
 

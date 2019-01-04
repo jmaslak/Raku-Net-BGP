@@ -5,13 +5,13 @@ use v6;
 # All Rights Reserved - See License
 #
 
-class Net::BGP::Event:ver<0.0.2>:auth<cpan:JMASLAK> {
-    has Int $.connection-id;
-    has Str $.peer;
+unit class Net::BGP::Event:ver<0.0.1>:auth<cpan:JMASLAK>;
 
-    method message-name(-->Str) { 'NOOP' };
-    method is-error(-->Bool)    { False  };
-}
+has Int $.connection-id;
+has Str $.peer;
+
+method message-name(-->Str) { 'NOOP' };
+method is-error(-->Bool)    { False  };
 
 =begin pod
 

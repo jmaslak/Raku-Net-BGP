@@ -12,118 +12,120 @@ use Net::BGP::Capability::ASN32;
 use Net::BGP::Capability::Generic;
 use Net::BGP::Capability::MPBGP;
 use Net::BGP::Capability::Route-Refresh;
-
 use Net::BGP::Error::Bad-Parameter-Length;
 use Net::BGP::Parameter;
 
-class Net::BGP::Parameter::Capabilities:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Parameter {
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+use StrictClass;
+unit class Net::BGP::Parameter::Capabilities:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Parameter
+    does StrictClass;
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+has buf8 $.data is rw;
+
+method parameter-code() {
+    return $.data[0];
+}
+
+method parameter-name() {
+    return "Capabilities";
+}
+
+method from-raw(buf8:D $raw) {
+    # Validate length
+    if $raw.bytes < 2 {
+        die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw.bytes)));
+    }
+    if $raw.bytes < ($raw[1] + 2) {
+        die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw[1])));
+    }
+    if $raw[0] ≠ 2 { die("Can only build a Capabilities parameter") }
+
+    # Validate the capabilities parse.
+    
+    return self.bless( :data(buf8.new($raw)) );
+};
+
+method from-hash(%params)  {
+    my @REQUIRED = «capabilities»;
+
+    # Delete unnecessary option
+    if %params<parameter-name>:exists {
+        if %params<parameter-name> ne 'Capabilities' {
+            die("Parameter name and code don't match");
+        }
+        %params<parameter-name>:delete
+    }
+    if %params<parameter-code>:exists {
+        if %params<parameter-code> ≠ 2 {
+            die("Can only build a Capabilities parameter");
+        }
+        %params<parameter-code>:delete;
     }
 
-    has buf8 $.data is rw;
-
-    method parameter-code() {
-        return $.data[0];
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper parameter options: " ~ %params.keys.join(", ") );
     }
 
-    method parameter-name() {
-        return "Capabilities";
+    # XXX Don't add capabilities if nothing in the capabilities!
+    my $value = buf8.new;
+    %params<capabilities> //= [];
+    for |%params<capabilities> -> $cap-hash {
+        $value.append: Net::BGP::Capability.from-hash( $cap-hash ).raw;
+    }
+    %params<parameter-value> =  $value;
+    
+    # Max length is 253, because 253 + one byte type + one byte len = 255
+    if %params<parameter-value>.bytes > 253 { die("Parameter too long"); }
+
+    my buf8 $parameter = buf8.new();
+    $parameter.append( 2 );     # Capabilities Option
+    $parameter.append( %params<parameter-value>.bytes );
+    $parameter.append( %params<parameter-value> );
+
+    my $obj = self.bless(:data( $parameter ));
+
+    # Validate capabilities parse
+    $obj.capabilities.sink;
+
+    return $obj;
+};
+
+method raw() { return $.data; }
+
+method parameter-length() {
+    return $.data[1];
+}
+
+method parameter-value() {
+    return $.data.subbuf(2, $.data[1]);
+}
+
+method capabilities( -->Array[Net::BGP::Capability:D] ) {
+    my Net::BGP::Capability:D @capabilities;
+    my $start = 2;
+    while $start < $!data.bytes {
+        my $cap-len = $!data[$start+1] + 2;
+
+        if ($start + $cap-len) > $!data.bytes {
+            die("Capability too long for option field");
+        }
+
+        my $cap-raw = $!data[ $start..($start + $cap-len - 1) ];
+        @capabilities.push: Net::BGP::Capability.from-raw( buf8.new($cap-raw) );
+
+        # Get next capability
+        $start += $cap-len;
     }
 
-    method from-raw(buf8:D $raw) {
-        # Validate length
-        if $raw.bytes < 2 {
-            die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw.bytes)));
-        }
-        if $raw.bytes < ($raw[1] + 2) {
-            die(Net::BGP::Error::Bad-Parameter-Length.new(:length($raw[1])));
-        }
-        if $raw[0] ≠ 2 { die("Can only build a Capabilities parameter") }
+    return @capabilities;
+}
 
-        # Validate the capabilities parse.
-        
-        return self.bless( :data(buf8.new($raw)) );
-    };
-
-    method from-hash(%params)  {
-        my @REQUIRED = «capabilities»;
-
-        # Delete unnecessary option
-        if %params<parameter-name>:exists {
-            if %params<parameter-name> ne 'Capabilities' {
-                die("Parameter name and code don't match");
-            }
-            %params<parameter-name>:delete
-        }
-        if %params<parameter-code>:exists {
-            if %params<parameter-code> ≠ 2 {
-                die("Can only build a Capabilities parameter");
-            }
-            %params<parameter-code>:delete;
-        }
-
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper parameter options: " ~ %params.keys.join(", ") );
-        }
-
-        # XXX Don't add capabilities if nothing in the capabilities!
-        my $value = buf8.new;
-        %params<capabilities> //= [];
-        for |%params<capabilities> -> $cap-hash {
-            $value.append: Net::BGP::Capability.from-hash( $cap-hash ).raw;
-        }
-        %params<parameter-value> =  $value;
-        
-        # Max length is 253, because 253 + one byte type + one byte len = 255
-        if %params<parameter-value>.bytes > 253 { die("Parameter too long"); }
-
-        my buf8 $parameter = buf8.new();
-        $parameter.append( 2 );     # Capabilities Option
-        $parameter.append( %params<parameter-value>.bytes );
-        $parameter.append( %params<parameter-value> );
-
-        my $obj = self.bless(:data( $parameter ));
-
-        # Validate capabilities parse
-        $obj.capabilities.sink;
-
-        return $obj;
-    };
-
-    method raw() { return $.data; }
-
-    method parameter-length() {
-        return $.data[1];
-    }
-
-    method parameter-value() {
-        return $.data.subbuf(2, $.data[1]);
-    }
-
-    method capabilities( -->Array[Net::BGP::Capability:D] ) {
-        my Net::BGP::Capability:D @capabilities;
-        my $start = 2;
-        while $start < $!data.bytes {
-            my $cap-len = $!data[$start+1] + 2;
-
-            if ($start + $cap-len) > $!data.bytes {
-                die("Capability too long for option field");
-            }
-
-            my $cap-raw = $!data[ $start..($start + $cap-len - 1) ];
-            @capabilities.push: Net::BGP::Capability.from-raw( buf8.new($cap-raw) );
-
-            # Get next capability
-            $start += $cap-len;
-        }
-
-        return @capabilities;
-    }
-
-    method Str(-->Str) {
-        "CAP=[" ~ self.capabilities.map({ .Str }).join('; ') ~ "]";
-    }
+method Str(-->Str) {
+    "CAP=[" ~ self.capabilities.map({ .Str }).join('; ') ~ "]";
 }
 
 # Register handler

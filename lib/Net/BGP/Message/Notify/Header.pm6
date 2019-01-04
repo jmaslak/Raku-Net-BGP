@@ -8,78 +8,79 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify;
 
-class Net::BGP::Message::Notify::Header:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Message::Notify::Header:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify
-{
-    my %error-subcodes := Hash[Net::BGP::Message::Notify::Header:U,Int].new;
-    my %error-subnames := Hash[Net::BGP::Message::Notify::Header:U,Str].new;
+    does StrictClass;
 
-    # Generic Types
-    method implemented-error-code\  (-->Int) { 1 }
-    method implemented-error-name\  (-->Str) { "Header" }
-    method implemented-error-subcode(-->Int) { … }
-    method implemented-error-subname(-->Str) { … }
-    
-    method error-name(-->Str) { "Header" }
+my %error-subcodes := Hash[Net::BGP::Message::Notify::Header:U,Int].new;
+my %error-subnames := Hash[Net::BGP::Message::Notify::Header:U,Str].new;
 
-    method register( Net::BGP::Message::Notify::Header:U $class -->Nil) {
-        %error-subcodes{ $class.implemented-error-subcode } = $class;
-        %error-subnames{ $class.implemented-error-subname } = $class;
+# Generic Types
+method implemented-error-code\  (-->Int) { 1 }
+method implemented-error-name\  (-->Str) { "Header" }
+method implemented-error-subcode(-->Int) { … }
+method implemented-error-subname(-->Str) { … }
+
+method error-name(-->Str) { "Header" }
+
+method register( Net::BGP::Message::Notify::Header:U $class -->Nil) {
+    %error-subcodes{ $class.implemented-error-subcode } = $class;
+    %error-subnames{ $class.implemented-error-subname } = $class;
+}
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
+    if $raw[0] ≠ 3 { # Not notify
+        die("Can only build a notification message");
+    }
+    if $raw[1] ≠ 1 { # Not Header Error
+        die("Can only build an Header error notification message");
     }
 
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+    if %error-subcodes{ $raw[2] }:exists {
+        return %error-subcodes{ $raw[2] }.from-raw($raw);
+    } else {
+        return %error-subcodes{ Int }.from-raw($raw);
+    }
+};
+
+method from-hash(%params is copy)  {
+    # Delete unnecessary options
+    if %params<message-code>:exists {
+        if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
+        %params<message-code>:delete
+    }
+    if %params<error-code>:exists {
+        if (%params<error-code> ≠ 1) { die("Invalid error type for Header"); }
+        %params<error-code>:delete
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
-        if $raw[0] ≠ 3 { # Not notify
-            die("Can only build a notification message");
-        }
-        if $raw[1] ≠ 1 { # Not Header Error
-            die("Can only build an Header error notification message");
+    # Get code from name
+    if %params<error-subname>:exists {
+        if %error-subnames{ %params<error-subname> }:!exists {
+            die("error-subname does not exist");
         }
 
-        if %error-subcodes{ $raw[2] }:exists {
-            return %error-subcodes{ $raw[2] }.from-raw($raw);
-        } else {
-            return %error-subcodes{ Int }.from-raw($raw);
-        }
-    };
-
-    method from-hash(%params is copy)  {
-        # Delete unnecessary options
-        if %params<message-code>:exists {
-            if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
-            %params<message-code>:delete
-        }
-        if %params<error-code>:exists {
-            if (%params<error-code> ≠ 1) { die("Invalid error type for Header"); }
-            %params<error-code>:delete
-        }
-
-        # Get code from name
-        if %params<error-subname>:exists {
-            if %error-subnames{ %params<error-subname> }:!exists {
-                die("error-subname does not exist");
+        if %params<error-subcode>:exists {
+            if %params<error-subcode> ≠ %error-subnames{ %params<error-subnames> }.implemented-error-subcode {
+                die("Message subcode and name do not agree");
             }
-
-            if %params<error-subcode>:exists {
-                if %params<error-subcode> ≠ %error-subnames{ %params<error-subnames> }.implemented-error-subcode {
-                    die("Message subcode and name do not agree");
-                }
-            } else {
-                %params<error-subcode> = %error-subnames{ %params<error-subname> }.implemented-error-subcode;
-            }
-
-            %params<error-subname>:delete;
-        }
-
-        if %error-subcodes{ %params<error-subcode> }:exists {
-            return %error-subcodes{ %params<error-subcode> }.from-hash(%params);
         } else {
-            return %error-subcodes{ Int }.from-hash(%params);
+            %params<error-subcode> = %error-subnames{ %params<error-subname> }.implemented-error-subcode;
         }
-    };
+
+        %params<error-subname>:delete;
+    }
+
+    if %error-subcodes{ %params<error-subcode> }:exists {
+        return %error-subcodes{ %params<error-subcode> }.from-hash(%params);
+    } else {
+        return %error-subcodes{ Int }.from-hash(%params);
+    }
 }
 
 # Register handler

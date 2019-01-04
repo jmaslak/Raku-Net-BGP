@@ -8,30 +8,29 @@ use v6;
 use Net::BGP::Connection;
 use OO::Monitors;
 
-monitor Net::BGP::Connection-List:ver<0.0.0>:auth<cpan:JMASLAK> {
+unit monitor Net::BGP::Connection-List:ver<0.0.0>:auth<cpan:JMASLAK>;
 
-    has Net::BGP::Connection:D %!connections;
+has Net::BGP::Connection:D %!connections;
 
-    method get(Int:D $id) {
-        if self.exists($id) {
-            return %!connections{$id};
-        } else {
-            return;
-        }
+method get(Int:D $id) {
+    if self.exists($id) {
+        return %!connections{$id};
+    } else {
+        return;
     }
+}
 
-    method add(Net::BGP::Connection:D $connection -->Nil) {
-        %!connections{ $connection.id } = $connection;
-    }
+method add(Net::BGP::Connection:D $connection -->Nil) {
+    %!connections{ $connection.id } = $connection;
+}
 
-    method remove(Int:D $id -->Nil) {
-        %!connections{ $id }:delete;
-    }
+method remove(Int:D $id -->Nil) {
+    %!connections{ $id }:delete;
+}
 
-    method exists(Int:D $id -->Bool) {
-        return %!connections{ $id }:exists;
-    }
-};
+method exists(Int:D $id -->Bool) {
+    return %!connections{ $id }:exists;
+}
 
 =begin pod
 

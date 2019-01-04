@@ -7,12 +7,15 @@ use v6;
 
 use Net::BGP::Error;
 
-class Net::BGP::Error::Bad-Parameter-Length:ver<0.0.2>:auth<cpan:JMASLAK> is Net::BGP::Error {
-    has $.length;  # Set to the length in the OPEN message
+use StrictClass;
+unit class Net::BGP::Error::Bad-Parameter-Length:ver<0.0.1>:auth<cpan:JMASLAK>
+    is Net::BGP::Error
+    does StrictClass;
 
-    method message-name(-->Str) { 'Bad-Parameter-Length' };
-    method message(-->Str)      { 'Parameter Length in OPEN is invalid' };
-}
+has $.length;  # Set to the length in the OPEN message
+
+method message-name(-->Str) { 'Bad-Parameter-Length' };
+method message(-->Str)      { 'Parameter Length in OPEN is invalid' };
 
 =begin pod
 

@@ -8,69 +8,70 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify;
 
-class Net::BGP::Message::Notify::Generic:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Message::Notify::Generic:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify
-{
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+    does StrictClass;
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+# Generic Types
+method implemented-error-code\  (-->Int) { Int }
+method implemented-error-name\  (-->Str) { Str }
+method implemented-error-subcode(-->Int) { Int }
+method implemented-error-subname(-->Str) { Str }
+
+method error-name(-->Str)    { Str }; # Undefined
+method error-subname(-->Str) { Str }; # Undefined
+
+method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
+    my $obj = self.bless(:data( buf8.new($raw) ));
+
+    if $raw[0] ≠ 3 { # Not a notify
+        die("Can only build a notification message");
     }
 
-    # Generic Types
-    method implemented-error-code\  (-->Int) { Int }
-    method implemented-error-name\  (-->Str) { Str }
-    method implemented-error-subcode(-->Int) { Int }
-    method implemented-error-subname(-->Str) { Str }
+    # Validate the parameters parse.
+    # We could probably defer this - the controller will get to it,
+    # but this is safer.
+    # $obj.parameters;
 
-    method error-name(-->Str)    { Str }; # Undefined
-    method error-subname(-->Str) { Str }; # Undefined
+    return $obj;
+};
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
-        my $obj = self.bless(:data( buf8.new($raw) ));
-
-        if $raw[0] ≠ 3 { # Not a notify
-            die("Can only build a notification message");
-        }
-
-        # Validate the parameters parse.
-        # We could probably defer this - the controller will get to it,
-        # but this is safer.
-        # $obj.parameters;
-
-        return $obj;
-    };
-
-    method from-hash(%params is copy)  {
-        # Delete unnecessary option
-        if %params<message-code>:exists {
-            if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
-            %params<message-code>:delete
-        }
-
-        my @REQUIRED = «error-code error-subcode raw-data»;
-
-        # Optional parameters
-        %params<raw-data> //= buf8.new;
-
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
-        }
-
-        # Now we need to build the raw data.
-        my $data = buf8.new();
-
-        $data.append( 3 );   # Message type (NOTIFY)
-        $data.append( %params<error-code> );
-        $data.append( %params<error-subcode> );
-        $data.append( %params<raw-data> );
-
-        return self.bless(:data( buf8.new($data) ));
-    };
-    
-    method raw() { return $.data; }
-
-    method Str(-->Str:D) {
-        "NOTIFY Error={ self.error-code } Subtype={ self.error-subcode }"
+method from-hash(%params is copy)  {
+    # Delete unnecessary option
+    if %params<message-code>:exists {
+        if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
+        %params<message-code>:delete
     }
+
+    my @REQUIRED = «error-code error-subcode raw-data»;
+
+    # Optional parameters
+    %params<raw-data> //= buf8.new;
+
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper options");
+    }
+
+    # Now we need to build the raw data.
+    my $data = buf8.new();
+
+    $data.append( 3 );   # Message type (NOTIFY)
+    $data.append( %params<error-code> );
+    $data.append( %params<error-subcode> );
+    $data.append( %params<raw-data> );
+
+    return self.bless(:data( buf8.new($data) ));
+};
+
+method raw() { return $.data; }
+
+method Str(-->Str:D) {
+    "NOTIFY Error={ self.error-code } Subtype={ self.error-subcode }"
 }
 
 # Register handler

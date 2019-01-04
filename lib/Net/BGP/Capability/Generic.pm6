@@ -7,52 +7,53 @@ use v6;
 
 use Net::BGP::Capability;
 
-class Net::BGP::Capability::Generic:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Capability::Generic:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
-{
-    # Generic Types
-    method implemented-capability-code(-->Int) { Int }
-    method implemented-capability-name(-->Str) { Str }
+    does StrictClass;
 
-    method capability-name(-->Str:D) { "{ $.raw[0] }" }
-    
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+# Generic Types
+method implemented-capability-code(-->Int) { Int }
+method implemented-capability-name(-->Str) { Str }
+
+method capability-name(-->Str:D) { "{ $.raw[0] }" }
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
+    if ($raw.bytes - 2) ≠ $raw[1] { die("Invalid capability payload length"); }
+
+    my $obj = self.bless(:$raw);
+    return $obj;
+};
+
+method from-hash(%params is copy)  {
+    my @REQUIRED = «capability-code value»;
+
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper options");
     }
 
-    method from-raw(buf8:D $raw where $raw.bytes ≥ 2) {
-        if ($raw.bytes - 2) ≠ $raw[1] { die("Invalid capability payload length"); }
+    if %params<capability-code> !~~ ^256 { die "Capability code is invalid" }
 
-        my $obj = self.bless(:$raw);
-        return $obj;
-    };
+    # Yes, it's ^254, not ^256, because the maximum parameter size is
+    # 255 bytes - so 253 bytes max (^254) plus the octets
+    # representing the capability's code point and the capability's
+    # length bring us to 253 + 2 = 255.
+    if %params<value>.bytes !~~ ^254 { die "Value is longer than 255 bytes" }
 
-    method from-hash(%params is copy)  {
-        my @REQUIRED = «capability-code value»;
+    my buf8 $capability = buf8.new();
+    $capability.append( %params<capability-code> );
+    $capability.append( %params<value>.bytes );
+    $capability.append( %params<value> );
 
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
-        }
+    return self.bless(:raw( $capability ));
+};
 
-        if %params<capability-code> !~~ ^256 { die "Capability code is invalid" }
-
-        # Yes, it's ^254, not ^256, because the maximum parameter size is
-        # 255 bytes - so 253 bytes max (^254) plus the octets
-        # representing the capability's code point and the capability's
-        # length bring us to 253 + 2 = 255.
-        if %params<value>.bytes !~~ ^254 { die "Value is longer than 255 bytes" }
-
-        my buf8 $capability = buf8.new();
-        $capability.append( %params<capability-code> );
-        $capability.append( %params<value>.bytes );
-        $capability.append( %params<value> );
-
-        return self.bless(:raw( $capability ));
-    };
-
-    method Str(-->Str:D) {
-        "Code=" ~ self.capability-name ~ " Len=" ~ self.capability-length;
-    }
+method Str(-->Str:D) {
+    "Code=" ~ self.capability-name ~ " Len=" ~ self.capability-length;
 }
 
 # Register capability

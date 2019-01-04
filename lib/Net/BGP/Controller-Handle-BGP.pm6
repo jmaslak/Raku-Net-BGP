@@ -5,28 +5,29 @@ use v6;
 # All Rights Reserved - See License
 #
 
-role Net::BGP::Controller-Handle-BGP:ver<0.0.2>:auth<cpan:JMASLAK> {
-    use Net::BGP::Connection-Role;
-    use Net::BGP::Message;
-    use Net::BGP::Message::Open;
+unit role Net::BGP::Controller-Handle-BGP:ver<0.0.1>:auth<cpan:JMASLAK>;
 
-    # Receive Messages
-    multi method receive-bgp(
-        Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Message:D $msg,
-        Str:D $peer,
-    ) { … }
+use Net::BGP::Connection-Role;
+use Net::BGP::Message;
+use Net::BGP::Message::Open;
 
-    # Handle errors
-    multi method handle-error(
-        Net::BGP::Connection-Role:D $connection,
-        Net::BGP::Error:D $e
-        -->Nil
-    ) { … };
+# Receive Messages
+multi method receive-bgp(
+    Net::BGP::Connection-Role:D $connection,
+    Net::BGP::Message:D $msg,
+    Str:D $peer,
+) { … }
 
-    # Deal with closed connections
-    method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) { … }
+# Handle errors
+multi method handle-error(
+    Net::BGP::Connection-Role:D $connection,
+    Net::BGP::Error:D $e
+    -->Nil
+) { … };
 
-    # Update last sent time
-    method update-last-sent(Net::BGP::Connection-Role:D $connection -->Nil) { … }
-}
+# Deal with closed connections
+method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) { … }
+
+# Update last sent time
+method update-last-sent(Net::BGP::Connection-Role:D $connection -->Nil) { … }
+

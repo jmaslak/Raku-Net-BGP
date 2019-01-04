@@ -9,7 +9,9 @@ use v6;
 # copyright.
 #
 
-unit class Net::BGP::Socket-Linux:ver<0.0.2>:auth<cpan:JMASLAK>;
+use StrictClass;
+unit class Net::BGP::Socket-Linux:ver<0.0.1>:auth<cpan:JMASLAK>
+    does StrictClass;
 
 use NativeCall;
 use NativeHelpers::Blob;

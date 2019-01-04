@@ -8,67 +8,68 @@ use v6;
 use Net::BGP::Conversions;
 use Net::BGP::Message::Notify;
 
-class Net::BGP::Message::Notify::Hold-Timer-Expired:ver<0.0.2>:auth<cpan:JMASLAK>
+use StrictClass;
+unit class Net::BGP::Message::Notify::Hold-Timer-Expired:ver<0.0.1>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify
-{
-    method new() {
-        die("Must use from-raw or from-hash to construct a new object");
+    does StrictClass;
+
+method new() {
+    die("Must use from-raw or from-hash to construct a new object");
+}
+
+# Generic Types
+method implemented-error-code\  (-->Int) { 4 }
+method implemented-error-name\  (-->Str) { 'Hold-Timer-Expired' }
+method implemented-error-subcode(-->Int) { Int }
+method implemented-error-subname(-->Str) { Str }
+
+method error-name(-->Str)    { 'Hold-Timer-Expired' };
+method error-subname(-->Str) { ~ self.error-subcode }; # Undefined
+
+method from-raw(buf8:D $raw where $raw.bytes == 3) {
+    my $obj = self.bless(:data( buf8.new($raw) ));
+
+    if $raw[0] ≠ 3 { # Not a notify
+        die("Can only build a notification message");
+    }
+    if $raw[1] ≠ 4 { # Not a hold time expiired
+        die("Can only build a Hold-Timer-Expired notification");
     }
 
-    # Generic Types
-    method implemented-error-code\  (-->Int) { 4 }
-    method implemented-error-name\  (-->Str) { 'Hold-Timer-Expired' }
-    method implemented-error-subcode(-->Int) { Int }
-    method implemented-error-subname(-->Str) { Str }
+    return $obj;
+};
 
-    method error-name(-->Str)    { 'Hold-Timer-Expired' };
-    method error-subname(-->Str) { ~ self.error-subcode }; # Undefined
+method from-hash(%params is copy)  {
+    # Delete unnecessary option
+    if %params<message-code>:exists {
+        if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
+        %params<message-code>:delete
+    }
+    if %params<error-code>:exists {
+        if (%params<error-code> ≠ 4) { die("Invalid message type for Hold-Timer-Expired"); }
+        %params<error-code>:delete
+    }
 
-    method from-raw(buf8:D $raw where $raw.bytes == 3) {
-        my $obj = self.bless(:data( buf8.new($raw) ));
+    my @REQUIRED = «error-subcode»;
 
-        if $raw[0] ≠ 3 { # Not a notify
-            die("Can only build a notification message");
-        }
-        if $raw[1] ≠ 4 { # Not a hold time expiired
-            die("Can only build a Hold-Timer-Expired notification");
-        }
+    # Optional parameters
+    %params<error-subcode> //= 0;
 
-        return $obj;
-    };
+    if @REQUIRED.sort.list !~~ %params.keys.sort.list {
+        die("Did not provide proper options");
+    }
 
-    method from-hash(%params is copy)  {
-        # Delete unnecessary option
-        if %params<message-code>:exists {
-            if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
-            %params<message-code>:delete
-        }
-        if %params<error-code>:exists {
-            if (%params<error-code> ≠ 4) { die("Invalid message type for Hold-Timer-Expired"); }
-            %params<error-code>:delete
-        }
+    # Now we need to build the raw data.
+    my $data = buf8.new();
 
-        my @REQUIRED = «error-subcode»;
+    $data.append( 3 );   # Message type (NOTIFY)
+    $data.append( 4 );
+    $data.append( %params<error-subcode> );
 
-        # Optional parameters
-        %params<error-subcode> //= 0;
+    return self.bless(:data( buf8.new($data) ));
+};
 
-        if @REQUIRED.sort.list !~~ %params.keys.sort.list {
-            die("Did not provide proper options");
-        }
-
-        # Now we need to build the raw data.
-        my $data = buf8.new();
-
-        $data.append( 3 );   # Message type (NOTIFY)
-        $data.append( 4 );
-        $data.append( %params<error-subcode> );
-
-        return self.bless(:data( buf8.new($data) ));
-    };
-    
-    method raw() { return $.data; }
-}
+method raw() { return $.data; }
 
 # Register handler
 INIT { Net::BGP::Message::Notify.register(Net::BGP::Message::Notify::Hold-Timer-Expired) }

@@ -8,7 +8,8 @@
     "if",
     "DateTime::Monotonic",
     "NativeHelpers::Blob",
-    "OO::Monitors"
+    "OO::Monitors",
+    "StrictClass"
   ],
   "description" : "BGP Server Support",
   "license" : "Artistic-2.0",
