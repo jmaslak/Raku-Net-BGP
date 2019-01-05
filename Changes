@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.0.3  2019-01-05T16:22:37-07:00
     - Add announce() method to Net::BGP to announce prefixes easier
     - Improve documentation
     - Reformatting class modules (mostly whitespace and adding
