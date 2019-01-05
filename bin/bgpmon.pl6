@@ -57,24 +57,6 @@ sub MAIN(
         }
     }
 
-    # Build the announcements
-    my @announce-str = $announce.split(',') if $announce.defined;
-    my @announcements = @announce-str.map: -> $info {
-        my @parts = $info.split('-');
-        if @parts.elems ≠ 2 { die("Ammouncement must be in format <ip>-<nexthop>") }
-        Net::BGP::Message.from-hash(
-            {
-                message-name => 'UPDATE',
-                as-path      => '',             # XXX We do something different for eBGP
-                local-pref   => 100,            # XXX Set localpref
-                origin       => 'I',
-                next-hop     => @parts[1],
-                nlri         => @parts[0],
-            },
-            :asn32,     # Should change depending on host
-        );
-    }
-
     # Start the TCP socket
     $bgp.listen();
     lognote("Listening") unless $short-format;
@@ -96,9 +78,7 @@ sub MAIN(
                 if $event ~~ Net::BGP::Event::BGP-Message {
                     if $event.message ~~ Net::BGP::Message::Open {
                         if %sent-connections{ $event.connection-id }:!exists {
-                            for @announcements -> $bgpmsg {
-                                $bgp.send-bgp( $event.connection-id, $bgpmsg );
-                            }
+                            announce($bgp, $announce, $event.connection-id);
                             %sent-connections{ $event.connection-id } = True;
                         }
                     }
@@ -145,6 +125,21 @@ sub MAIN(
             }
             @str.list.sink;
         }
+    }
+}
+
+sub announce(Net::BGP:D $bgp, Str $announce, Int:D $connection-id -->Nil) {
+    # Build the announcements
+    my @announce-str = $announce.split(',') if $announce.defined;
+    for @announce-str -> $info {
+        my @parts = $info.split('-');
+        die "Announcement must be in format <ip>-<nexthop>" unless @parts.elems == 2;
+
+        $bgp.announce(
+            $connection-id,
+            [ @parts[0] ],
+            @parts[1],
+        );
     }
 }
 

@@ -20,7 +20,7 @@ use Net::BGP::Time;
 # method that takes a controller.
 
 use StrictClass;
-unit class Net::BGP::Controller:ver<0.0.1>:auth<cpan:JMASLAK>
+unit class Net::BGP::Controller:ver<0.0.3>:auth<cpan:JMASLAK>
     does StrictClass
     does Net::BGP::Controller-Handle-BGP;
 
@@ -102,7 +102,7 @@ multi method receive-bgp(
             $connection.close;
             return;
         }
-        
+
         my Net::BGP::Capability::MPBGP @afcap =
             @capabilities.grep( { $^c ~~ Net::BGP::Capability::MPBGP } );
 
@@ -141,7 +141,7 @@ multi method receive-bgp(
 
         self.send-keep-alive($connection);
     }
-    
+
     $.user-supplier.emit: Net::BGP::Event::BGP-Message.new(
         :message( $open ),
         :connection-id( $connection.id ),
@@ -311,7 +311,7 @@ method send-open(
             };
         };
     }
-    
+
     my $msg = Net::BGP::Message.from-hash(%msg-hash);
     $connection.send-bgp($msg);
 }

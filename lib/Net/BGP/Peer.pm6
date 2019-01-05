@@ -58,6 +58,14 @@ method set-channel($channel) {
     $!channel = $channel;
 }
 
+method do-asn32(-->Bool:D) {
+    return $.peer-supports-asn32 && $.local-supports-asn32;
+}
+
+method is-ibgp(-->Bool:D) {
+    return $.my-asn == $.peer-asn;
+}
+
 method remove-peer() {
     # We currently don't do anything
     # XXX We should close the channel and any other cleanup.
@@ -88,6 +96,11 @@ This keeps track of a peer's state and configuration.
 
 The current state of the connection.
 
+=head2 passive
+
+If true, this peer is "passive" - meaning that we will not initiate an outbound
+connection to this peer.
+
 =head2 peer-ip
 
 The IP address for the peer (String).
@@ -103,6 +116,18 @@ The ASN belonging to the peer.
 =head2 peer-af
 
 The AFI/SAFI combinations supported by the peer.
+
+=head2 peer-supports-asn32
+
+True if the peer sent an ASN32 capability.
+
+=head supports-capabilities
+
+True if the peer has sent a capability in the open message to us.
+
+=head last-message-received
+
+The monotonic time stamp of the last message received.
 
 =head2 my-asn
 
@@ -137,6 +162,15 @@ Does an ungraceful shutdown of the peer (if open).
 
 Returns true if the peer has indicated support for this AFI/SAFI address
 family specification.
+
+=head do-asn32
+
+Returns C<True> if we have negotiated 4 byte (32 bit) ASNs with the peer.
+Otherwise returns C<False>.
+
+=head is-ibgp
+
+Return C<True> if this peer is an iBGP peer, C<False> otherwise.
 
 =head1 AUTHOR
 

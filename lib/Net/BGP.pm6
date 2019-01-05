@@ -43,7 +43,7 @@ use Net::BGP::Message::Notify::Hold-Timer-Expired;
 use Net::BGP::Message::Update;
 
 use StrictClass;
-unit class Net::BGP:ver<0.0.2>:auth<cpan:JMASLAK> does StrictClass;
+unit class Net::BGP:ver<0.0.3>:auth<cpan:JMASLAK> does StrictClass;
 
 our subset PortNum of Int where ^65536;
 
@@ -92,6 +92,58 @@ method send-bgp(Int:D $connection-id, Net::BGP::Message:D $bgp) {
     );
 
     $!controller.connections.get($connection-id).command.send($msg);
+}
+
+method announce(
+    Int:D $connection-id,
+          @prefixes,
+    Str:D $next-hop,
+    Str:D $as-path? is copy = "",
+    Str:D $origin? = '?'
+    -->Nil
+) {
+    die "Invalid origin" unless $origin.fc eq 'i'|'e'|'?';
+  
+    my $connection  = $!controller.connections.get($connection-id);
+    my $ip = $connection.peer-ip;
+    my $peer = self.peer-get(:peer-ip($ip));
+    my Bool $asn32;
+    my Bool $ibgp;
+    my Int  $my-asn;
+    $peer.lock.protect: {
+        die "Peer not defined" unless $peer.defined;
+        $asn32  = $peer.do-asn32;
+        $ibgp   = $peer.is-ibgp;
+        $my-asn = $peer.my-asn;
+    }
+
+    # If it's an eBGP session, we want to prepend our ASN.
+    if ! $ibgp {
+        if $as-path ne '' {
+            $as-path = "$my-asn $as-path";
+        } else {
+            $as-path = ~$my-asn;
+        }
+    }
+
+    # We're going to assume we can fit 20 prefixes into an update
+    # message.  This is completely arbitrary and completely the wrong
+    # way to do this.
+    # XXX We should test for a special exception type when we construct
+    # the announcement.
+    
+    for @prefixes.batch(20) -> $batch {
+        my %hash;
+        %hash<message-name> = 'UPDATE';
+        %hash<as-path>      = $as-path;
+        %hash<local-pref>   = 100 if $ibgp;    # XXX Vlaue should be configurable
+        %hash<origin>       = $origin;
+        %hash<next-hop>     = $next-hop;
+        %hash<nlri>         = @prefixes;
+
+        my $msg = Net::BGP::Message.from-hash(%hash, :$asn32);
+        self.send-bgp($connection-id, $msg);
+    }
 }
 
 method listen(--> Nil) {

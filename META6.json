@@ -96,5 +96,5 @@
   "source-url" : "https://github.com/jmaslak/Perl6-Net-BGP.git",
   "tags" : [ ],
   "test-depends" : [ ],
-  "version" : "0.0.2"
+  "version" : "0.0.3"
 }
