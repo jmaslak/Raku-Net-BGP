@@ -15,6 +15,8 @@ unit class Net::BGP::Event::BGP-Message:ver<0.0.3>:auth<cpan:JMASLAK>
 
 has Net::BGP::Message $.message;
 
+has Int:D $creation-date = DateTime.now.posix;
+
 method message-name(-->Str) { 'BGP-Message' };
 
 method Str(-->Str) {

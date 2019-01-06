@@ -202,19 +202,37 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
     } elsif $bgp ~~ Net::BGP::Message::Update {
         if $bgp.nlri.elems {
             for @($bgp.nlri) -> $prefix {
-                push @out, short-line-announce($prefix, $event.peer, $bgp);
+                push @out, short-line-announce(
+                    $prefix,
+                    $event.peer,
+                    $bgp,
+                    $event.creation-date
+                );
             }
         } elsif $bgp.nlri6.elems {
             for @($bgp.nlri6) -> $prefix {
-                push @out, short-line-announce6($prefix, $event.peer, $bgp);
+                push @out, short-line-announce6(
+                    $prefix,
+                    $event.peer,
+                    $bgp,
+                    $event.creation-date
+                );
             }
         } elsif $bgp.withdrawn.elems {
             for @($bgp.withdrawn6) -> $prefix {
-                push @out, short-line-withdrawn($prefix, $event.peer);
+                push @out, short-line-withdrawn(
+                    $prefix,
+                    $event.peer,
+                    $event.creation-date
+                );
             }
         } elsif $bgp.withdrawn6.elems {
             for @($bgp.withdrawn6) -> $prefix {
-                push @out, short-line-withdrawn($prefix, $event.peer);
+                push @out, short-line-withdrawn(
+                    $prefix,
+                    $event.peer,
+                    $event.creation-date,
+                );
             }
         }
     } else {
@@ -241,12 +259,13 @@ sub short-line-header(-->Str:D) {
 sub short-line-announce(
     Net::BGP::CIDR $prefix,
     Str:D $peer,
-    Net::BGP::Message::Update $bgp
+    Net::BGP::Message::Update $bgp,
+    Int:D $message-date,
     -->Str:D
 ) {
     return join("|",
         "A",
-        DateTime.now.posix,
+        $message-date,
         $peer,
         $prefix,
         $bgp.next-hop,
@@ -258,12 +277,13 @@ sub short-line-announce(
 sub short-line-announce6(
     Net::BGP::CIDR $prefix,
     Str:D $peer,
-    Net::BGP::Message::Update $bgp
+    Net::BGP::Message::Update $bgp,
+    Int:D $message-date,
     -->Str:D
 ) {
     return join("|",
         "A",
-        DateTime.now.posix,
+        $message-date,
         $peer,
         $prefix,
         $bgp.next-hop6,
@@ -275,11 +295,12 @@ sub short-line-announce6(
 sub short-line-withdrawn(
     Net::BGP::CIDR $prefix,
     Str:D $peer,
+    Int:D $message-date,
     -->Str:D
 ) {
     return join("|",
         "W",
-        DateTime.now.posix,
+        $message-date,
         $peer,
         $prefix,
     );
@@ -287,11 +308,12 @@ sub short-line-withdrawn(
 
 sub short-line-open(
     Str:D $peer,
+    Int:D $message-date,
     -->Str:D
 ) {
     return join("|",
         "O",
-        DateTime.now.posix,
+        $message-date,
         $peer
     );
 }

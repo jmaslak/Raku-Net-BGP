@@ -17,4 +17,3 @@ Todo Items:
   * Allow specification of address families on a per-peer basis
   * Pause recept of incoming TCP packets while waiting for
     user/controller to process existing backlog
-  * Short log in bgpmon can have dates out of sequence
