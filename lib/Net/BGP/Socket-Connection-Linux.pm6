@@ -38,7 +38,6 @@ method write(buf8:D $buffer -->Nil) {
 
     my $rv = native-write($!socket-fd, nativecast(Pointer, $buffer), $buffer.bytes);
     if $rv ≠ $buffer {
-        die("could not finish write ($rv)");
         self.close if $!state ≠ SOCKET_CLOSED;
     }
 }
