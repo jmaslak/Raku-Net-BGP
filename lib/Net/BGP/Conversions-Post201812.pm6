@@ -15,8 +15,8 @@ sub _nuint16(buf8 $b where $b.bytes == 2 --> Int) is export {
     return $b.read-uint16(0, BigEndian);
 }
 
-sub _nuint32(buf8 $b where $b.bytes == 4 --> Int) is export {
-    return $b.read-uint32(0, BigEndian);
+sub _nuint32(buf8 $b, Int:D $pos? = 0 --> Int) is export {
+    return $b.read-uint32($pos, BigEndian);
 }
 
 sub _nuint128(buf8 $b where $b.bytes == 16 --> Int) is export {

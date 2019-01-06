@@ -27,7 +27,7 @@ multi sub nuint16(byte $a, byte $b --> Int) is export {
 multi sub nuint32(@a where @a.elems == 4 --> Int) is export {
     return nuint32(@a[0], @a[1], @a[2], @a[3]);
 }
-multi sub nuint32(buf8 $b where $b.bytes == 4 --> Int) is export { _nuint32($b) }
+multi sub nuint32(buf8 $b, Int $pos? = 0 --> Int) is export { _nuint32($b, $pos) }
 multi sub nuint32(byte $a, byte $b, byte $c, byte $d --> Int) is export {
     return $a × 2²⁴ + $b × 2¹⁶ + $c × 2⁸ + $d;
 }

@@ -76,7 +76,7 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
 };
 
 method ip(-->Str:D) {
-    return int-to-ipv4(nuint32( buf8.new( $.raw.subbuf( 3, 4 ) ) ));
+    return int-to-ipv4(nuint32($.raw, 3));
 }
 
 method Str(-->Str:D) { "Next-Hop=" ~ self.ip }

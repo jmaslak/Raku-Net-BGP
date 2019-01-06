@@ -32,6 +32,12 @@ unit class Net::BGP::Message::Update:ver<0.0.3>:auth<cpan:JMASLAK>
 
 has Bool:D $.asn32 is required;
 
+has Str   $.cached-next-hop;
+has Str   $.cached-as16-path;
+has Str   $.cached-as32-path;
+has Str   $.cached-origin;
+has Str:D @.cached-community-list;
+
 method new() {
     die("Must use from-raw or from-hash to construct a new object");
 }
@@ -60,6 +66,25 @@ method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
         self.data.subbuf( self.path-start, self.path-length),
         :$!asn32
     );
+    for @!cached-path-attributes -> $attr {
+        given $attr {
+            when Net::BGP::Path-Attribute::Next-Hop {
+                $!cached-next-hop       = $attr.ip;
+            }
+            when Net::BGP::Path-Attribute::AS-Path {
+                $!cached-as16-path      = $attr.as-path;
+            }
+            when Net::BGP::Path-Attribute::AS4-Path {
+                $!cached-as32-path      = $attr.as-path;
+            }
+            when Net::BGP::Path-Attribute::Origin {
+                $!cached-origin         = $attr.origin;
+            }
+            when Net::BGP::Path-Attribute::Community {
+                @!cached-community-list = $attr.community-list;
+            }
+        }
+    }
     return @!cached-path-attributes;
 }
 
@@ -364,31 +389,29 @@ method withdrawn6(-->Array[Net::BGP::CIDR:D]) {
 }
 
 method as-path(-->Str) {
-    my $attr = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
-    return Str unless $attr.defined;
+    self.path-attributes.sink;
 
     if self.asn32 {
         # We don't need to look at AS4-Path.
-        return $attr.as-path;
+        return $!cached-as16-path; # A bit of a misnomer in name XXX
     } else {
         # So we're a 16 bit ASN BGP speaker.  Let's look at AS4.
         
         # Do we have an AS4-Path?
-        my $as4 = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS4-Path );
+        return $!cached-as16-path if ! $!cached-as32-path;
 
-        if ! $as4.defined {
-            return $attr.as-path;  # Just use the AS-Path.
-        }
+        my $as4  = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS4-Path );
+        my $as   = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
 
         # XXX We need to look for AS4_Aggregator and check that
         # Aggregator, if found, is 23456.
         
-        if $attr.path-length < $as4.path-length {
-            return $attr.as-path;
-        } elsif $attr.path-length == $as4.path-length {
+        if $as.path-length < $as4.path-length {
+            return $as.as-path;
+        } elsif $as.path-length == $as4.path-length {
             return $as4.as4-path;
         } else {
-            my $prefix = $attr.as-path-first($attr.path-length - $as4.path-length);
+            my $prefix = $as.as-path-first($as.path-length - $as4.path-length);
             return "$prefix " ~ $as4.as4-path;
         }
     }
@@ -396,8 +419,8 @@ method as-path(-->Str) {
 }
 
 method origin(-->Str) {
-    my $attr = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Origin );
-    return $attr.defined ?? $attr.origin !! Str;
+    self.path-attributes.sink;
+    return $!cached-origin;
 }
 
 method path(-->Str) {
@@ -411,18 +434,16 @@ method path(-->Str) {
 }
 
 method community-list(-->Array[Str:D]) {
-    my Str:D @ret;
-
-    my $communities = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Community );
-    @ret = $communities.community-list if $communities.defined;
-    return @ret;
+    self.path-attributes.sink;
+    return @!cached-community-list;
 }
 
 method next-hop(-->Str) {
+    return $!cached-next-hop if $!cached-next-hop.defined;
     my $nh = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Next-Hop );
     return unless $nh.defined;
     
-    return $nh.ip;
+    return $!cached-next-hop = $nh.ip;
 }
 
 method raw() { return $.data; }
