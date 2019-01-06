@@ -53,6 +53,7 @@ subtest 'Event' => {
         is $msg.connection-id, 1, 'Connection ID is proper';
         is $msg.message-name, 'NOOP', 'Message type has proper default';
         is $msg.is-error, False, 'Message is not an error';
+        is-approx $msg.creation-date, DateTime.now.posix, 30, "Date time appears correct";
 
         done-testing;
     };
@@ -67,6 +68,7 @@ subtest 'Event' => {
         is $msg.message.message-code, 1, 'BGP message type is correct';
         is $msg.message.message-name, 'OPEN', 'BGP message code is correct';
         is $msg.message.parameters.elems, 0, "Proper number of parameter elements";
+        is-approx $msg.creation-date, DateTime.now.posix, 30, "Date time appears correct";
 
         done-testing;
     };
@@ -80,6 +82,7 @@ subtest 'Event' => {
         is $msg.is-error, False, 'Message is not an error';
         is $msg.message.message-code, 1, 'BGP message type is correct';
         is $msg.message.message-name, 'OPEN', 'BGP message code is correct';
+        is-approx $msg.creation-date, DateTime.now.posix, 30, "Date time appears correct";
 
         my @p = $msg.message.parameters;
         is @p.elems, 2, "Proper number of parameter elements";

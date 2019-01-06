@@ -10,6 +10,8 @@ unit class Net::BGP::Event:ver<0.0.3>:auth<cpan:JMASLAK>;
 has Int $.connection-id;
 has Str $.peer;
 
+has Int:D $.creation-date = DateTime.now.posix;
+
 method message-name(-->Str) { 'NOOP' };
 method is-error(-->Bool)    { False  };
 
@@ -39,6 +41,10 @@ This contains the appropriate connection ID associated with the notification.
 =head2 peer
 
 This contains the IP address of the peer.
+
+=head2 creation-date
+
+The date/time in Posix format when this object was created.
 
 =head1 METHODS
 

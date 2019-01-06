@@ -198,7 +198,7 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
 
     my $bgp = $event.message;
     if $bgp ~~ Net::BGP::Message::Open {
-        push @out, short-line-open($event.peer);
+        push @out, short-line-open($event.peer, $event.creation-date);
     } elsif $bgp ~~ Net::BGP::Message::Update {
         if $bgp.nlri.elems {
             for @($bgp.nlri) -> $prefix {
