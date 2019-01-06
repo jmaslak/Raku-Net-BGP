@@ -75,7 +75,7 @@ method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
                 $!cached-as16-path      = $attr.as-path;
             }
             when Net::BGP::Path-Attribute::AS4-Path {
-                $!cached-as32-path      = $attr.as-path;
+                $!cached-as32-path      = $attr.as4-path;
             }
             when Net::BGP::Path-Attribute::Origin {
                 $!cached-origin         = $attr.origin;
