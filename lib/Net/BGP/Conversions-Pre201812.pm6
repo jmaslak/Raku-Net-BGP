@@ -15,7 +15,7 @@ sub _nuint16(buf8 $b where $b.bytes == 2 --> Int) is export {
     return $b[0] × 2⁸ + $b[1];
 }
 
-sub _nuint32(buf8 $b where $b.bytes == 4, Int:D $pos = 0 --> Int) is export {
+sub _nuint32(buf8 $b, Int:D $pos? = 0 --> Int) is export {
     return $b[0+$pos] * 2²⁴ + $b[1+$pos] * 2¹⁶ + $b[2+$pos] * 2⁸ + $b[3+$pos];
 }
 
