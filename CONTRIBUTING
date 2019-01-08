@@ -15,6 +15,10 @@ If you want to help:
     specifically otherwise.  I'll use your email and PAUSE ID (if
     applicable) if I can find it.  If I get this wrong or you change
     either, just jot me a note or PR to change it.
+  * If you make changes that might impact the performance of the
+    Net::BGP::Update object or its' methods, please run "runbench.sh"
+    in the top directory before and after making the changes to
+    validate you did not harm performance.
 
 Some things you can do that would make me smile:
 
@@ -22,6 +26,7 @@ Some things you can do that would make me smile:
     want to do with the module.  Feel free to do any of them (but if it
     is a bigger item, you might jot me a note first so that I don't
     accidentally duplicate your effort!)
+  * Performance!!!
   * I'm sure this isn't very idiomatic Perl 6, and would love patches
     that help me with that!
   * Write tests for things that are known to be broken (UTF-8 file
