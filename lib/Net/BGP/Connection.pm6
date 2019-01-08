@@ -29,6 +29,7 @@ has Supplier:D          $.user-supplier    is required; # To communicate with us
 has buf8:D              $.buffer = buf8.new;
 has Bool:D              $.closed           is rw = False;
 has Bool:D              $.asn32            is rw = False;
+has IO::Handle          $.debug            is rw;
 
 has Net::BGP::Controller-Handle-BGP:D $.bgp-handler is required;
 
@@ -37,6 +38,7 @@ method handle-messages(-->Nil) {
     react {
         whenever self.socket.Supply(:bin) -> $buf {
             self.buffer.append($buf);
+            $!debug.write($buf) if $!debug.defined;
             loop {
                 my $bgpmsg = self.pop-bgp-message();
                 if ! $bgpmsg.defined { last; } # Exit loop
@@ -174,6 +176,8 @@ method close(-->Nil) {
     self.socket.close;
     self.closed = True;
     $.bgp-handler.connection-closed(self);
+    $!debug.close if $!debug.defined;
+    $!debug = IO::Handle;
     # XXX Do we need to signal anything here?
 }
 

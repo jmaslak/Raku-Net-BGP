@@ -174,6 +174,12 @@ method listen(--> Nil) {
                     :remote-port($socket.peer-port),
                     :inbound(True),
                 );
+                if %*ENV<bgp_debug_prefix>:exists {
+                    my $prefix = %*ENV<bgp_debug_prefix>;
+                    if $prefix ne '' {
+                        $conn.debug = open "{$prefix}.{$conn.id}", :w;
+                    }
+                }
 
                 # Set up connection object
                 $!controller.connections.add($conn);
@@ -320,6 +326,12 @@ method connection-handler(Promise:D $socket-promise, Net::BGP::Peer:D $peer) {
 	:remote-port($socket.peer-port),
 	:inbound(False),
     );
+    if %*ENV<bgp_debug_prefix>:exists {
+        my $prefix = %*ENV<bgp_debug_prefix>;
+        if $prefix ne '' {
+            $conn.debug = open "{$prefix}.{$conn.id}", :w;
+        }
+    }
 
     # Add peer to connection
     $peer.connection = $conn;
