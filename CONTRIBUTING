@@ -16,9 +16,9 @@ If you want to help:
     applicable) if I can find it.  If I get this wrong or you change
     either, just jot me a note or PR to change it.
   * If you make changes that might impact the performance of the
-    Net::BGP::Update object or its' methods, please run "runbench.sh"
-    in the top directory before and after making the changes to
-    validate you did not harm performance.
+    Net::BGP::Message::Update object or its' methods, please run
+    the "runbench.sh" script in the top directory before and after
+    making the changes to validate you did not harm performance.
 
 Some things you can do that would make me smile:
 
