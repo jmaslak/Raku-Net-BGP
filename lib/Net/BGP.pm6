@@ -107,7 +107,8 @@ method announce(
           @prefixes,
     Str:D $next-hop,
     Str:D $as-path? is copy = "",
-    Str:D $origin? = '?'
+    Str:D $origin? = '?',
+          :@attrs? = []
     -->Nil
 ) {
     die "Invalid origin" unless $origin.fc eq 'i'|'e'|'?';
@@ -142,12 +143,13 @@ method announce(
     
     for @prefixes.batch(20) -> $batch {
         my %hash;
-        %hash<message-name> = 'UPDATE';
-        %hash<as-path>      = $as-path;
-        %hash<local-pref>   = 100 if $ibgp;    # XXX Vlaue should be configurable
-        %hash<origin>       = $origin;
-        %hash<next-hop>     = $next-hop;
-        %hash<nlri>         = @prefixes;
+        %hash<message-name>    = 'UPDATE';
+        %hash<as-path>         = $as-path;
+        %hash<local-pref>      = 100 if $ibgp;    # XXX Vlaue should be configurable
+        %hash<origin>          = $origin;
+        %hash<next-hop>        = $next-hop;
+        %hash<nlri>            = @prefixes;
+        %hash<path-attributes> = @attrs;
 
         my $msg = Net::BGP::Message.from-hash(%hash, :$asn32);
         self.send-bgp($connection-id, $msg);

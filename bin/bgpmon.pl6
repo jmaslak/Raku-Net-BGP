@@ -24,7 +24,8 @@ sub MAIN(
     Str                  :$announce,
     Bool:D               :$short-format = False,
     Bool:D               :$af-ipv6 = False,
-    Bool:D               :$allow-unknown-peers = False, 
+    Bool:D               :$allow-unknown-peers = False,
+    Bool:D               :$send-experimental-path-attribute = False,
     *@args is copy
 ) {
     my $bgp = Net::BGP.new(
@@ -80,7 +81,18 @@ sub MAIN(
                 if $event ~~ Net::BGP::Event::BGP-Message {
                     if $event.message ~~ Net::BGP::Message::Open {
                         if %sent-connections{ $event.connection-id }:!exists {
-                            announce($bgp, $announce, $event.connection-id);
+                            if $send-experimental-path-attribute {
+                                my %attr;
+                                %attr<path-attribute-code> = 255;
+                                %attr<optional>            = 1;
+                                %attr<transitive>          = 1;
+                                %attr<value>               = buf8.new(0..31);
+                                my @attrs;
+                                @attrs.push(%attr);
+                                announce($bgp, $announce, $event.connection-id, :@attrs );
+                            } else {
+                                announce($bgp, $announce, $event.connection-id);
+                            }
                             %sent-connections{ $event.connection-id } = True;
                         }
                     }
@@ -130,7 +142,7 @@ sub MAIN(
     }
 }
 
-sub announce(Net::BGP:D $bgp, Str $announce, Int:D $connection-id -->Nil) {
+sub announce(Net::BGP:D $bgp, Str $announce, Int:D $connection-id, :@attrs? -->Nil) {
     # Build the announcements
     my @announce-str = $announce.split(',') if $announce.defined;
     for @announce-str -> $info {
@@ -141,6 +153,7 @@ sub announce(Net::BGP:D $bgp, Str $announce, Int:D $connection-id -->Nil) {
             $connection-id,
             [ @parts[0] ],
             @parts[1],
+            :@attrs,
         );
     }
 }

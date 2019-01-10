@@ -138,7 +138,7 @@ method from-hash(%params is copy, Bool:D :$asn32) {
     my @REQUIRED = «
         withdrawn origin as-path as4-path next-hop med local-pref
         atomic-aggregate originator-id cluster-list community nlri
-        address-family
+        address-family path-attributes
     »;
 
     %params<withdrawn>        //= [];
@@ -154,6 +154,7 @@ method from-hash(%params is copy, Bool:D :$asn32) {
     %params<cluster-list>     //= '';
     %params<nlri>             //= [];
     %params<address-family>   //= 'ipv4';
+    %params<path-attributes>  //= [];
 
     # Delete unnecessary option
     if %params<message-code>:exists {
@@ -322,6 +323,11 @@ method from-hash(%params is copy, Bool:D :$asn32) {
             },
             :asn32
         ).raw;
+    }
+
+    my @attrs = @(%params<path-attributes>);
+    for @attrs -> $attr {
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash( $attr, :$asn32 ).raw;
     }
 
     my $msg = buf8.new( 2 );                        # Message type
