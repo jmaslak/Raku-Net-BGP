@@ -141,6 +141,8 @@ method announce(
     # XXX We should test for a special exception type when we construct
     # the announcement.
     
+    my $af = @prefixes.grep( { $_.contains(':') } ).elems ?? 'ipv6' !! 'ipv4';
+    
     for @prefixes.batch(20) -> $batch {
         my %hash;
         %hash<message-name>    = 'UPDATE';
@@ -150,6 +152,7 @@ method announce(
         %hash<next-hop>        = $next-hop;
         %hash<nlri>            = @prefixes;
         %hash<path-attributes> = @attrs;
+        %hash<address-family>  = $af;
 
         my $msg = Net::BGP::Message.from-hash(%hash, :$asn32);
         self.send-bgp($connection-id, $msg);
