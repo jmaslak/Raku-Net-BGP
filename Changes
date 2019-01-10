@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.0.5  2019-01-09T21:28:32-07:00
     - Add allow-unknown-peers
     - Add undocumented option to bgpmon to announce the RIPE test
       attribute - see https://docs.google.com/spreadsheets/d/1U42-HCi3RzXkqVxd8e2yLdK9okFZl77tWZv13EsEzO0/edit#gid=0

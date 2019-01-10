@@ -37,6 +37,11 @@ user-channel
 
 Returns the channel communicate for the BGP server process to communicate to user code.
 
+add-unknown-peers
+-----------------
+
+If this is `True` (default is `False`), connections from unknown peers are allowed. When they first connect, a new peer is added to the peer list using the remote address and the ASN sent in the peer's OPEN message.
+
 METHODS
 =======
 
