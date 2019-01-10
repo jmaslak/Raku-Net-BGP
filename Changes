@@ -1,6 +1,7 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Add allow-unknown-peers
 
 0.0.4  2019-01-06T11:19:23-07:00
     - Improve performance of IPv4 UPDATE messages

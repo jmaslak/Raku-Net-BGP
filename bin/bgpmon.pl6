@@ -24,12 +24,14 @@ sub MAIN(
     Str                  :$announce,
     Bool:D               :$short-format = False,
     Bool:D               :$af-ipv6 = False,
+    Bool:D               :$allow-unknown-peers = False, 
     *@args is copy
 ) {
     my $bgp = Net::BGP.new(
         :$port,
         :$my-asn,
         :identifier(ipv4-to-int($my-bgp-id)),
+        :add-unknown-peers($allow-unknown-peers),
     );
 
     # Add peers

@@ -39,6 +39,12 @@ will send messages to the BGP server.
 Returns the channel communicate for the BGP server process to communicate to
 user code.
 
+=head2 add-unknown-peers
+
+If this is C<True> (default is C<False>), connections from unknown peers are
+allowed.  When they first connect, a new peer is added to the peer list using
+the remote address and the ASN sent in the peer's OPEN message.
+
 =head1 METHODS
 
 =head2 listen

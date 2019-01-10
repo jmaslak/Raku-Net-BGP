@@ -24,9 +24,10 @@ unit class Net::BGP::Controller:ver<0.0.4>:auth<cpan:JMASLAK>
     does StrictClass
     does Net::BGP::Controller-Handle-BGP;
 
-has Int:D      $.my-asn          is required where ^(2³²);
-has Int:D      $.identifier      is required where ^(2³²);
-has Supplier:D $.user-supplier   is required;
+has Int:D      $.my-asn            is required where ^(2³²);
+has Int:D      $.identifier        is required where ^(2³²);
+has Supplier:D $.user-supplier     is required;
+has Bool:D     $.add-unknown-peers is required;
 
 has Net::BGP::Peer-List:D       $.peers       = Net::BGP::Peer-List.new(:$!my-asn);
 has Net::BGP::Connection-List:D $.connections = Net::BGP::Connection-List.new;
@@ -40,10 +41,38 @@ multi method receive-bgp(
     # Does the peer exist?
     my $p = self.peers.get($connection.remote-ip);
     if ! $p.defined {
-        # Bad peer, we just close the connection, it's an invalid
-        # peer.
-        $connection.close;
-        return;
+        if ! $!add-unknown-peers {
+            # Bad peer, we just close the connection, it's an invalid
+            # peer.
+            $connection.close;
+            return;
+        } else {
+            my @capabilities;
+            for $open.parameters -> $param {
+                if $param ~~ Net::BGP::Parameter::Capabilities {
+                    for $param.capabilities -> $cap {
+                        @capabilities.push: $cap;
+                    }
+                }
+            }
+            # We allow unknown peers.  So we'll add the peer.
+            my $asn32cap =
+                @capabilities.grep( { $^c ~~ Net::BGP::Capability::ASN32 } ).first;
+
+            my $peer-asn = $asn32cap.defined ?? $asn32cap.asn !! $open.asn;
+            if ($open.asn ≠ 23456) && ($peer-asn ≥ (2¹⁶)) {
+                die("Open ASN is not correct for a 32 bit ASN");
+            }
+
+            # We have the peer IP and the ASN, so add it.
+            $!peers.add(
+                :$peer-asn,
+                :peer-ip($connection.remote-ip),
+                :passive
+            );
+
+            $p = self.peers.get($connection.remote-ip);
+        }
     }
 
     # Process Parmaters

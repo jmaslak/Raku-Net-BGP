@@ -55,27 +55,35 @@ has Channel  $.user-channel;        # User channel (for the user to receive the 
 
 has Net::BGP::Controller $.controller is rw;
 
-has Int:D $.my-asn     is required where ^(2³²);
-has Int:D $.identifier is required where ^(2³²);
+has Int:D  $.my-asn     is required where ^(2³²);
+has Int:D  $.identifier is required where ^(2³²);
+has Bool:D $.add-unknown-peers = False;
 
 has Str:D %!md5;
 
 submethod BUILD( *%args ) {
     for %args.keys -> $k {
         given $k {
-            when 'port'       { $!port       = %args{$k} if %args{$k}.defined }
-            when 'my-asn'     { $!my-asn     = %args{$k} }
-            when 'identifier' { $!identifier = %args{$k} }
+            when 'port'              { $!port              = %args{$k} if %args{$k}.defined }
+            when 'my-asn'            { $!my-asn            = %args{$k} }
+            when 'identifier'        { $!identifier        = %args{$k} }
+            when 'add-unknown-peers' { $!add-unknown-peers = %args{$k} }
             default { die("Invalid attribute set in call to constructor: $k") }
         }
     }
 
     $!user-supplier = Supplier.new;
     $!user-channel  = $!user-supplier.Supply.Channel;
+
+    # This really shouldn't be necessary, but I seem to have tripped a
+    # Rakudo bug.
+    my $unknown = $!add-unknown-peers // False;
+
     $!controller    = Net::BGP::Controller.new(
         :$!my-asn,
         :$!identifier,
         :$!user-supplier,
+        :add-unknown-peers($unknown),
     );
 }
 

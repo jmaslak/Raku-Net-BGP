@@ -61,6 +61,13 @@ Instead, it will simply await connections.
 This is the BGP port to listen on.  The default port, 179, requires elevated
 privileges, so this may be useful for user-level BGP code.
 
+=head2 --allow-unknown-peers
+
+If this is present, peers that aren't explictly defined will be allowed to
+connect.  We'll accept whatever ASN they provide on the initial connection
+(this initial ASN value will be remembered until this script exits).  This is
+useful to minimize configuration requirements.
+
 =head2 --cidr-filter <cidr-list>
 
 This is a comma seperated lists of CIDRS.  If an UPDATE message is received
