@@ -300,7 +300,6 @@ method connect(Str:D $host, Int:D $port where ^(2¹⁶) -->Promise:D) {
         my $rv = native-connect($!socket-fd, $addrinfo.ai_addr, $size);
         self.freeaddrinfo($addrinfo);
         if $rv {
-            die("Could not connect ($rv)");
             $promise.break("Could not connect ($rv)");
         } else {
             $!state = SOCKET_BOUND;
