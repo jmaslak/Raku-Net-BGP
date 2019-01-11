@@ -42,6 +42,8 @@ subtest 'Open Message w/ Capabilities', {
     is $bgp.asn, :16('1020'), 'ASN is correct';
     is $bgp.hold-time, 3, 'Hold time is correct';
     is $bgp.identifier, :16('01020304'), 'BGP identifier is correct';
+    is $bgp.ipv4-support, True, 'IPv4 Support';
+    is $bgp.ipv6-support, True, 'IPv6 Support';
     is $bgp.parameters.elems, 1, "Proper number of Parameters";
     ok $bgp.parameters[0] ~~ Net::BGP::Parameter::Capabilities, "Parameter is a Capabilitiy";
     is $bgp.parameters[0].parameter-code, 2, "Parameter has proper code";

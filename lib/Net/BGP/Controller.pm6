@@ -39,6 +39,8 @@ multi method receive-bgp(
     Str:D $peer,
 ) {
     # Does the peer exist?
+    my $new-peer = False;
+
     my $p = self.peers.get($connection.remote-ip);
     if ! $p.defined {
         if ! $!add-unknown-peers {
@@ -47,6 +49,7 @@ multi method receive-bgp(
             $connection.close;
             return;
         } else {
+            $new-peer = True;
             my @capabilities;
             for $open.parameters -> $param {
                 if $param ~~ Net::BGP::Parameter::Capabilities {
@@ -141,6 +144,8 @@ multi method receive-bgp(
         for @afcap -> $cap {
             $p.peer-af.push: Net::BGP::AFI-SAFI.from-str($cap.afi, $cap.safi);
         }
+
+        if $new-peer { $p.my-af = $p.peer-af }
 
         $p.last-message-received = monotonic-whole-seconds;
 

@@ -19,6 +19,8 @@ subtest 'Open Message', {
     is $bgp.asn, :16('1020'), 'ASN is correct';
     is $bgp.hold-time, 3, 'Hold time is correct';
     is $bgp.identifier, :16('01020304'), 'BGP identifier is correct';
+    is $bgp.ipv4-support, True, 'Supports IPv4';
+    is $bgp.ipv6-support, False, 'Supports IPv6';
 
     my $from-hash = Net::BGP::Message.from-hash(
         {

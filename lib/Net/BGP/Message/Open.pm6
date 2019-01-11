@@ -80,6 +80,23 @@ method capabilities(-->Array[Net::BGP::Capability:D]) {
     return @cap;
 }
 
+method ipv4-support(-->Bool:D) {
+    my @capabilities = self.capabilities.grep( { $_ ~~ Net::BGP::Capability::MPBGP } );
+    if @capabilities.elems == 0 { return True; } # Not MPBGP
+    for @capabilities -> $mpcap {
+        if $mpcap.afi eq 'IP' and $mpcap.safi eq 'unicast' { return True }
+    }
+    return False;
+}
+
+method ipv6-support(-->Bool:D) {
+    my @capabilities = self.capabilities;
+    for @capabilities.grep( { $_ ~~ Net::BGP::Capability::MPBGP } ) -> $mpcap {
+        if $mpcap.afi eq 'IPv6' and $mpcap.safi eq 'unicast' { return True }
+    }
+    return False;
+}
+
 method asn32-support(-->Bool:D) {
     return self.capabilities.first( { $_ ~~ Net::BGP::Capability::ASN32 } ).defined;
 }
@@ -229,6 +246,14 @@ The ASN field of the source of the OPEN message
 =head2 asn32-support
 
 Returns true if the peer has 32 bit ASN support.
+
+=head2 ipv4-support
+
+Returns true if the peer supports the IPv4 unicast address family.
+
+=head2 ipv6-support
+
+Returns true if the peer supports the IPv6 unicast address family.
 
 =head2 capabilities
 
