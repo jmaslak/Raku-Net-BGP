@@ -20,7 +20,7 @@ use Net::BGP::Time;
 # method that takes a controller.
 
 use StrictClass;
-unit class Net::BGP::Controller:ver<0.0.5>:auth<cpan:JMASLAK>
+unit class Net::BGP::Controller:ver<0.0.6>:auth<cpan:JMASLAK>
     does StrictClass
     does Net::BGP::Controller-Handle-BGP;
 
