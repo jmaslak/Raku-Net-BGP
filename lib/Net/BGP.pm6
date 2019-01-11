@@ -146,9 +146,6 @@ method announce(
     
     my $af = @prefixes.grep( { $_.contains(':') } ).elems ?? 'ipv6' !! 'ipv4';
 
-    say @communities.perl;
-    say @communities.elems;
-    
     for @prefixes.batch(20) -> $batch {
         my %hash;
         %hash<message-name>    = 'UPDATE';
