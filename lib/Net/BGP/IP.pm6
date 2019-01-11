@@ -16,18 +16,18 @@ our subset ipv4 of Str where / ^ @octet**4 % '.' $ /;
 our subset ipv4_int of UInt where ^(2³²);
 our subset ipv4_len of UInt where ^33;
 
-use NativeCall;
-sub inet_aton(Str $str is encoded('utf8'), uint32 $addr is rw -->uint32) is native {*};
-sub ntohl(uint32 $net -->uint32) is native {*};
+# use NativeCall;
+# sub inet_aton(Str $str is encoded('utf8'), uint32 $addr is rw -->uint32) is native {*};
+# sub ntohl(uint32 $net -->uint32) is native {*};
 
 # XXX - Regexes are way slow.
 # our sub ipv4-to-int(ipv4:D $ip -->uint32) is export {
 our sub ipv4-to-int(Str:D $ip -->uint32) is export {
-    my uint32 $result = 0;
-    my $ret = inet_aton($ip, $result);
-    die("Could not convert name to IP") if $ret == 0;
-    return ntohl($result);
-
+    # my uint32 $result = 0;
+    # my $ret = inet_aton($ip, $result);
+    # die("Could not convert name to IP") if $ret == 0;
+    # return ntohl($result);
+    # 
     my uint32 $ipval = 0;
     for $ip.split('.') -> Int(Str) $part {
         $ipval = $ipval +< 8 + $part;
