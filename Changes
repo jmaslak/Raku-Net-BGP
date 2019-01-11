@@ -1,6 +1,9 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Allow bgpmon to send communities along with new prefix
+      advertisements
+    - Allow bgpmon to listen on IPv6 addresses
 
 0.0.5  2019-01-09T21:28:32-07:00
     - Add allow-unknown-peers

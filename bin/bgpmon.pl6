@@ -16,6 +16,7 @@ my subset Asn  of UInt where ^2¹⁶;
 sub MAIN(
     Bool:D               :$passive = False,
     Int:D                :$port = 179,
+    Str:D                :$listen-host = '0.0.0.0',
     Int:D                :$my-asn,
     Int                  :$max-log-messages,
     Net::BGP::IP::ipv4:D :$my-bgp-id,
@@ -26,10 +27,12 @@ sub MAIN(
     Bool:D               :$af-ipv6 = False,
     Bool:D               :$allow-unknown-peers = False,
     Bool:D               :$send-experimental-path-attribute = False,
+    Str:D                :$communities = '',
     *@args is copy
 ) {
     my $bgp = Net::BGP.new(
         :$port,
+        :$listen-host,
         :$my-asn,
         :identifier(ipv4-to-int($my-bgp-id)),
         :add-unknown-peers($allow-unknown-peers),
@@ -81,6 +84,10 @@ sub MAIN(
                 if $event ~~ Net::BGP::Event::BGP-Message {
                     if $event.message ~~ Net::BGP::Message::Open {
                         if %sent-connections{ $event.connection-id }:!exists {
+
+                            my @communities;
+                            @communities = $communities.split(',') if $communities ne '';
+
                             if $send-experimental-path-attribute {
                                 my %attr;
                                 %attr<path-attribute-code> = 255;
@@ -89,9 +96,20 @@ sub MAIN(
                                 %attr<value>               = buf8.new(0..31);
                                 my @attrs;
                                 @attrs.push(%attr);
-                                announce($bgp, $announce, $event.connection-id, :@attrs );
+                                announce(
+                                    $bgp,
+                                    $announce,
+                                    $event.connection-id,
+                                    :@attrs,
+                                    :@communities,
+                                );
                             } else {
-                                announce($bgp, $announce, $event.connection-id);
+                                announce(
+                                    $bgp,
+                                    $announce,
+                                    $event.connection-id,
+                                    :@communities
+                                );
                             }
                             %sent-connections{ $event.connection-id } = True;
                         }
@@ -142,7 +160,14 @@ sub MAIN(
     }
 }
 
-sub announce(Net::BGP:D $bgp, Str $announce, Int:D $connection-id, :@attrs? -->Nil) {
+sub announce(
+    Net::BGP:D $bgp,
+    Str        $announce,
+    Int:D      $connection-id,
+               :@attrs?,
+               :@communities?
+    -->Nil
+) {
     # Build the announcements
     my @announce-str = $announce.split(',') if $announce.defined;
     for @announce-str -> $info {
@@ -154,6 +179,7 @@ sub announce(Net::BGP:D $bgp, Str $announce, Int:D $connection-id, :@attrs? -->N
             [ @parts[0] ],
             @parts[1],
             :@attrs,
+            :@communities,
         );
     }
 }

@@ -61,6 +61,11 @@ Instead, it will simply await connections.
 This is the BGP port to listen on.  The default port, 179, requires elevated
 privileges, so this may be useful for user-level BGP code.
 
+=head2 --listen-host=<host>
+
+This is the BGP host to listen on.  The default host, 0.0.0.0, is equivilent
+to "all IPv4 addresses."  Use C<::> if you would like to listen to IPv6 too.
+
 =head2 --allow-unknown-peers
 
 If this is present, peers that aren't explictly defined will be allowed to
@@ -82,6 +87,11 @@ have no filtering.
 A comma seperated list of prefixes to announce along with the appropriate next
 hop.  The next hop is seperated from the prefix by a hypen, while multiple
 prefixes are seperated by a comma.
+
+=head2 --communities <community-list>
+
+A comma seperated list of communities to advertise with any C<--announce>
+routes provided.
 
 =head2 --af-ipv6
 

@@ -48,6 +48,7 @@ unit class Net::BGP:ver<0.0.5>:auth<cpan:JMASLAK> does StrictClass;
 our subset PortNum of Int where ^65536;
 
 has PortNum:D $.port is default(179);
+has Str:D     $.listen-host is default('0.0.0.0');
 
 has Channel  $.listener-channel;    # Listener channel
 has Supplier $!user-supplier;       # Supplier object (to send events to the user)
@@ -65,6 +66,7 @@ submethod BUILD( *%args ) {
     for %args.keys -> $k {
         given $k {
             when 'port'              { $!port              = %args{$k} if %args{$k}.defined }
+            when 'listen-host'       { $!listen-host       = %args{$k} }
             when 'my-asn'            { $!my-asn            = %args{$k} }
             when 'identifier'        { $!identifier        = %args{$k} }
             when 'add-unknown-peers' { $!add-unknown-peers = %args{$k} }
@@ -108,7 +110,8 @@ method announce(
     Str:D $next-hop,
     Str:D $as-path? is copy = "",
     Str:D $origin? = '?',
-          :@attrs? = []
+          :@attrs? = [],
+          :@communities? = []
     -->Nil
 ) {
     die "Invalid origin" unless $origin.fc eq 'i'|'e'|'?';
@@ -142,6 +145,9 @@ method announce(
     # the announcement.
     
     my $af = @prefixes.grep( { $_.contains(':') } ).elems ?? 'ipv6' !! 'ipv4';
+
+    say @communities.perl;
+    say @communities.elems;
     
     for @prefixes.batch(20) -> $batch {
         my %hash;
@@ -152,6 +158,11 @@ method announce(
         %hash<next-hop>        = $next-hop;
         %hash<nlri>            = @prefixes;
         %hash<path-attributes> = @attrs;
+
+        if @communities.elems {
+            %hash<community>   = @communities;
+        }
+
         %hash<address-family>  = $af;
 
         my $msg = Net::BGP::Message.from-hash(%hash, :$asn32);
@@ -172,7 +183,7 @@ method listen(--> Nil) {
     my $listen-promise = Promise.new;
 
     start {
-        $listen-socket = Net::BGP::Socket.new(:my-host("0.0.0.0"), :my-port($.port));
+        $listen-socket = Net::BGP::Socket.new(:my-host($.listen-host), :my-port($.port));
         for %!md5.keys -> $h { $listen-socket.add-md5($h, %!md5{$h}) }
         $listen-socket.listen;
 
