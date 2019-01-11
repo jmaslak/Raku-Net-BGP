@@ -30,6 +30,8 @@ sub MAIN(
     Str:D                :$communities = '',
     *@args is copy
 ) {
+    $*OUT.out-buffer = False;
+
     my $bgp = Net::BGP.new(
         :$port,
         :$listen-host,
