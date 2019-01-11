@@ -9,7 +9,7 @@ use Net::BGP::Message;
 use Net::BGP::Event;
 
 use StrictClass;
-unit class Net::BGP::Event::BGP-Message:ver<0.0.6>:auth<cpan:JMASLAK>
+unit class Net::BGP::Event::BGP-Message:ver<0.0.7>:auth<cpan:JMASLAK>
     is Net::BGP::Event
     does StrictClass;
 
