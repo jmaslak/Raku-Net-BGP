@@ -102,13 +102,17 @@ sub MAIN(
                                     $event.connection-id,
                                     :@attrs,
                                     :@communities,
+                                    :supports-ipv4($event.message.ipv4-support),
+                                    :supports-ipv6($event.message.ipv6-support),
                                 );
                             } else {
                                 announce(
                                     $bgp,
                                     $announce,
                                     $event.connection-id,
-                                    :@communities
+                                    :@communities,
+                                    :supports-ipv4($event.message.ipv4-support),
+                                    :supports-ipv6($event.message.ipv6-support),
                                 );
                             }
                             %sent-connections{ $event.connection-id } = True;
@@ -165,7 +169,9 @@ sub announce(
     Str        $announce,
     Int:D      $connection-id,
                :@attrs?,
-               :@communities?
+               :@communities?,
+    Bool:D     :$supports-ipv4,
+    Bool:D     :$supports-ipv6
     -->Nil
 ) {
     # Build the announcements
@@ -173,6 +179,10 @@ sub announce(
     for @announce-str -> $info {
         my @parts = $info.split('-');
         die "Announcement must be in format <ip>-<nexthop>" unless @parts.elems == 2;
+
+        # Don't advertise unsupported address families
+        if ( $info.contains(':')) and (!$supports-ipv6) { next; }
+        if (!$info.contains(':')) and (!$supports-ipv4) { next; }
 
         $bgp.announce(
             $connection-id,
