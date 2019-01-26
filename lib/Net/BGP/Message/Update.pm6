@@ -37,6 +37,7 @@ has Str   $.cached-as16-path;
 has Str   $.cached-as32-path;
 has Str   $.cached-origin;
 has Str:D @.cached-community-list;
+has Bool  $.cached-atomic-aggregate;
 
 method new() {
     die("Must use from-raw or from-hash to construct a new object");
@@ -66,22 +67,26 @@ method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
         self.data.subbuf( self.path-start, self.path-length),
         :$!asn32
     );
+    $!cached-atomic-aggregate = False;
     for @!cached-path-attributes -> $attr {
         given $attr {
             when Net::BGP::Path-Attribute::Next-Hop {
-                $!cached-next-hop       = $attr.ip;
+                $!cached-next-hop         = $attr.ip;
             }
             when Net::BGP::Path-Attribute::AS-Path {
-                $!cached-as16-path      = $attr.as-path;
+                $!cached-as16-path        = $attr.as-path;
             }
             when Net::BGP::Path-Attribute::AS4-Path {
-                $!cached-as32-path      = $attr.as4-path;
+                $!cached-as32-path        = $attr.as4-path;
             }
             when Net::BGP::Path-Attribute::Origin {
-                $!cached-origin         = $attr.origin;
+                $!cached-origin           = $attr.origin;
             }
             when Net::BGP::Path-Attribute::Community {
-                @!cached-community-list = $attr.community-list;
+                @!cached-community-list   = $attr.community-list;
+            }
+            when Net::BGP::Path-Attribute::Atomic-Aggregate {
+                $!cached-atomic-aggregate = True;
             }
         }
     }
@@ -110,6 +115,8 @@ method Str(-->Str) {
 
     my @comm = self.community-list;
     push @lines, "Communities: " ~ @comm.join(" ") if @comm.elems;
+
+    push @lines, "Atomic-Aggregate" if self.atomic-aggregate;
 
     my $path-attributes = self.path-attributes;
     for $path-attributes.sort( { $^a.path-attribute-code <=> $^b.path-attribute-code } ) -> $attr {
@@ -444,6 +451,11 @@ method community-list(-->Array[Str:D]) {
     return @!cached-community-list;
 }
 
+method atomic-aggregate(-->Bool:D) {
+    self.path-attributes.sink;
+    return $!cached-atomic-aggregate.so;
+}
+
 method next-hop(-->Str) {
     return $!cached-next-hop if $!cached-next-hop.defined;
     my $nh = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Next-Hop );
@@ -540,6 +552,11 @@ Returns an array of path attributes.
 
 Returns an array of strings representing the communities in the BGP Community
 attribute.
+
+=head2 atomic-aggregate
+
+Returns true if the atomic aggregate path attribute is present.  Returns
+false otherwise.
 
 =head2 raw
 

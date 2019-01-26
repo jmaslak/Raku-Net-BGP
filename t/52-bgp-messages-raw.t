@@ -129,6 +129,7 @@ subtest 'Update Message (ASN16)', {
 
     ok $bgp.path-attributes[5] ~~ Net::BGP::Path-Attribute::Atomic-Aggregate,
         "Path Attribute 6 Proper Type";
+    is $bgp.atomic-aggregate, True, "Atomic Attribute is present";
 
     ok $bgp.path-attributes[6] ~~ Net::BGP::Path-Attribute::Community,
         "Path Attribute 7 Proper Type";
