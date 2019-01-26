@@ -125,6 +125,7 @@ method Str(-->Str) {
         next if $attr ~~ Net::BGP::Path-Attribute::Origin;
         next if $attr ~~ Net::BGP::Path-Attribute::Community;
         next if $attr ~~ Net::BGP::Path-Attribute::Next-Hop;
+        next if $attr ~~ Net::BGP::Path-Attribute::Atomic-Aggregate;
 
         push @lines, "  ATTRIBUTE: " ~ $attr.Str;
     }
