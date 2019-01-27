@@ -34,6 +34,8 @@ subtest 'nuint16' => {
     is nuint16(nuint16-buf8(256)), 256;
     is nuint16(nuint16-buf8(257)), 257;
 
+    is nuint16-buf8(258).list.join("."), '1.2', "258 is encoded properly";
+
     done-testing;
 }
 
