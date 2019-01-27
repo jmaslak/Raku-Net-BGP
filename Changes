@@ -3,6 +3,8 @@ Revision history for Perl6-Net-BGP
 {{$NEXT}}
     - Added Aggregator attribute handling
     - Was not properly validating Origin value
+    - Lint mode (bgpmon.pl6)
+    - Support of AS4-Aggregate
 
 0.0.8  2019-01-26T16:04:13-07:00
     - Print Atomic Aggregate nicely when stringifying Update messages
