@@ -195,6 +195,8 @@ subtest 'Update-ASN16', {
             med              => 5000,
             local-pref       => 100,
             atomic-aggregate => True,
+            aggregator-asn   => 258,
+            aggregator-ip    => '192.0.2.6',
             originator-id    => '10.0.0.2',
             community        => [ '2571:258' ],
             cluster-list     => '10.0.0.10 10.0.0.11',

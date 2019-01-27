@@ -342,5 +342,10 @@ subtest 'IPv6 CIDRs', {
     done-testing;
 }
 
+subtest 'Misc. Tests' => {
+    is buf8-to-ipv4(192, 0, 2, 1), '192.0.2.1', "buf8-to-ipv4 returns good value";
+}
+
+
 done-testing;
 

@@ -47,6 +47,12 @@ our sub int-to-ipv4(ipv4_int:D $i -->Str:D) is export {
     return join('.', $ip +> 24, $ip +> 16 +& 255, $ip +> 8 +& 255, $ip +& 255);
 }
 
+our sub buf8-to-ipv4(*@parts -->Str:D) is export {
+    if @parts.elems ≠ 4 { die("Must pass 4 parts - you passed { @parts.elems }") }
+    if @parts.first({ $^a !~~ ^256 }).defined { die("Invalid IP address") }
+    return join('.', @parts);
+}
+
 # IPv6
 #
 #
@@ -254,6 +260,11 @@ Net::BGP::IP - IP Address Handling Functionality
   my $cannonical = ip-cannonical('2001:0db8:0::0:1');
 
 =head1 SUBROUTINES
+
+=head2 buf8-to-ipv4
+
+Takes a buffer (or any other list of numbers) 4 elements long and, assuming
+network ordering, returns an IPv4 address.
 
 =head2 int-to-ipv4
 

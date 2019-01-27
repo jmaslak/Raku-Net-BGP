@@ -11,6 +11,7 @@ use Net::BGP::CIDR;
 use Net::BGP::Message;
 use Net::BGP::Parameter;
 use Net::BGP::Path-Attribute;
+use Net::BGP::Path-Attribute::Aggregator;
 use Net::BGP::Path-Attribute::AS-Path;
 use Net::BGP::Path-Attribute::AS4-Path;
 use Net::BGP::Path-Attribute::Atomic-Aggregate;
@@ -38,6 +39,8 @@ has Str   $.cached-as32-path;
 has Str   $.cached-origin;
 has Str:D @.cached-community-list;
 has Bool  $.cached-atomic-aggregate;
+has Int   $.cached-aggregator-asn;
+has Str   $.cached-aggregator-ip;
 
 method new() {
     die("Must use from-raw or from-hash to construct a new object");
@@ -88,6 +91,10 @@ method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
             when Net::BGP::Path-Attribute::Atomic-Aggregate {
                 $!cached-atomic-aggregate = True;
             }
+            when Net::BGP::Path-Attribute::Aggregator {
+                $!cached-aggregator-asn   = $attr.asn;
+                $!cached-aggregator-ip    = $attr.ip;
+            }
         }
     }
     return @!cached-path-attributes;
@@ -118,6 +125,10 @@ method Str(-->Str) {
 
     push @lines, "Atomic-Aggregate" if self.atomic-aggregate;
 
+    if $!cached-aggregator-asn.defined {
+        push @lines, "Aggregator: ASN {$!cached-aggregator-asn} by {$!cached-aggregator-ip}"
+    }
+
     my $path-attributes = self.path-attributes;
     for $path-attributes.sort( { $^a.path-attribute-code <=> $^b.path-attribute-code } ) -> $attr {
         next if $attr ~~ Net::BGP::Path-Attribute::AS-Path;
@@ -126,6 +137,7 @@ method Str(-->Str) {
         next if $attr ~~ Net::BGP::Path-Attribute::Community;
         next if $attr ~~ Net::BGP::Path-Attribute::Next-Hop;
         next if $attr ~~ Net::BGP::Path-Attribute::Atomic-Aggregate;
+        next if $attr ~~ Net::BGP::Path-Attribute::Aggregator;
 
         push @lines, "  ATTRIBUTE: " ~ $attr.Str;
     }
@@ -146,7 +158,7 @@ method from-hash(%params is copy, Bool:D :$asn32) {
     my @REQUIRED = «
         withdrawn origin as-path as4-path next-hop med local-pref
         atomic-aggregate originator-id cluster-list community nlri
-        address-family path-attributes
+        address-family path-attributes aggregator-ip aggregator-asn
     »;
 
     %params<withdrawn>        //= [];
@@ -163,6 +175,8 @@ method from-hash(%params is copy, Bool:D :$asn32) {
     %params<nlri>             //= [];
     %params<address-family>   //= 'ipv4';
     %params<path-attributes>  //= [];
+    %params<aggregator-asn>   //= Nil;
+    %params<aggregator-ip>    //= '';
 
     # Delete unnecessary option
     if %params<message-code>:exists {
@@ -253,6 +267,18 @@ method from-hash(%params is copy, Bool:D :$asn32) {
         $path-attr.append: Net::BGP::Path-Attribute.from-hash(
             {
                 path-attribute-name => 'Atomic-Aggregate',
+            },
+            :$asn32
+        ).raw;
+    }
+
+    if %params<aggregator-ip> ne '' {
+        die("Must define aggregator ASN") if ! %params<aggregator-asn>.defined;
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+            {
+                path-attribute-name => 'Aggregator',
+                asn                 => %params<aggregator-asn>,
+                ip                  => %params<aggregator-ip>,
             },
             :$asn32
         ).raw;
@@ -457,6 +483,16 @@ method atomic-aggregate(-->Bool:D) {
     return $!cached-atomic-aggregate.so;
 }
 
+method aggregator-asn(-->Int) {
+    self.path-attributes.sink;
+    return $!cached-aggregator-asn;
+}
+
+method aggregator-ip(-->Str) {
+    self.path-attributes.sink;
+    return $!cached-aggregator-ip;
+}
+
 method next-hop(-->Str) {
     return $!cached-next-hop if $!cached-next-hop.defined;
     my $nh = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::Next-Hop );
@@ -558,6 +594,16 @@ attribute.
 
 Returns true if the atomic aggregate path attribute is present.  Returns
 false otherwise.
+
+=head2 aggregator-ip
+
+Returns the BGP ID of the host that aggregated this route. Returns an undefined
+value if the route is not aggregated.
+
+=head2 aggregator-asn
+
+Returns the ASN of the host that aggregated this route. Returns an undefined
+value if the route is not aggregated.
 
 =head2 raw
 

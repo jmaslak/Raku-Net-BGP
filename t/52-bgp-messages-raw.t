@@ -102,7 +102,7 @@ subtest 'Update Message (ASN16)', {
     is $bgp.withdrawn[1], '192.168.150.0/24', "Withdrawn 2 correct";
     is $bgp.withdrawn[2], '192.168.150.1/32', "Withdrawn 3 correct";
 
-    is $bgp.path-attributes.elems, 9, "Proper number of path elements";
+    is $bgp.path-attributes.elems, 10, "Proper number of path elements";
     ok $bgp.path-attributes[0] ~~ Net::BGP::Path-Attribute::Origin,
         "Path Attribute 1 Proper Type";
     is $bgp.path-attributes[0].origin, '?', "Path Attribute 1 Proper Value";
@@ -131,19 +131,24 @@ subtest 'Update Message (ASN16)', {
         "Path Attribute 6 Proper Type";
     is $bgp.atomic-aggregate, True, "Atomic Attribute is present";
 
-    ok $bgp.path-attributes[6] ~~ Net::BGP::Path-Attribute::Community,
+    ok $bgp.path-attributes[6] ~~ Net::BGP::Path-Attribute::Aggregator,
         "Path Attribute 7 Proper Type";
-    is $bgp.path-attributes[6].community-list.join(" "), "2571:258", "Path Attribute 7 Proper Value";
+    is $bgp.path-attributes[6].asn, 258, 'Aggregator ASN correct';
+    is $bgp.path-attributes[6].ip, '192.0.2.6', "Aggregator IP correct";
+
+    ok $bgp.path-attributes[7] ~~ Net::BGP::Path-Attribute::Community,
+        "Path Attribute 8 Proper Type";
+    is $bgp.path-attributes[7].community-list.join(" "), "2571:258", "Path Attribute 7 Proper Value";
     is $bgp.community-list.join(" "), "2571:258", "Communities are proper";
 
-    ok $bgp.path-attributes[7] ~~ Net::BGP::Path-Attribute::Originator-ID,
-        "Path Attribute 8 Proper Type";
-    is $bgp.path-attributes[7].originator-id, "10.0.0.2", "Path Attribute 8 Proper Value";
-
-    ok $bgp.path-attributes[8] ~~ Net::BGP::Path-Attribute::Cluster-List,
+    ok $bgp.path-attributes[8] ~~ Net::BGP::Path-Attribute::Originator-ID,
         "Path Attribute 9 Proper Type";
-    is $bgp.path-attributes[8].cluster-list, "10.0.0.10 10.0.0.11",
-        "Path Attribute 9 Proper Value";
+    is $bgp.path-attributes[8].originator-id, "10.0.0.2", "Path Attribute 9 Proper Value";
+
+    ok $bgp.path-attributes[9] ~~ Net::BGP::Path-Attribute::Cluster-List,
+        "Path Attribute 10 Proper Type";
+    is $bgp.path-attributes[9].cluster-list, "10.0.0.10 10.0.0.11",
+        "Path Attribute 10 Proper Value";
 
     is $bgp.nlri.elems, 3, "Proper number of NLRI prefixes";
     is $bgp.nlri[0], '10.0.0.0/8',       "NLRI 1 correct";
