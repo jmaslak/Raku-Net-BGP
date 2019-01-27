@@ -17,3 +17,4 @@ Todo Items:
   * Allow specification of address families on a per-peer basis
   * Pause recept of incoming TCP packets while waiting for
     user/controller to process existing backlog
+  * Document from-hash method properly in Net::BGP::Message
