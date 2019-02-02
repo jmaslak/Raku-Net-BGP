@@ -472,6 +472,8 @@ method as-path(-->Str) {
         my $as4 = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS4-Path );
         my $as  = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
 
+        if ! $as.defined { return ''; }
+
         if $as.path-length < $as4.path-length {
             return $as.as-path;
         } elsif $as.path-length == $as4.path-length {
@@ -487,6 +489,7 @@ method as-array(-->Array[Int:D]) {
     self.path-attributes.sink;
 
     my $as  = self.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
+    if ! $as.defined { return Array[Int:D].new };
 
     return $as.as-array if self.asn32;
 

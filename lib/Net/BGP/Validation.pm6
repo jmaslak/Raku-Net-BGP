@@ -18,6 +18,10 @@ my %ERRORS;
 %ERRORS<AGGR_ASN_RESERVED>      = "Aggregator ASN is a reserved ASN";
 %ERRORS<AGGR_ASN_TRANS>         = "Aggregator ASN is the AS_TRANS ASN";
 %ERRORS<AGGR_ID_BOGON>          = "Aggregator ID is a bogon";
+%ERRORS<AS_PATH_DOC>            = "ASN Path contains a documentation ASN";
+%ERRORS<AS_PATH_PRIVATE>        = "ASN Path contains a private ASN";
+%ERRORS<AS_PATH_RESERVED>       = "ASN Path contains a reserved ASN";
+%ERRORS<AS_PATH_TRANS>          = "ASN Path contains the AS_TRANS ASN";
 %ERRORS<AS4_PEER_SENT_AS4_PATH> = "AS4-capable peer sent an AS4-Path attribute";
 
 my Net::BGP::CIDR:D @BOGONS =
@@ -71,6 +75,27 @@ multi sub error_dispatch(
     return @errors;
 }
 
+sub check-asn(
+    UInt:D $asn,
+    UInt:D $my-asn,
+    UInt:D $peer-asn,
+    -->Str
+) {
+    if $asn == $my-asn                      { return Str; }
+    if $asn == $peer-asn                    { return Str; }
+    if $asn == 0                            { return 'RESERVED'; }
+    if $asn == 23456                        { return 'TRANS'; }
+    if 64496 ≤ $asn ≤ 64511                 { return 'DOC'; }
+    if 64512 ≤ $asn ≤ 65534                 { return 'PRIVATE'; }
+    if $asn == 65535                        { return 'RESERVED'; }
+    if 65536 ≤ $asn ≤ 65551                 { return 'DOC'; }
+    if 65552 ≤ $asn ≤ 131071                { return 'RESERVED'; }
+    if 4_200_000_000 ≤ $asn ≤ 4_294_967_294 { return 'PRIVATE'; }
+    if $asn == 4_294_967_295                { return 'RESERVED'; }
+
+    return Str;
+}
+
 sub update-check-aggregator(
     Net::BGP::Message::Update:D :$message,
     UInt:D :$my-asn,
@@ -80,28 +105,11 @@ sub update-check-aggregator(
     my Pair:D @errors;
 
     if $message.aggregator-asn.defined {
-        if $message.aggregator-asn == $my-asn {
-            # Not an error
-        } elsif $message.aggregator-asn == $peer-asn {
-            # Not an error
-        } elsif $message.aggregator-asn == 0 {
-            @errors.push: error('AGGR_ASN_RESERVED');
-        } elsif $message.aggregator-asn == 23456 {
-            @errors.push: error('AGGR_ASN_TRANS');
-        } elsif 64496 ≤ $message.aggregator-asn ≤ 64511 {
-            @errors.push: error('AGGR_ASN_DOC');
-        } elsif 64512 ≤ $message.aggregator-asn ≤ 65534 {
-            @errors.push: error('AGGR_ASN_PRIVATE');
-        } elsif $message.aggregator-asn == 65535 {
-            @errors.push: error('AGGR_ASN_RESERVED');
-        } elsif 65536 ≤ $message.aggregator-asn ≤ 65551 {
-            @errors.push: error('AGGR_ASN_DOC');
-        } elsif 65552 ≤ $message.aggregator-asn ≤ 131071 {
-            @errors.push: error('AGGR_ASN_RESERVED');
-        } elsif 4_200_000_000 ≤ $message.aggregator-asn ≤ 4_294_967_294 {
-            @errors.push: error('AGGR_ASN_PRIVATE');
-        } elsif $message.aggregator-asn == 4_294_967_295 {
-            @errors.push: error('AGGR_ASN_RESERVED');
+        given check-asn($message.aggregator-asn, $my-asn, $peer-asn) {
+            when "RESERVED" { @errors.push(error('AGGR_ASN_RESERVED')) }
+            when "TRANS"    { @errors.push(error('AGGR_ASN_TRANS')) }
+            when "DOC"      { @errors.push(error('AGGR_ASN_DOC')) }
+            when "PRIVATE"  { @errors.push(error('AGGR_ASN_PRIVATE')) }
         }
 
         my $id-cidr = Net::BGP::CIDR.from-str($message.aggregator-ip ~ '/32');
@@ -126,10 +134,30 @@ sub update-check-aspath(
     my $as4 = $message.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS4-Path );
     my $as  = $message.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
 
+    if ($message.nlri.elems + $message.nlri6.elems) == 0 {
+        # XXX we shouldn't have these path attributes
+        return @errors;
+    }
+
     # XXX We should validate we don't see more than one of these.
 
     if $as4.defined and $message.asn32 {
         @errors.push: error('AS4_PEER_SENT_AS4_PATH');
+    }
+
+    my $reserved = 0;
+    my $trans    = 0;
+    my $doc      = 0;
+    my $private  = 0;
+
+    my @asns = $message.as-array;
+    for @asns.unique -> $asn {
+        given check-asn($asn, $my-asn, $peer-asn) {
+            when "RESERVED" { @errors.push(error('AS_PATH_RESERVED')) if ! $reserved++ }
+            when "TRANS"    { @errors.push(error('AS_PATH_TRANS'))    if ! $trans++    }
+            when "DOC"      { @errors.push(error('AS_PATH_DOC'))      if ! $doc++      }
+            when "PRIVATE"  { @errors.push(error('AS_PATH_PRIVATE'))  if ! $private++  }
+        }
     }
 
     return @errors;
@@ -213,7 +241,33 @@ processing an UPDATE message looking for an AS4_Aggregator path-attribute).
 This message has an Aggregator path-attribute with an IP in the bogon range
 (except 0.0.0.0, which is valid).
 
+=head3 AS_PATH_DOC
+
+  ASN Path contains a documentation ASN
+
+This UPDATE message has an AS path with an ASN in the doucmentation range.
+
+=head3 AS_PATH_PRIVATE
+
+  ASN Path contains a private ASN
+
+This UPDATE message has an AS path with an ASN in the private range.
+
+=head3 AS_PATH_RESERVED
+
+  ASN Path contains a reserved ASN
+
+This UPDATE message has an AS path with an ASN in the reserved range.
+
+=head3 AS_PATH_TRANS
+
+  ASN Path contains a contains the AS_TRANS ASN
+
+This UPDATE message has an AS path that contains 23456 (AS_TRANS).
+
 =head3 AS4_PEER_SENT_AS4_PATH
+
+  AS4-capable peer sent an AS4-Path attribute
 
 An update message sent from an AS4-capable peer contains an AS4-Path attribute.
 
