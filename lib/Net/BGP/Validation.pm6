@@ -12,12 +12,13 @@ use Net::BGP::Message;
 use Net::BGP::Message::Update;
 
 my %ERRORS;
-%ERRORS<AFMIX>             = "Multiple Address Families in a single BGP Update";
-%ERRORS<AGGR_ASN_DOC>      = "Aggregator ASN is a documentation ASN";
-%ERRORS<AGGR_ASN_PRIVATE>  = "Aggregator ASN is a private ASN";
-%ERRORS<AGGR_ASN_RESERVED> = "Aggregator ASN is a reserved ASN";
-%ERRORS<AGGR_ASN_TRANS>    = "Aggregator ASN is the AS_TRANS ASN";
-%ERRORS<AGGR_ID_BOGON>     = "Aggregator ID is a bogon";
+%ERRORS<AFMIX>                  = "Multiple Address Families in a single BGP Update";
+%ERRORS<AGGR_ASN_DOC>           = "Aggregator ASN is a documentation ASN";
+%ERRORS<AGGR_ASN_PRIVATE>       = "Aggregator ASN is a private ASN";
+%ERRORS<AGGR_ASN_RESERVED>      = "Aggregator ASN is a reserved ASN";
+%ERRORS<AGGR_ASN_TRANS>         = "Aggregator ASN is the AS_TRANS ASN";
+%ERRORS<AGGR_ID_BOGON>          = "Aggregator ID is a bogon";
+%ERRORS<AS4_PEER_SENT_AS4_PATH> = "AS4-capable peer sent an AS4-Path attribute";
 
 my Net::BGP::CIDR:D @BOGONS =
     Net::BGP::CIDR.from-str('0.0.0.0/8'),
@@ -60,13 +61,17 @@ multi sub error_dispatch(
     }
 
     # Check aggregator
-    my $agg = update_check_aggregator(:$message, :$my-asn, :$peer-asn);
+    my $agg = update-check-aggregator(:$message, :$my-asn, :$peer-asn);
     if $agg.elems { @errors.append: @$agg }
+
+    # check path
+    my $pth = update-check-aspath(:$message, :$my-asn, :$peer-asn);
+    if $pth.elems { @errors.append: @$pth }
 
     return @errors;
 }
 
-sub update_check_aggregator(
+sub update-check-aggregator(
     Net::BGP::Message::Update:D :$message,
     UInt:D :$my-asn,
     UInt:D :$peer-asn,
@@ -105,6 +110,26 @@ sub update_check_aggregator(
         } elsif @BOGONS.first({ $^a.contains($id-cidr) }).defined {
             @errors.push: error('AGGR_ID_BOGON');
         }
+    }
+
+    return @errors;
+}
+
+sub update-check-aspath(
+    Net::BGP::Message::Update:D :$message,
+    UInt:D :$my-asn,
+    UInt:D :$peer-asn,
+    -->Array[Pair:D]
+) {
+    my Pair:D @errors;
+
+    my $as4 = $message.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS4-Path );
+    my $as  = $message.path-attributes.first( * ~~ Net::BGP::Path-Attribute::AS-Path );
+
+    # XXX We should validate we don't see more than one of these.
+
+    if $as4.defined and $message.asn32 {
+        @errors.push: error('AS4_PEER_SENT_AS4_PATH');
     }
 
     return @errors;
@@ -187,6 +212,10 @@ processing an UPDATE message looking for an AS4_Aggregator path-attribute).
 
 This message has an Aggregator path-attribute with an IP in the bogon range
 (except 0.0.0.0, which is valid).
+
+=head3 AS4_PEER_SENT_AS4_PATH
+
+An update message sent from an AS4-capable peer contains an AS4-Path attribute.
 
 =head1 AUTHOR
 
