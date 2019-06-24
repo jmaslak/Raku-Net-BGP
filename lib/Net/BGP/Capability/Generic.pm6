@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Capability;
 
 use StrictClass;
-unit class Net::BGP::Capability::Generic:ver<0.1.1>:auth<cpan:JMASLAK>
+unit class Net::BGP::Capability::Generic:ver<0.1.2>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
     does StrictClass;
 

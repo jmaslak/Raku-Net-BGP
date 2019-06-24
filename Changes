@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.1.2  2019-06-24T08:25:02-06:00
     - Moved Net::BGP::Socket* into independent module (TCP::LowLevel)
 
 0.1.1  2019-02-02T19:43:36-07:00
