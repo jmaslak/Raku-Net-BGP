@@ -327,27 +327,27 @@ method connect-if-needed(-->Nil) {
 method connection-handler(Promise:D $socket-promise, Net::BGP::Peer:D $peer) {
     my $socket;
     {
-	$socket = $socket-promise.result;
-	CATCH {
-	    default {
-		# XXX We should log better
-		# But we know...Connection failed.
-		return;
-	    }
-	}
+        $socket = $socket-promise.result;
+        CATCH {
+            default {
+                # XXX We should log better
+                # But we know...Connection failed.
+                return;
+            }
+        }
     }
 
     my $conn;
     if $peer.connection.defined { return } # Just in case it got defined
 
     $conn = Net::BGP::Connection.new(
-	:socket($socket),
-	:listener-channel($!listener-channel),
-	:user-supplier($!user-supplier),
-	:bgp-handler($.controller),
-	:remote-ip($socket.peer-host),
-	:remote-port($socket.peer-port),
-	:inbound(False),
+        :socket($socket),
+        :listener-channel($!listener-channel),
+        :user-supplier($!user-supplier),
+        :bgp-handler($.controller),
+        :remote-ip($socket.peer-host),
+        :remote-port($socket.peer-port),
+        :inbound(False),
     );
     if %*ENV<bgp_debug_prefix>:exists {
         my $prefix = %*ENV<bgp_debug_prefix>;
@@ -365,30 +365,30 @@ method connection-handler(Promise:D $socket-promise, Net::BGP::Peer:D $peer) {
     # Send Open
     $peer.state = Net::BGP::Peer::OpenSent;
     $!controller.send-open($conn,
-	:hold-time($peer.my-hold-time),
-	:supports-capabilities($peer.supports-capabilities),
-	:af($peer.my-af),
+        :hold-time($peer.my-hold-time),
+        :supports-capabilities($peer.supports-capabilities),
+        :af($peer.my-af),
     );
 
     # Let user know.
     $!user-supplier.emit(
-	Net::BGP::Event::New-Connection.new(
-	    :client-ip( $socket.peer-host ),
-	    :client-port( $socket.peer-port ),
-	    :connection-id( $conn.id ),
-	),
+        Net::BGP::Event::New-Connection.new(
+            :client-ip( $socket.peer-host ),
+            :client-port( $socket.peer-port ),
+            :connection-id( $conn.id ),
+        ),
     );
 
     $conn.handle-messages;
 
     CATCH {
-	default {
-	    # We should log better
-	    $*ERR.say("Error in child process!");
-	    $*ERR.say(.message);
-	    $*ERR.say(.backtrace.join);
-	    .rethrow;
-	}
+        default {
+            # We should log better
+            $*ERR.say("Error in child process!");
+            $*ERR.say(.message);
+            $*ERR.say(.backtrace.join);
+            .rethrow;
+        }
     }
 }
 
