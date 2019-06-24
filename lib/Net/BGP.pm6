@@ -14,7 +14,6 @@ use Net::BGP::Conversions;
 use Net::BGP::IP;
 use Net::BGP::Event::New-Connection;
 use Net::BGP::Peer;
-use Net::BGP::Socket;
 use Net::BGP::Time;
 
 # We need to register all the parameter types, which happens when the
@@ -41,6 +40,8 @@ use Net::BGP::Message::Notify::Open::Unsupported-Optional-Parameter;
 use Net::BGP::Message::Notify::Open::Unsupported-Version;
 use Net::BGP::Message::Notify::Hold-Timer-Expired;
 use Net::BGP::Message::Update;
+
+use TCP::LowLevel;
 
 use StrictClass;
 unit class Net::BGP:ver<0.1.1>:auth<cpan:JMASLAK> does StrictClass;
@@ -180,8 +181,9 @@ method listen(--> Nil) {
     my $listen-promise = Promise.new;
 
     start {
-        $listen-socket = Net::BGP::Socket.new(:my-host($.listen-host), :my-port($.port));
+        $listen-socket = TCP::LowLevel.new(:my-host($.listen-host), :my-port($.port));
         for %!md5.keys -> $h { $listen-socket.add-md5($h, %!md5{$h}) }
+        say $.listen-host; say $.port;
         $listen-socket.listen;
 
         react {
@@ -313,7 +315,7 @@ method connect-if-needed(-->Nil) {
             $p.last-connect-attempt = monotonic-whole-seconds;
         }
 
-        my $obj = Net::BGP::Socket.new(:my-host('::'), :my-port(0));
+        my $obj = TCP::LowLevel.new(:my-host('::'), :my-port(0));
         if %!md5{ $p.peer-ip.fc }:exists {
             $obj.add-md5($p.peer-ip.fc, %!md5{ $p.peer-ip.fc });
         }

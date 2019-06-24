@@ -9,7 +9,8 @@
     "DateTime::Monotonic",
     "NativeHelpers::Blob",
     "OO::Monitors",
-    "StrictClass"
+    "StrictClass",
+    "TCP::LowLevel"
   ],
   "description" : "BGP Server Support",
   "license" : "Artistic-2.0",

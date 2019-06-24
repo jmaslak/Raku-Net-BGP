@@ -7,14 +7,14 @@ use Test;
 #
 
 use experimental :pack;
-use Net::BGP::Socket;
+use TCP::LowLevel;
 
 subtest 'Basic Server - Native OS', { connectivity-test }
-$Net::BGP::Socket::linux = False;
+$TCP::LowLevel::Socket::linux = False;
 subtest 'Basic Server - Fallback',  { connectivity-test }
 
 sub connectivity-test() {
-    my $inet = Net::BGP::Socket.new(:my-host("127.0.0.1"), :my-port(0));
+    my $inet = TCP::LowLevel.new(:my-host("127.0.0.1"), :my-port(0));
     $inet.listen;
     is $inet.defined, True, "sock is defined";
 

@@ -7,14 +7,14 @@ use Test;
 #
 
 use experimental :pack;
-use Net::BGP::Socket-Linux;
-use Net::BGP::Socket-Connection-Linux;
+use TCP::LowLevel::Socket-Linux;
+use TCP::LowLevel::Socket-Connection-Linux;
 
 note "KERNEL Name: " ~ $*KERNEL.name;
 plan :skip-all("Non-Linux Host") unless $*KERNEL.name eq 'linux';
 
 subtest 'Basic Server', {
-    my $inet = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
+    my $inet = TCP::LowLevel::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock = $inet.socket;
 
     ok $sock ~~ Int, "sock is proper type";
@@ -37,7 +37,7 @@ subtest 'Basic Server', {
     $connections.tap: { $conn = $_; $promise.keep };
     await $promise;
 
-    ok $conn ~~ Net::BGP::Socket-Connection-Linux, "conn is Socket-Connection";
+    ok $conn ~~ TCP::LowLevel::Socket-Connection-Linux, "conn is Socket-Connection";
     is $conn.defined, True, "conn is defined";
     is $conn.my-host, $inet.my-host, "my-host matches";
     is $conn.my-port, $inet.bound-port, "my-port matches bound-port";
@@ -64,7 +64,7 @@ subtest 'Basic Server', {
     $promise = Promise.new;
     my $buf;
     $client.print($str);
-    $conn.Supply.tap: { $buf = $_; $promise.keep }
+    $conn.Supply(:bin).tap: { $buf = $_; $promise.keep }
     await $promise;
     is $buf.unpack('a*'), $str, "Read line 5";
 
@@ -77,13 +77,13 @@ subtest 'Basic Server', {
 };
 
 subtest 'Client/Server', {
-    my $inet1 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
+    my $inet1 = TCP::LowLevel::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock1 = $inet1.socket;
     $inet1.bind;
     $inet1.listen;
     note "# Listening on port {$inet1.bound-port}";
     
-    my $inet2 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
+    my $inet2 = TCP::LowLevel::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
     my $conn2 = await $inet2.connect('127.0.0.1', $inet1.bound-port);
     
     my $connections1 = $inet1.acceptor;
@@ -107,12 +107,12 @@ subtest 'Client/Server', {
 };
 
 subtest 'Client/Server - MD5 Non-Match', sub {
-    plan :skip-all("No MD5 support") unless Net::BGP::Socket-Linux.supports-md5;
+    plan :skip-all("No MD5 support") unless TCP::LowLevel::Socket-Linux.supports-md5;
 
-    my $inet1 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
+    my $inet1 = TCP::LowLevel::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock1 = $inet1.socket;
 
-    my $inet2 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
+    my $inet2 = TCP::LowLevel::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
 
     $inet1.add-md5('192.0.2.1', 'key key key'); # should not match anything
     $inet1.bind;
@@ -141,12 +141,12 @@ subtest 'Client/Server - MD5 Non-Match', sub {
 
 
 subtest 'Client/Server - MD5 Match', sub {
-    plan :skip-all("No MD5 support") unless Net::BGP::Socket-Linux.supports-md5;
+    plan :skip-all("No MD5 support") unless TCP::LowLevel::Socket-Linux.supports-md5;
 
-    my $inet1 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
+    my $inet1 = TCP::LowLevel::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
     my $sock1 = $inet1.socket;
 
-    my $inet2 = Net::BGP::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
+    my $inet2 = TCP::LowLevel::Socket-Linux.new(:my-host('127.0.0.1'), :my-port(0));
 
     $inet1.add-md5('127.0.0.1', 'key key key');
     $inet2.add-md5('127.0.0.1', 'key key key');
