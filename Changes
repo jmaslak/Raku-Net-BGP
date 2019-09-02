@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.1.3  2019-09-02T17:38:10-06:00
     - Bugfix: UPDATE messages now update receive state timers
     - Feature: bgpmon.pl6 now can suppress output of UPDATE messages
 
