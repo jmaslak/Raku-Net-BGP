@@ -104,7 +104,7 @@ method get-peer-due-for-keepalive(-->Net::BGP::Peer) {
             if ! $peer.last-message-sent.defined { return $peer; }
 
             # Send time
-            my $send-time = ($hold-time / 3).truncate;
+            my $send-time = (($hold-time - 1) / 3).truncate;
 
             # Connected in the past by at least retry time?
             if $now ≥ ($peer.last-message-sent + $send-time) {
