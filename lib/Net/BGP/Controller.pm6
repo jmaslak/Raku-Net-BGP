@@ -220,12 +220,27 @@ multi method receive-bgp(
     Net::BGP::Message::Update:D $update,
     Str:D                       $peer-ip,
 ) {
+    my $p = self.peers.get($connection.remote-ip);
+    if ! $p.defined {
+        # Bad peer, we just close the connection, it's an invalid
+        # peer.
+        $connection.close;
+        return;
+    }
+
     $.user-supplier.emit: Net::BGP::Event::BGP-Message.new(
         :message( $update ),
         :connection-id( $connection.id ),
         :peer( $peer-ip ),
         :peer-asn( $connection.peer-asn ),
     );
+
+    $p.lock.protect: {
+        if $p.connection.defined && ($p.connection.id == $connection.id ) {
+            $p.last-message-received = monotonic-whole-seconds;
+            return;
+        }
+    }
 }
 
 multi method receive-bgp(
