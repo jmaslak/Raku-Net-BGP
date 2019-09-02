@@ -183,7 +183,6 @@ method listen(--> Nil) {
     start {
         $listen-socket = TCP::LowLevel.new(:my-host($.listen-host), :my-port($.port));
         for %!md5.keys -> $h { $listen-socket.add-md5($h, %!md5{$h}) }
-        say $.listen-host; say $.port;
         $listen-socket.listen;
 
         react {
