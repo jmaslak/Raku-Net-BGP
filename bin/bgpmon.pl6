@@ -30,6 +30,7 @@ sub MAIN(
     Bool:D               :$send-experimental-path-attribute = False,
     Str:D                :$communities = '',
     Bool:D               :$lint-mode = False,
+    Bool:D               :$suppress-updates = False,
     *@args is copy
 ) {
     $*OUT.out-buffer = False;
@@ -153,6 +154,11 @@ sub MAIN(
                 if $event<event> ~~ Net::BGP::Event::BGP-Message {
                     if $lint-mode {
                         next unless $event<errors>.elems;  # In lint mode, we only show errors
+                    }
+
+                    # Skip updates if we suppress-updates
+                    if $suppress-updates and ($event<event>.message ~~ Net::BGP::Message::Update) {
+                        next;
                     }
                 }
 
