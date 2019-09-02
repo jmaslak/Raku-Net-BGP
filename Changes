@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Bugfix: UPDATE messages now update receive state timers
+    - Feature: bgpmon.pl6 now can suppress output of UPDATE messages
 
 0.1.2  2019-06-24T08:25:02-06:00
     - Moved Net::BGP::Socket* into independent module (TCP::LowLevel)
