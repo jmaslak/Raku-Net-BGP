@@ -129,11 +129,8 @@ method get-peer-dead(-->Net::BGP::Peer) {
             # Never received?
             if ! $peer.last-message-received.defined { return $peer; }
 
-            # Send time
-            my $send-time = $hold-time;
-
             # Connected in the past by at least retry time?
-            if $now ≥ (($peer.last-message-received // 0) + $send-time) {
+            if $now ≥ (($peer.last-message-received // 0) + $hold-time) {
                 return $peer;
             }
         }
