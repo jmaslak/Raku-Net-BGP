@@ -10,7 +10,8 @@
     "NativeHelpers::Blob",
     "OO::Monitors",
     "StrictClass",
-    "TCP::LowLevel"
+    "TCP::LowLevel",
+    "Terminal::ANSIColor",
   ],
   "description" : "BGP Server Support",
   "license" : "Artistic-2.0",

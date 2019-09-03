@@ -10,9 +10,12 @@ use Net::BGP;
 use Net::BGP::IP;
 use Net::BGP::Time;
 use Net::BGP::Validation;
+use Terminal::ANSIColor;
 
 my subset Port of UInt where ^2¹⁶;
 my subset Asn  of UInt where ^2¹⁶;
+
+my $COLORED;
 
 sub MAIN(
     Bool:D               :$passive = False,
@@ -31,8 +34,11 @@ sub MAIN(
     Str:D                :$communities = '',
     Bool:D               :$lint-mode = False,
     Bool:D               :$suppress-updates = False,
+    Bool:D               :$color = False, # XXX Should test for terminal
     *@args is copy
 ) {
+    $COLORED = $color;
+
     $*OUT.out-buffer = False;
 
     my $bgp = Net::BGP.new(
@@ -260,8 +266,16 @@ sub lognote(Str:D $msg) {
     log('N', $msg);
 }
 
-sub log(Str:D $type, Str:D $msg) {
-    say "{DateTime.now.Str} [$type] $msg";
+sub log(Str:D $type, Str:D $msg, Bool:D $colored = $COLORED) {
+    my @lines = $msg.split("\n");
+    my $first = @lines.shift;
+
+    print BOLD if $colored;
+    print "{DateTime.now.Str} [$type] $first";
+    print RESET if $colored;
+
+    say "";
+    say @lines.join("\n") if @lines.elems;
 }
 
 sub long-format-output(Str:D $event is copy, @errors -->Nil) {
