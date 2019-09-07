@@ -132,7 +132,7 @@ sub MAIN(
                 }
 
                 @stack.push: $event;
-                if $cnt++ ≤ 8*2*$batch-size {
+                if $cnt++ ≤ $*KERNEL.cpu-cores*2*$batch-size {
                     $event = $channel.poll;
                 } else {
                     $event = Nil;
@@ -145,7 +145,8 @@ sub MAIN(
             my @errlist;
             if (@stack.elems > $batch-size) {
                 @events = @stack.hyper(
-                    :degree(8), :batch((@stack.elems / 8).ceiling)
+                    :degree($*KERNEL.cpu-cores),
+                    :batch((@stack.elems / $*KERNEL.cpu-cores).ceiling)
                 ).grep(
                     { is-filter-match($^a, :@cidr-filter, :$lint-mode) }
                 ).map( { map-event($^a, $my-asn, $lint-mode, $short-format) } );
