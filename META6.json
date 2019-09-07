@@ -11,7 +11,7 @@
     "OO::Monitors",
     "StrictClass",
     "TCP::LowLevel",
-    "Terminal::ANSIColor",
+    "Terminal::ANSIColor"
   ],
   "description" : "BGP Server Support",
   "license" : "Artistic-2.0",
