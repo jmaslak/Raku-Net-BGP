@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.1.4  2019-09-07T10:47:40-06:00
     - Feature: basic ANSI colorization (--color) with bgpmon.pl6
     - Feature: decode cap code 66 (deprecated dynamic capabilities)
     - Enhancement: bgpmon should scale properly on multi-cpu machines

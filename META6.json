@@ -25,6 +25,7 @@
     "Net::BGP::CIDR" : "lib/Net/BGP/CIDR.pm6",
     "Net::BGP::Capability" : "lib/Net/BGP/Capability.pm6",
     "Net::BGP::Capability::ASN32" : "lib/Net/BGP/Capability/ASN32.pm6",
+    "Net::BGP::Capability::Deprecated-Dynamic-Capability" : "lib/Net/BGP/Capability/Deprecated-Dynamic-Capability.pm6",
     "Net::BGP::Capability::Generic" : "lib/Net/BGP/Capability/Generic.pm6",
     "Net::BGP::Capability::MPBGP" : "lib/Net/BGP/Capability/MPBGP.pm6",
     "Net::BGP::Capability::Route-Refresh" : "lib/Net/BGP/Capability/Route-Refresh.pm6",
@@ -98,5 +99,5 @@
   "source-url" : "https://github.com/jmaslak/Perl6-Net-BGP.git",
   "tags" : [ ],
   "test-depends" : [ ],
-  "version" : "0.1.3"
+  "version" : "0.1.4"
 }
