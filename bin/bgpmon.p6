@@ -274,12 +274,14 @@ multi is-filter-match(
     if @asn-filter.elems {
         for @asn-filter -> $cidr {
             if $event.message.as-array.first( { $^a == $cidr } ).defined {
-                return 'AS-PATH'
+                return 'AS-PATH';
             }
         }
 
         my $agg = $event.message.aggregator-asn;
-        if $agg.defined && @asn-filter.first( { $^a == $agg } ).defined { return True }
+        if $agg.defined && @asn-filter.first( { $^a == $agg } ).defined {
+            return 'AGGREGATOR-ASN';
+        }
     }
 
     return Str;
