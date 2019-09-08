@@ -13,6 +13,7 @@ use Net::BGP::Capability::Deprecated-Dynamic-Capability;
 use Net::BGP::Capability::Generic;
 use Net::BGP::Capability::MPBGP;
 use Net::BGP::Capability::Route-Refresh;
+use Net::BGP::Capability::Route-Refresh-Cisco;
 use Net::BGP::Error::Bad-Parameter-Length;
 use Net::BGP::Parameter;
 
