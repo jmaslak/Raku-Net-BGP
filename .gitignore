@@ -6,6 +6,7 @@
 /resources/*.dylib
 .precomp/
 /Net-BGP-*
+prefixes.sh
 profile-*.html
 test.sh
 test2.sh
