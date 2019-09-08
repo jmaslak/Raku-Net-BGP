@@ -245,8 +245,9 @@ multi is-filter-match(
     -->Str
 ) {
     return '' unless $event.message ~~ Net::BGP::Message::Update; # We only care about UPDATEs
+    return '' unless @asn-filter.elems + @cidr-filter.elems > 0;
 
-    if @asn-filter.elems + @cidr-filter.elems == 0 { return '' }
+    my @m;
 
     if @cidr-filter.elems {
         my @nlri      = @( $event.message.nlri );
@@ -255,36 +256,40 @@ multi is-filter-match(
         $agg          = Net::BGP::CIDR.from-str("$agg/32") if $agg.defined;
 
         for @cidr-filter.grep( { $^a.ip-version == 4 } ) -> $cidr {
-            if @nlri.first\    ( { $cidr.contains($^a) } ).defined { return 'NLRI' }
-            if @withdrawn.first( { $cidr.contains($^a) } ).defined { return 'WITHDRAWN' }
+            if @nlri.first\    ( { $cidr.contains($^a) } ).defined { @m.push('NLRI') }
+            if @withdrawn.first( { $cidr.contains($^a) } ).defined { @m.push('WITHDRAWN') }
 
             if $agg.defined {
-                if $cidr.contains($agg) { return 'AGGREGATOR-IP' }
+                if $cidr.contains($agg) { @m.push('AGGREGATOR-IP') }
             }
         }
 
         my @nlri6      = @( $event.message.nlri6 );
         my @withdrawn6 = @( $event.message.withdrawn6 );
         for @cidr-filter.grep( { $^a.ip-version == 6 } ) -> $cidr {
-            if @nlri6.first\    ( { $cidr.contains($^a) } ).defined { return 'NLRI' }
-            if @withdrawn6.first( { $cidr.contains($^a) } ).defined { return 'WITHDRAWN' }
+            if @nlri6.first\    ( { $cidr.contains($^a) } ).defined { @m.push('NLRI') }
+            if @withdrawn6.first( { $cidr.contains($^a) } ).defined { @m.push('WITHDRAWN') }
         }
     }
 
     if @asn-filter.elems {
         for @asn-filter -> $cidr {
             if $event.message.as-array.first( { $^a == $cidr } ).defined {
-                return 'AS-PATH';
+                @m.push('AS-PATH');
             }
         }
 
         my $agg = $event.message.aggregator-asn;
         if $agg.defined && @asn-filter.first( { $^a == $agg } ).defined {
-            return 'AGGREGATOR-ASN';
+            @m.push('AGGREGATOR-ASN');
         }
     }
 
-    return Str;
+    if @m.elems > 0 {
+        return @m.sort.unique.join(" ");
+    } else {
+        return Str;
+    }
 }
 multi is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode -->Str) {
     return $lint-mode ?? Str !! '';
@@ -292,13 +297,10 @@ multi is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode -->Str) {
 
 multi get-str($event, :@cidr-filter -->Str) { $event.Str }
 
-sub logevent(Str:D $event, Str $match is copy) {
+sub logevent(Str:D $event) {
     state $counter = 0;
 
-    $match //= '';
-    if $match ne '' { $match = "(match: $match) " }
-
-    lognote("«" ~ $counter++ ~ "» $match" ~ $event);
+    lognote("«" ~ $counter++ ~ "» " ~ $event);
 }
 
 sub lognote(Str:D $msg) {
@@ -323,7 +325,10 @@ sub long-format-output(Str:D $event is copy, @errors, Str $match -->Nil) {
             $event ~= "\n      ERROR: {$err.key} ({$err.value})";
         }
     }
-    logevent($event, $match);
+    if $match.defined and $match ne '' {
+        $event ~= "\n      MATCH: $match";
+    }
+    logevent($event);
 }
 
 sub short-format-output(Str:D $line, @errors -->Nil) {
