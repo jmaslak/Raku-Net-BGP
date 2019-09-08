@@ -73,12 +73,21 @@ connect.  We'll accept whatever ASN they provide on the initial connection
 (this initial ASN value will be remembered until this script exits).  This is
 useful to minimize configuration requirements.
 
+=head2 --asn-filter <asn-list>
+
+This is a comma seperated lists of ASNs.  If an UPDATE message is received
+that has an AS path element or aggregation ASN from this list, the UPDATE
+will be printed.  Otherwise it will be silently ignored (unless it instead
+matches a constraint from C<--cidr-filter>.  The default is to have no
+filtering.
+
 =head2 --cidr-filter <cidr-list>
 
-This is a comma seperated lists of CIDRS.  If an UPDATE message is received
+This is a comma seperated lists of CIDRs.  If an UPDATE message is received
 that has an NRLI or withdrawn/unreachable prefix from this list, the UPDATE
-will be printed.  Otherwise it will be silently ignored.  The default is to
-have no filtering.
+will be printed.  Otherwise it will be silently ignored (unless it instead
+matches a constraint from C<--asn-filter>.  The default is to have no
+filtering.
 
 =head2 --announce <prefixs-and-nexthops>
 
