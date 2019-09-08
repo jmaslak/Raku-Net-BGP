@@ -55,8 +55,8 @@ sub MAIN(
         my $peer-ip  = @args.shift;
         if ! @args.elems { die("Must specify peer ASN after the peer IP"); }
         my $peer-asn = @args.shift;
-       
-        my $md5; 
+
+        my $md5;
         if @args.elems {
             if @args[0] ~~ m/^ '--md5='/ {
                 $md5 = S/^ '--md5='// given @args.shift;
@@ -154,14 +154,24 @@ sub MAIN(
                 @events = @stack.hyper(
                     :degree($*KERNEL.cpu-cores),
                     :batch((@stack.elems / $*KERNEL.cpu-cores).ceiling)
-                ).grep(
-                    { is-filter-match($^a, :@cidr-filter, :@asn-filter, :$lint-mode) }
-                ).map( { map-event($^a, $my-asn, $lint-mode, $short-format) } );
+                ).map( { map-event(
+                    :event($^a),
+                    :$my-asn,
+                    :$short-format,
+                    :$lint-mode,
+                    :@cidr-filter,
+                    :@asn-filter
+                ) } ).grep( { $^a<match>.defined } );
 
             } else {
-                @events = @stack.grep(
-                    { is-filter-match($^a, :@cidr-filter, :@asn-filter, :$lint-mode) }
-                ).map( { map-event($^a, $my-asn, $lint-mode, $short-format) } );
+                @events = @stack.map( { map-event(
+                    :event($^a),
+                    :$my-asn,
+                    :$short-format,
+                    :$lint-mode,
+                    :@cidr-filter,
+                    :@asn-filter
+                ) } ).grep( { $^a<match>.defined } );
             }
 
             for @events -> $event {
@@ -181,7 +191,7 @@ sub MAIN(
                         short-format-output($entry, $event<errors>);
                     }
                 } else {
-                    long-format-output($event<str>, $event<errors>);
+                    long-format-output($event<str>, $event<errors>, $event<match>);
                 }
 
                 $messages-logged++;
@@ -232,68 +242,61 @@ multi is-filter-match(
     :@cidr-filter,
     :@asn-filter,
     :$lint-mode
-    -->Bool:D
+    -->Str
 ) {
-    if $event.message ~~ Net::BGP::Message::Update {
-        if @asn-filter.elems + @cidr-filter.elems == 0 { return True }
+    return '' unless $event.message ~~ Net::BGP::Message::Update; # We only care about UPDATEs
 
-        if @cidr-filter.elems {
-            my @nlri = @( $event.message.nlri );
-            for @cidr-filter.grep( { $^a.ip-version == 4 } ) -> $cidr {
-                if @nlri.first( { $cidr.contains($^a) } ).defined { return True }
-            }
+    if @asn-filter.elems + @cidr-filter.elems == 0 { return '' }
 
-            my @withdrawn = @( $event.message.withdrawn );
-            for @cidr-filter.grep( { $^a.ip-version == 4 } ) -> $cidr {
-                if @withdrawn.first( { $cidr.contains($^a) } ).defined { return True }
-            }
+    if @cidr-filter.elems {
+        my @nlri      = @( $event.message.nlri );
+        my @withdrawn = @( $event.message.withdrawn );
+        my $agg       = $event.message.aggregator-ip;
+        $agg          = Net::BGP::CIDR.from-str("$agg/32") if $agg.defined;
 
-            my @nlri6 = @( $event.message.nlri6 );
-            for @cidr-filter.grep( { $^a.ip-version == 6 } ) -> $cidr {
-                if @nlri6.first( { $cidr.contains($^a) } ).defined { return True }
-            }
+        for @cidr-filter.grep( { $^a.ip-version == 4 } ) -> $cidr {
+            if @nlri.first\    ( { $cidr.contains($^a) } ).defined { return 'NLRI' }
+            if @withdrawn.first( { $cidr.contains($^a) } ).defined { return 'WITHDRAWN' }
 
-            my @withdrawn6 = @( $event.message.withdrawn6 );
-            for @cidr-filter.grep( { $^a.ip-version == 6 } ) -> $cidr {
-                if @withdrawn6.first( { $cidr.contains($^a) } ).defined { return True }
-            }
-
-            my $agg = $event.message.aggregator-ip;
             if $agg.defined {
-                $agg = Net::BGP::CIDR.from-str("$agg/32");
-                for @cidr-filter.grep( { $^a.ip-version == 4 } ) -> $cidr {
-                    if $cidr.contains($agg) {
-                        return True;
-                    }
-                }
+                if $cidr.contains($agg) { return 'AGGREGATOR-IP' }
             }
         }
 
-        if @asn-filter.elems {
-            my $agg = $event.message.aggregator-asn;
-            if $agg.defined && @asn-filter.first( { $^a == $agg } ).defined { return True }
-
-            for @asn-filter -> $cidr {
-                if $event.message.as-array.first( { $^a == $cidr } ).defined {
-                    return True
-                }
-            }
+        my @nlri6      = @( $event.message.nlri6 );
+        my @withdrawn6 = @( $event.message.withdrawn6 );
+        for @cidr-filter.grep( { $^a.ip-version == 6 } ) -> $cidr {
+            if @nlri6.first\    ( { $cidr.contains($^a) } ).defined { return 'NLRI' }
+            if @withdrawn6.first( { $cidr.contains($^a) } ).defined { return 'WITHDRAWN' }
         }
-
-        return False;
-    } else {
-        return !$lint-mode;
     }
+
+    if @asn-filter.elems {
+        for @asn-filter -> $cidr {
+            if $event.message.as-array.first( { $^a == $cidr } ).defined {
+                return 'AS-PATH'
+            }
+        }
+
+        my $agg = $event.message.aggregator-asn;
+        if $agg.defined && @asn-filter.first( { $^a == $agg } ).defined { return True }
+    }
+
+    return Str;
 }
-multi is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode -->Bool:D) {
-    return !$lint-mode;
+multi is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode -->Str) {
+    return $lint-mode ?? Str !! '';
 }
 
 multi get-str($event, :@cidr-filter -->Str) { $event.Str }
 
-sub logevent(Str:D $event) {
+sub logevent(Str:D $event, Str $match is copy) {
     state $counter = 0;
-    lognote("«" ~ $counter++ ~ "» " ~ $event);
+
+    $match //= '';
+    if $match ne '' { $match = "(match: $match) " }
+
+    lognote("«" ~ $counter++ ~ "» $match" ~ $event);
 }
 
 sub lognote(Str:D $msg) {
@@ -312,13 +315,13 @@ sub log(Str:D $type, Str:D $msg, Bool:D $colored = $COLORED) {
     say @lines.join("\n") if @lines.elems;
 }
 
-sub long-format-output(Str:D $event is copy, @errors -->Nil) {
+sub long-format-output(Str:D $event is copy, @errors, Str $match -->Nil) {
     if @errors.elems {
         for @errors -> $err {
             $event ~= "\n      ERROR: {$err.key} ({$err.value})";
         }
     }
-    logevent($event);
+    logevent($event, $match);
 }
 
 sub short-format-output(Str:D $line, @errors -->Nil) {
@@ -459,9 +462,21 @@ sub short-line-open(
     );
 }
 
-sub map-event($event, $my-asn, $lint-mode, $short-format) {
+# We short circuit on matches, and don't execute this full sub.
+# This is a performance optimization.
+sub map-event(
+    :$event,
+    :$my-asn,
+    :$short-format,
+    :$lint-mode,
+    :@cidr-filter,
+    :@asn-filter,
+) {
     my $ret = Hash.new;
     $ret<event> = $event;
+    $ret<match> = is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode);
+    return $ret unless $ret<match>.defined; # Short circuit here.
+
     $ret<str>   = $short-format ?? short-lines($event) !! $event.Str;
 
     if $lint-mode and $event ~~ Net::BGP::Event::BGP-Message {
