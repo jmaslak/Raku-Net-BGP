@@ -144,4 +144,8 @@ Only output messages that trigger some "lint" checks (and match any filters in
 place).  For example, private ASNs in the Aggregator path attribute of an
 UPDATE message.
 
+=head2 --color
+
+Enable basic output colorization to make output slightly easier to read.
+
 =end pod
