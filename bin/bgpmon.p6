@@ -26,7 +26,7 @@ sub MAIN(
     Net::BGP::IP::ipv4:D :$my-bgp-id,
     Int:D                :$batch-size = 32,
     Str                  :$cidr-filter,
-    Str:D                :$asn-filter,
+    Str                  :$asn-filter,
     Str                  :$announce,
     Bool:D               :$short-format = False,
     Bool:D               :$af-ipv6 = False,
