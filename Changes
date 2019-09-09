@@ -2,6 +2,7 @@ Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
     - Enhancement: Decode capability 128 (obsolete Cisco route refresh)
+    - Enhancement: Decode long commmunity path attribute (attribute 32)
 
 0.1.5  2019-09-07T20:58:13-06:00
     - Feature: Add --filter-asn option to bgpmon.p6

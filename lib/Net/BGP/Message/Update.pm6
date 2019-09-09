@@ -20,6 +20,7 @@ use Net::BGP::Path-Attribute::Cluster-List;
 use Net::BGP::Path-Attribute::Community;
 use Net::BGP::Path-Attribute::Generic;
 use Net::BGP::Path-Attribute::Local-Pref;
+use Net::BGP::Path-Attribute::Long-Community;
 use Net::BGP::Path-Attribute::MED;
 use Net::BGP::Path-Attribute::MP-NLRI;
 use Net::BGP::Path-Attribute::MP-Unreachable;
@@ -44,6 +45,7 @@ has Int   $.cached-aggregator-asn;
 has Str   $.cached-aggregator-ip;
 has Int   $.cached-as4-aggregator-asn;
 has Str   $.cached-as4-aggregator-ip;
+has Str:D @.cached-long-community-list;
 
 method new() {
     die("Must use from-raw or from-hash to construct a new object");
@@ -77,30 +79,33 @@ method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
     for @!cached-path-attributes -> $attr {
         given $attr {
             when Net::BGP::Path-Attribute::Next-Hop {
-                $!cached-next-hop           = $attr.ip;
+                $!cached-next-hop            = $attr.ip;
             }
             when Net::BGP::Path-Attribute::AS-Path {
-                $!cached-as16-path          = $attr.as-path;
+                $!cached-as16-path           = $attr.as-path;
             }
             when Net::BGP::Path-Attribute::AS4-Path {
-                $!cached-as32-path          = $attr.as4-path;
+                $!cached-as32-path           = $attr.as4-path;
             }
             when Net::BGP::Path-Attribute::Origin {
-                $!cached-origin             = $attr.origin;
+                $!cached-origin              = $attr.origin;
             }
             when Net::BGP::Path-Attribute::Community {
-                @!cached-community-list     = $attr.community-list;
+                @!cached-community-list      = $attr.community-list;
             }
             when Net::BGP::Path-Attribute::Atomic-Aggregate {
-                $!cached-atomic-aggregate   = True;
+                $!cached-atomic-aggregate    = True;
             }
             when Net::BGP::Path-Attribute::Aggregator {
-                $!cached-aggregator-asn     = $attr.asn;
-                $!cached-aggregator-ip      = $attr.ip;
+                $!cached-aggregator-asn      = $attr.asn;
+                $!cached-aggregator-ip       = $attr.ip;
             }
             when Net::BGP::Path-Attribute::AS4-Aggregator {
-                $!cached-as4-aggregator-asn = $attr.asn;
-                $!cached-as4-aggregator-ip  = $attr.ip;
+                $!cached-as4-aggregator-asn  = $attr.asn;
+                $!cached-as4-aggregator-ip   = $attr.ip;
+            }
+            when Net::BGP::Path-Attribute::Long-Community {
+                @!cached-long-community-list = $attr.long-community-list;
             }
         }
     }
@@ -129,6 +134,9 @@ method Str(-->Str) {
 
     my @comm = self.community-list;
     push @lines, "Communities: " ~ @comm.join(" ") if @comm.elems;
+    
+    my @long-comm = self.long-community-list;
+    push @lines, "Long-Communities: " ~ @long-comm.join(" ") if @long-comm.elems;
 
     push @lines, "Atomic-Aggregate" if self.atomic-aggregate;
 
@@ -147,6 +155,7 @@ method Str(-->Str) {
         next if $attr ~~ Net::BGP::Path-Attribute::Atomic-Aggregate;
         next if $attr ~~ Net::BGP::Path-Attribute::Aggregator;
         next if $attr ~~ Net::BGP::Path-Attribute::AS4-Aggregator;
+        next if $attr ~~ Net::BGP::Path-Attribute::Long-Community;
 
         push @lines, "  ATTRIBUTE: " ~ $attr.Str;
     }
@@ -168,6 +177,7 @@ method from-hash(%params is copy, Bool:D :$asn32) {
         withdrawn origin as-path as4-path next-hop med local-pref
         atomic-aggregate originator-id cluster-list community nlri
         address-family path-attributes aggregator-ip aggregator-asn
+        long-community
     »;
 
     %params<withdrawn>        //= [];
@@ -186,6 +196,7 @@ method from-hash(%params is copy, Bool:D :$asn32) {
     %params<path-attributes>  //= [];
     %params<aggregator-asn>   //= Nil;
     %params<aggregator-ip>    //= '';
+    %params<long-community>   //= [];
 
     # Delete unnecessary option
     if %params<message-code>:exists {
@@ -388,6 +399,16 @@ method from-hash(%params is copy, Bool:D :$asn32) {
         ).raw;
     }
 
+    if %params<long-community>.elems {
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+            {
+                path-attribute-name => 'Long-Community',
+                long-community      => %params<long-community>,
+            },
+            :$asn32
+        ).raw;
+    }
+
     my @attrs = @(%params<path-attributes>);
     for @attrs -> $attr {
         $path-attr.append: Net::BGP::Path-Attribute.from-hash( $attr, :$asn32 ).raw;
@@ -535,6 +556,11 @@ method community-list(-->Array[Str:D]) {
     return @!cached-community-list;
 }
 
+method long-community-list(-->Array[Str:D]) {
+    self.path-attributes.sink;
+    return @!cached-long-community-list;
+}
+
 method atomic-aggregate(-->Bool:D) {
     self.path-attributes.sink;
     return $!cached-atomic-aggregate.so;
@@ -656,6 +682,11 @@ Returns an array of path attributes.
 
 Returns an array of strings representing the communities in the BGP Community
 attribute.
+
+=head2 long-community-list
+
+Returns an array of strings representing the communities in the BGP
+Long-Community attribute.
 
 =head2 atomic-aggregate
 
