@@ -6,7 +6,7 @@ use v6;
 #
 
 use StrictClass;
-unit class Net::BGP::AS-List:ver<0.1.5>:auth<cpan:JMASLAK> does StrictClass;
+unit class Net::BGP::AS-List:ver<0.1.6>:auth<cpan:JMASLAK> does StrictClass;
 
 use Net::BGP::Conversions;
 

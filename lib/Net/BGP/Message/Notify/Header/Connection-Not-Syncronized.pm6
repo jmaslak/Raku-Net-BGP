@@ -9,7 +9,7 @@ use Net::BGP::Conversions;
 use Net::BGP::Message::Notify::Header;
 
 use StrictClass;
-unit class Net::BGP::Message::Notify::Header::Connection-Not-Syncronized:ver<0.1.5>:auth<cpan:JMASLAK>
+unit class Net::BGP::Message::Notify::Header::Connection-Not-Syncronized:ver<0.1.6>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify::Header
     does StrictClass;
 
