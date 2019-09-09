@@ -6,6 +6,7 @@
 /resources/*.dylib
 .precomp/
 /Net-BGP-*
+netflix.sh
 prefixes.sh
 profile-*.html
 test.sh
