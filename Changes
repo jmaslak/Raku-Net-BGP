@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.1.7  2019-10-14T15:23:11-06:00
     - Handle race condition on socket writes
     - Minor changes to reference Raku, not Perl 6
 

@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-This provides framework to support the BGP protocol within a Perl6 application.
+This provides framework to support the BGP protocol within a Raku application.
 
 This is a pre-release of the final version, and as such the interface may change. The best way of seeing how this module works is to look at `bin/bgpmon.pl6` and examining it. If you are interested in using this module, and have any suggestions at all, please let me know!
 
