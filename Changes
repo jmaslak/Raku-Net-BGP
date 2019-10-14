@@ -2,6 +2,7 @@ Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
     - Handle race condition on socket writes
+    - Minor changes to reference Raku, not Perl 6
 
 0.1.6  2019-09-09T16:23:21-06:00
     - Enhancement: Decode capability 128 (obsolete Cisco route refresh)
