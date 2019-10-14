@@ -115,8 +115,11 @@ method send-bgp(Net::BGP::Message:D $msg -->Nil) {
     # Message
     $outbuf.append( $msg.raw );
 
-    # Actually send them.
-    self.socket.write($outbuf);
+    # Actually send them.  We wrap this in a try to avoid a race
+    # condition info.
+    try {
+        self.socket.write($outbuf);
+    }
 
     # controller
     $.bgp-handler.update-last-sent(self);
