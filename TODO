@@ -18,3 +18,6 @@ Todo Items:
   * Pause recept of incoming TCP packets while waiting for
     user/controller to process existing backlog
   * Document from-hash method properly in Net::BGP::Message
+  * Make opens print nicer (multi-line)
+  * Seeing after stop and restart, sometimes first connection does not
+    establish a connection
