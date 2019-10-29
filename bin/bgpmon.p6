@@ -241,11 +241,15 @@ multi is-filter-match(
     Net::BGP::Event::BGP-Message:D $event,
     :@cidr-filter,
     :@asn-filter,
-    :$lint-mode
+    :$lint-mode,
+    :$colored = $COLORED,
     -->Str
 ) {
     return '' unless $event.message ~~ Net::BGP::Message::Update; # We only care about UPDATEs
     return '' unless @asn-filter.elems + @cidr-filter.elems > 0;
+
+    my $nlri      = 'NLRI';
+    my $withdrawn = 'WITHDRAWN';
 
     my @m;
 
@@ -256,8 +260,8 @@ multi is-filter-match(
         $agg          = Net::BGP::CIDR.from-str("$agg/32") if $agg.defined;
 
         for @cidr-filter.grep( { $^a.ip-version == 4 } ) -> $cidr {
-            if @nlri.first\    ( { $cidr.contains($^a) } ).defined { @m.push('NLRI') }
-            if @withdrawn.first( { $cidr.contains($^a) } ).defined { @m.push('WITHDRAWN') }
+            if @nlri.first\    ( { $cidr.contains($^a) } ).defined { @m.push($nlri) }
+            if @withdrawn.first( { $cidr.contains($^a) } ).defined { @m.push($withdrawn) }
 
             if $agg.defined {
                 if $cidr.contains($agg) { @m.push('AGGREGATOR-IP') }
@@ -267,8 +271,8 @@ multi is-filter-match(
         my @nlri6      = @( $event.message.nlri6 );
         my @withdrawn6 = @( $event.message.withdrawn6 );
         for @cidr-filter.grep( { $^a.ip-version == 6 } ) -> $cidr {
-            if @nlri6.first\    ( { $cidr.contains($^a) } ).defined { @m.push('NLRI') }
-            if @withdrawn6.first( { $cidr.contains($^a) } ).defined { @m.push('WITHDRAWN') }
+            if @nlri6.first\    ( { $cidr.contains($^a) } ).defined { @m.push($nlri) }
+            if @withdrawn6.first( { $cidr.contains($^a) } ).defined { @m.push($withdrawn) }
         }
     }
 
@@ -311,12 +315,23 @@ sub log(Str:D $type, Str:D $msg, Bool:D $colored = $COLORED) {
     my @lines = $msg.split("\n");
     my $first = @lines.shift;
 
-    print BOLD if $colored;
+    if $colored {
+        if ! @lines.elems {
+            print color('cyan');
+        } elsif (@lines[*-1] ~~ m/\s+ MATCH:.*WITHDRAWN/ ) {
+            print color('red');
+        } elsif (@lines[*-1] ~~ m/\s+ MATCH:.*NLRI/ ) {
+            print color('green');
+        } else {
+            print color('cyan');
+        }
+    }
     print "{DateTime.now.Str} [$type] $first";
-    print RESET if $colored;
 
     say "";
     say @lines.join("\n") if @lines.elems;
+
+    print RESET if $colored;
 }
 
 sub long-format-output(Str:D $event is copy, @errors, Str $match -->Nil) {

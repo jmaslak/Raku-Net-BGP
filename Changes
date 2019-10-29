@@ -1,6 +1,7 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Colorization changes in bgpmon.p6
 
 0.1.7  2019-10-14T15:23:11-06:00
     - Handle race condition on socket writes
