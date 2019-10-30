@@ -50,7 +50,7 @@ subtest 'Open Message w/ Capabilities', {
     is $bgp.parameters[0].parameter-name, "Capabilities", "Parameter has proper name";
 
     my $caps = $bgp.parameters[0].capabilities;
-    is $caps.elems, 4, "Proper number of capabilities";
+    is $caps.elems, 5, "Proper number of capabilities";
 
     ok $caps[0] ~~ Net::BGP::Capability::Route-Refresh, "Capability¹ is proper type";
     is $caps[0].capability-code, 2,                     "Capability¹ has proper code";
@@ -74,6 +74,22 @@ subtest 'Open Message w/ Capabilities', {
     is $caps[3].afi,             "IPv6",          "Capability⁴ has proper afi";
     is $caps[3].safi,            "unicast",       "Capability⁴ has proper safi";
     is $caps[3].reserved,        0,               "Capability⁴ has proper reserved";
+
+    ok $caps[4] ~~ Net::BGP::Capability::Graceful-Restart, "Capability⁵ is proper type";
+    is $caps[4].capability-code, 64,              "Capability⁵ has proper code";
+    is $caps[4].capability-name, "Graceful-Restart", "Capability⁵ has proper name";
+    is $caps[4].restart,         True,            "Capability⁵ has proper restart";
+    is $caps[4].reserved-flags,  0,               "Capability⁵ has proper reserved";
+    is $caps[4].flags,           0x8,             "Capability⁵ has proper flags";
+    is $caps[4].restart-time,    256,             "Capability⁵ has proper restart-time";
+
+    my $per-af = $caps[4].per-af-flags;
+    is $per-af.elems,            1,               "Capability⁵ has proper num of per-af";
+    is $per-af[0].afi,           1,               "Capability⁵ has proper per-af AFI";
+    is $per-af[0].safi,          1,               "Capability⁵ has proper per-af SAFI";
+    is $per-af[0].afi-name,      'IP',            "Capability⁵ has proper per-af AFI Name";
+    is $per-af[0].safi-name,     'unicast',       "Capability⁵ has proper per-af SAFI Name";
+    is $per-af[0].flags,         0,               "Capability⁵ has proper per-af Flags";
 
     ok check-list($bgp.raw, read-message('open-message-capabilities')), 'Message value correct';;
 

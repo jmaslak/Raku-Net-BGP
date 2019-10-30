@@ -11,6 +11,7 @@ use Net::BGP::Capability;
 use Net::BGP::Capability::ASN32;
 use Net::BGP::Capability::Deprecated-Dynamic-Capability;
 use Net::BGP::Capability::Generic;
+use Net::BGP::Capability::Graceful-Restart;
 use Net::BGP::Capability::MPBGP;
 use Net::BGP::Capability::Route-Refresh;
 use Net::BGP::Capability::Route-Refresh-Cisco;
