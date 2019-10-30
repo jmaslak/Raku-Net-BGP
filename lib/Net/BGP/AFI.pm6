@@ -7,7 +7,7 @@ use v6;
 
 unit module Net::BGP::AFI:ver<0.1.7>:auth<cpan:JMASLAK>;
 
-my %afi-names := Hash[Int:D,Str:D].new;
+my %afi-names := Hash[UInt:D,Str:D].new;
 
 my %afi-codes := {
         1 => 'IP',
@@ -59,11 +59,11 @@ for %afi-codes -> $pair {
     %afi-names{ $pair.value } = $pair.key.Int;
 }
 
-sub afi-name(Int:D $afi -->Str:D) is export(:ALL, :afi-code) {
+sub afi-name(UInt:D $afi -->Str:D) is export(:ALL, :afi-code) {
     return %afi-codes{$afi}:exists ?? %afi-codes{$afi} !! "$afi";
 }
 
-sub afi-code(Str:D $name -->Int:D) is export(:ALL, :afi-code) {
+sub afi-code(Str:D $name -->UInt:D) is export(:ALL, :afi-code) {
     if %afi-names{$name}:exists {
         return %afi-names{$name};
     }
@@ -92,11 +92,11 @@ BGP Address Family Indicators
 
 =head1 Subroutines
 
-=head2 afi-name(Int:D $afi -->Str:D)
+=head2 afi-name(UInt:D $afi -->Str:D)
 
 Returns the name corresponding to an integer AFI code.
 
-=head2 afi-code(Str:D $name -->Int:D)
+=head2 afi-code(Str:D $name -->UInt:D)
 
 Returns the integer represeinting the AFI from the string name.  Throws an
 exception upon unrecognized AFIs.

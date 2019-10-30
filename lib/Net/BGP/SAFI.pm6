@@ -6,7 +6,7 @@ use v6;
 #
 
 unit module Net::BGP::SAFI:ver<0.1.7>:auth<cpan:JMASLAK>;
-my %safi-names := Hash[Int:D,Str:D].new;
+my %safi-names := Hash[UInt:D,Str:D].new;
 
 my %safi-codes := {
         1 => 'unicast',
@@ -39,11 +39,11 @@ for %safi-codes -> $pair {
     %safi-names{ $pair.value } = $pair.key.Int;
 }
 
-sub safi-name(Int:D $safi -->Str:D) is export(:ALL, :safi-code) {
+sub safi-name(UInt:D $safi -->Str:D) is export(:ALL, :safi-code) {
     return %safi-codes{$safi}:exists ?? %safi-codes{$safi} !! "$safi";
 }
 
-sub safi-code(Str:D $name -->Int:D) is export(:ALL, :safi-code) {
+sub safi-code(Str:D $name -->UInt:D) is export(:ALL, :safi-code) {
     if %safi-names{$name}:exists {
         return %safi-names{$name};
     }
@@ -72,11 +72,11 @@ BGP Subsequent Address Family Indicators
 
 =head1 Subroutines
 
-=head2 safi-name(Int:D $safi -->Str:D)
+=head2 safi-name(UInt:D $safi -->Str:D)
 
 Returns the name corresponding to an integer SAFI code.
 
-=head2 safi-code(Str:D $name -->Int:D)
+=head2 safi-code(Str:D $name -->UInt:D)
 
 Returns the integer represeinting the SAFI from the string name.  Throws an
 exception upon unrecognized SAFIs.
