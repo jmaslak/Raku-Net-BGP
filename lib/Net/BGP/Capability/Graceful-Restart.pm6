@@ -135,7 +135,7 @@ method per-af-flags() { # Returns a list of per-af classes
 method Str(-->Str:D) {
     "Graceful-Restart="
         ~ ( self.restart ?? 'RESTART ' !! '' )
-        ~ ( self.reserved-flags ?? 'RES=' ~ self.reserved-flags ~ ' ' !! '' )
+        ~ ( self.reserved-flags ?? 'Reserved:' ~ self.reserved-flags ~ ' ' !! '' )
         ~ self.restart-time ~ "secs"
         ~ (self.per-af-flags.elems ?? ' ' !! '')
         ~ (self.per-af-flags)».Str.join(";");
