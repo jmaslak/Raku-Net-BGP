@@ -29,7 +29,7 @@ use Net::BGP::Path-Attribute::Origin;
 use Net::BGP::Path-Attribute::Originator-ID;
 
 use StrictClass;
-unit class Net::BGP::Message::Update:ver<0.1.7>:auth<cpan:JMASLAK>
+unit class Net::BGP::Message::Update:ver<0.1.8>:auth<cpan:JMASLAK>
     is Net::BGP::Message
     does StrictClass;
 

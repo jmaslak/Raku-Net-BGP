@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit module Net::BGP::SAFI:ver<0.1.7>:auth<cpan:JMASLAK>;
+unit module Net::BGP::SAFI:ver<0.1.8>:auth<cpan:JMASLAK>;
 my %safi-names := Hash[UInt:D,Str:D].new;
 
 my %safi-codes := {
