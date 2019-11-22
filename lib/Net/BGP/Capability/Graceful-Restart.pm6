@@ -47,6 +47,12 @@ method from-hash(%params is copy)  {
         %params<restart-state>.delete;
     }
 
+    if %params<graceful-restart-on-notify>:exists {
+        %params<flags> = %params<flags> +& 0x4;
+        %params<flags> = %params<flags> +| 0x4 if %params<graceful-restart-on-notify>;
+        %params<graceful-restart-on-notify>.delete;
+    }
+
     if %params<capability-name>:exists {
         if %params<capability-name> ne self.implemented-capability-name {
             die "Can only create a {self.implemented-capability-name} capability";
@@ -106,8 +112,16 @@ method restart(-->Bool:D) {
     }
 }
 
+method graceful-restart-on-notify(-->Bool:D) {
+    if self.flags +& 0x4 {
+        return True;
+    } else {
+        return False;
+    }
+}
+
 method reserved-flags(-->UInt:D) {
-    return self.flags +& 0x7;
+    return self.flags +& 0x3;
 }
 
 method restart-time(-->UInt:D) {
@@ -136,6 +150,7 @@ method Str(-->Str:D) {
     "Graceful-Restart="
         ~ ( self.restart ?? 'RESTART ' !! '' )
         ~ ( self.reserved-flags ?? 'Reserved:' ~ self.reserved-flags ~ ' ' !! '' )
+        ~ ( self.graceful-restart-on-notify ?? 'Graceful-Restart-On-Notify ' !! '' )
         ~ self.restart-time ~ "secs"
         ~ (self.per-af-flags.elems ?? ' ' !! '')
         ~ (self.per-af-flags)».Str.join(";");
@@ -172,9 +187,9 @@ Constructs a new object for a given raw binary buffer.
 
 Constructs a new object for a given hash.  This parent class looks only for
 the key of C<capability-code>, C<flags> (optional if C<restart> key is present),
-C<restart> (optional), and an C<address-family-flags> array of hashes.  This
-array of hashes uses the keys C<afi>, C<safi>, and C<flags> to generate the
-per-AFI/SAFI flags.
+C<restart> (optional), C<graceful-restart-on-notify> (optional) and an
+C<address-family-flags> array of hashes.  This array of hashes uses the keys
+C<afi>, C<safi>, and C<flags> to generate the per-AFI/SAFI flags.
 
 =head1 Methods
 
@@ -197,6 +212,11 @@ The raw byte buffer (C<buf8>) corresponding to the RFC definition of C<value>.
 =head2 flags
 
 Returns the four bit flag value.
+
+=head2 graceful-restart-on-notify
+
+Returns C<True> or C<False> based on whether the remote end complies with
+RFC8538 (with support for graceful restart on receipt of a notify message).
 
 =head2 restart
 
