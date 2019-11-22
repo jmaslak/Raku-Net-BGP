@@ -13,5 +13,4 @@ test.sh
 test2.sh
 /*.log
 /log.txt
-out.txt
-out2.txt
+out*.txt
