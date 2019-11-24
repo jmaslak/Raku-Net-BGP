@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Adjusted stringification of open/close events to match other BGP
+      events.
 
 0.1.8  2019-11-21T19:58:02-07:00
     - Support for encoding/decoding graceful-restart capability

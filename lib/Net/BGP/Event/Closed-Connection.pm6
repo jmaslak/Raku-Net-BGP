@@ -17,7 +17,7 @@ has Int $.client-port;
 
 method message-name(-->Str) { 'Closed-Connection' };
 
-method Str(-->Str) { "Closed connection { self.connection-id }" }
+method Str(-->Str) { "{ self.connection-id } Closed connection" }
 
 =begin pod
 

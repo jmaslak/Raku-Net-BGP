@@ -18,7 +18,7 @@ has Int $.client-port;
 method message-name(-->Str) { 'New-Connection' };
 
 method Str(-->Str) {
-    "New connection { self.connection-id } from $.client-ip:$.client-port";
+    "{ self.connection-id } New connection from $.client-ip:$.client-port";
 }
 
 =begin pod
