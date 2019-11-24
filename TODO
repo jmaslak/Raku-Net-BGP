@@ -21,3 +21,4 @@ Todo Items:
   * Make opens print nicer (multi-line)
   * Seeing after stop and restart, sometimes first connection does not
     establish a connection
+  * All notifies should have a stringifier
