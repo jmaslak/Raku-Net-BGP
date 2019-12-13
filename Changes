@@ -1,8 +1,12 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
-    - Adjusted stringification of open/close events to match other BGP
-      events.
+    - Enhancement: bgpmon.p6 --track option maintains history of
+      previous AS path elements. This is also used during match operations.
+    - Enhancement: Adjusted stringification of open/close events to match
+      other BGP events.
+    - Bugfix: Short format bgpmon.p6 output now properly displays IPv4
+      withdrawals
 
 0.1.8  2019-11-21T19:58:02-07:00
     - Support for encoding/decoding graceful-restart capability

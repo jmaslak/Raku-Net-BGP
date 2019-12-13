@@ -97,6 +97,10 @@ method from-hash(%params is copy)  {
 
 method raw() { return $.data; }
 
+method Str(-->Str:D) {
+    "NOTIFY Error={ self.error-code } Subtype={ self.error-subcode }"
+}
+
 # Register handler
 INIT { Net::BGP::Message.register: Net::BGP::Message::Notify }
 

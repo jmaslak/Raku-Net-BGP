@@ -256,6 +256,13 @@ multi method receive-bgp(
         $connection.close;
         return;
     }
+    
+    $.user-supplier.emit: Net::BGP::Event::BGP-Message.new(
+        :message( $msg ),
+        :connection-id( $connection.id ),
+        :peer( $peer-ip ),
+        :peer-asn( $connection.peer-asn ),
+    );
 
     $p.lock.protect: {
         if $p.connection.defined && ($p.connection.id == $connection.id ) {

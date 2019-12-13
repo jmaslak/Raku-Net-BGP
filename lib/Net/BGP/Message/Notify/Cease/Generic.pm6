@@ -6,11 +6,11 @@ use v6;
 #
 
 use Net::BGP::Conversions;
-use Net::BGP::Message::Notify;
+use Net::BGP::Message::Notify::Cease;
 
 use StrictClass;
-unit class Net::BGP::Message::Notify::Generic:ver<0.1.8>:auth<cpan:JMASLAK>
-    is Net::BGP::Message::Notify
+unit class Net::BGP::Message::Notify::Cease::Generic:ver<0.1.8>:auth<cpan:JMASLAK>
+    is Net::BGP::Message::Notify::Cease
     does StrictClass;
 
 method new() {
@@ -18,19 +18,19 @@ method new() {
 }
 
 # Generic Types
-method implemented-error-code\  (-->Int) { Int }
-method implemented-error-name\  (-->Str) { Str }
 method implemented-error-subcode(-->Int) { Int }
 method implemented-error-subname(-->Str) { Str }
 
-method error-name(-->Str)    { Str }; # Undefined
-method error-subname(-->Str) { Str }; # Undefined
+method error-subname(-->Str) { Str } # Undefined
 
 method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
     my $obj = self.bless(:data( buf8.new($raw) ));
 
     if $raw[0] ≠ 3 { # Not a notify
         die("Can only build a notification message");
+    }
+    if $raw[1] ≠ 6 { # Not an Cease error
+        die("Can only build an Cease error notification message");
     }
 
     # Validate the parameters parse.
@@ -42,13 +42,17 @@ method from-raw(buf8:D $raw where $raw.bytes ≥ 3) {
 };
 
 method from-hash(%params is copy)  {
-    # Delete unnecessary option
+    # Delete unnecessary options
     if %params<message-code>:exists {
         if (%params<message-code> ≠ 3) { die("Invalid message type for NOTIFY"); }
         %params<message-code>:delete
     }
+    if %params<error-code>:exists {
+        if (%params<error-code> ≠ 6) { die("Invalid error type for Cease"); }
+        %params<error-code>:delete
+    }
 
-    my @REQUIRED = «error-code error-subcode raw-data»;
+    my @REQUIRED = «error-subcode raw-data»;
 
     # Optional parameters
     %params<raw-data> //= buf8.new;
@@ -61,7 +65,7 @@ method from-hash(%params is copy)  {
     my $data = buf8.new();
 
     $data.append( 3 );   # Message type (NOTIFY)
-    $data.append( %params<error-code> );
+    $data.append( 6 );   # Error code (Cease)
     $data.append( %params<error-subcode> );
     $data.append( %params<raw-data> );
 
@@ -71,17 +75,17 @@ method from-hash(%params is copy)  {
 method raw() { return $.data; }
 
 method Str(-->Str:D) {
-    "NOTIFY Error={ self.error-code } Subtype={ self.error-subcode }"
+    "NOTIFY CEASE Subtype={ self.error-subcode } ";
 }
 
 # Register handler
-INIT { Net::BGP::Message::Notify.register(Net::BGP::Message::Notify::Generic) }
+INIT { Net::BGP::Message::Notify::Cease.register(Net::BGP::Message::Notify::Cease::Generic) }
 
 =begin pod
 
 =head1 NAME
 
-Net::BGP::Message::Notify::Generic - Generic BGP Notify Message
+Net::BGP::Message::Notify::Cease::Generic - Generic Cease Error BGP Notify Message
 
 =head1 SYNOPSIS
 
@@ -93,7 +97,7 @@ Net::BGP::Message::Notify::Generic - Generic BGP Notify Message
 
 =head1 DESCRIPTION
 
-Generic Notify BGP message type
+Generic Cease error BGP Notify message type
 
 =head1 Constructors
 
@@ -108,18 +112,17 @@ is not designed.
 
 =head1 Methods
 
-=head2 message-type
+=head2 message-code
 
 Returns a string that describes what message type the command represents.
 
-Currently understood types include C<OPEN>, C<CEASE>, and
-C<HOLD-TIMER-EXPIRED>.
+Currently understood types include C<Cease>.
 
 =head2 message-code
 
 Contains an integer that corresponds to the message-code.
 
-=head2 error-code
+=head2 error-type
 
 Error code of the notification.
 

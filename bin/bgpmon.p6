@@ -15,6 +15,8 @@ use Terminal::ANSIColor;
 my subset Port of UInt where ^2¹⁶;
 my subset Asn  of UInt where ^2¹⁶;
 
+my %last-path;
+
 my $COLORED;
 
 sub MAIN(
@@ -36,6 +38,7 @@ sub MAIN(
     Bool:D               :$lint-mode = False,
     Bool:D               :$suppress-updates = False,
     Bool:D               :$color = False, # XXX Should test for terminal
+    Bool:D               :$track = False,
     *@args is copy
 ) {
     $COLORED = $color;
@@ -160,7 +163,8 @@ sub MAIN(
                     :$short-format,
                     :$lint-mode,
                     :@cidr-filter,
-                    :@asn-filter
+                    :@asn-filter,
+                    :$track,
                 ) } ).grep( { $^a<match>.defined } );
 
             } else {
@@ -170,7 +174,8 @@ sub MAIN(
                     :$short-format,
                     :$lint-mode,
                     :@cidr-filter,
-                    :@asn-filter
+                    :@asn-filter,
+                    :$track,
                 ) } ).grep( { $^a<match>.defined } );
             }
 
@@ -191,7 +196,7 @@ sub MAIN(
                         short-format-output($entry, $event<errors>);
                     }
                 } else {
-                    long-format-output($event<str>, $event<errors>, $event<match>);
+                    long-format-output($event<str>, $event<errors>, $event<match>, $event<last-path>);
                 }
 
                 $messages-logged++;
@@ -243,6 +248,7 @@ multi is-filter-match(
     :@asn-filter,
     :$lint-mode,
     :$colored = $COLORED,
+    :$track,
     -->Str
 ) {
     return '' unless $event.message ~~ Net::BGP::Message::Update; # We only care about UPDATEs
@@ -277,10 +283,38 @@ multi is-filter-match(
     }
 
     if @asn-filter.elems {
-        for @asn-filter -> $cidr {
-            if $event.message.as-array.first( { $^a == $cidr } ).defined {
+        for @asn-filter -> $as {
+            if $event.message.as-array.first( { $^a == $as } ).defined {
                 @m.push('AS-PATH');
             }
+        }
+
+        if $track {
+            my @nlri = @( $event.message.nlri ).append( @($event.message.nlri6) );
+            for @nlri -> $prefix {
+                if %last-path{$event.peer}{$prefix}:exists {
+                    if @asn-filter.elems {
+                        for @asn-filter -> $as {
+                            if $as ∈ %last-path{$event.peer}{$prefix} {
+                                @m.push('PREFIX-PREVIOUS-MATCH');
+                            }
+                        }
+                    }
+               }
+            }
+
+            my @withdrawn = @( $event.message.withdrawn ).append( @($event.message.withdrawn6) );
+            for @withdrawn -> $prefix {
+                if %last-path{$event.peer}{$prefix}:exists {
+                    if @asn-filter.elems {
+                        for @asn-filter -> $as {
+                            if $as ∈ %last-path{$event.peer}{$prefix} {
+                                @m.push('PREFIX-PREVIOUS-MATCH');
+                            }
+                        }
+                    }
+               }
+           }
         }
 
         my $agg = $event.message.aggregator-asn;
@@ -295,7 +329,7 @@ multi is-filter-match(
         return Str;
     }
 }
-multi is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode -->Str) {
+multi is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode, :$track -->Str) {
     return $lint-mode ?? Str !! '';
 }
 
@@ -334,15 +368,21 @@ sub log(Str:D $type, Str:D $msg, Bool:D $colored = $COLORED) {
     print RESET if $colored;
 }
 
-sub long-format-output(Str:D $event is copy, @errors, Str $match -->Nil) {
+sub long-format-output(Str:D $event is copy, @errors, Str $match, %last-paths -->Nil) {
     if @errors.elems {
         for @errors -> $err {
             $event ~= "\n      ERROR: {$err.key} ({$err.value})";
         }
     }
+
+    for %last-paths.keys.sort -> $prefix {
+        $event ~= "\n      LAST PATH ($prefix): {%last-paths{$prefix}}";
+    }
+
     if $match.defined and $match ne '' {
         $event ~= "\n      MATCH: $match";
     }
+
     logevent($event);
 }
 
@@ -354,7 +394,7 @@ sub short-format-output(Str:D $line, @errors -->Nil) {
     }
 }
 
-multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
+multi short-lines(Net::BGP::Event::BGP-Message:D $event, %last-paths -->Array[Str:D]) {
     my Str:D @out;
 
     my $bgp = $event.message;
@@ -367,7 +407,8 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
                     $prefix,
                     $event.peer,
                     $bgp,
-                    $event.creation-date
+                    $event.creation-date,
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
                 );
             }
         } elsif $bgp.nlri6.elems {
@@ -376,15 +417,17 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
                     $prefix,
                     $event.peer,
                     $bgp,
-                    $event.creation-date
+                    $event.creation-date,
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
                 );
             }
         } elsif $bgp.withdrawn.elems {
-            for @($bgp.withdrawn6) -> $prefix {
+            for @($bgp.withdrawn) -> $prefix {
                 push @out, short-line-withdrawn(
                     $prefix,
                     $event.peer,
-                    $event.creation-date
+                    $event.creation-date,
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
                 );
             }
         } elsif $bgp.withdrawn6.elems {
@@ -393,6 +436,7 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
                     $prefix,
                     $event.peer,
                     $event.creation-date,
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
                 );
             }
         }
@@ -403,7 +447,7 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event -->Array[Str:D]) {
     return @out;
 }
 
-multi short-lines($event -->Array[Str:D]) { return Array[Str:D].new; }
+multi short-lines($event, %last-paths -->Array[Str:D]) { return Array[Str:D].new; }
 
 sub short-line-header(-->Str:D) {
     return join("|",
@@ -414,6 +458,7 @@ sub short-line-header(-->Str:D) {
         "Next-Hop",
         "Path",
         "Communities",
+        "Last-Path",
         "Errors",
     );
 }
@@ -423,6 +468,7 @@ sub short-line-announce(
     Str:D $peer,
     Net::BGP::Message::Update $bgp,
     Int:D $message-date,
+    Str:D $last-path,
     -->Str:D
 ) {
     return join("|",
@@ -433,6 +479,7 @@ sub short-line-announce(
         $bgp.next-hop,
         $bgp.path,
         $bgp.community-list.join(" "),
+        $last-path,
         '',
     );
 }
@@ -442,6 +489,7 @@ sub short-line-announce6(
     Str:D $peer,
     Net::BGP::Message::Update $bgp,
     Int:D $message-date,
+    Str:D $last-path,
     -->Str:D
 ) {
     return join("|",
@@ -452,6 +500,7 @@ sub short-line-announce6(
         $bgp.next-hop6,
         $bgp.path,
         $bgp.community-list.join(" "),
+        $last-path,
         '',
     );
 }
@@ -460,6 +509,7 @@ sub short-line-withdrawn(
     Net::BGP::CIDR $prefix,
     Str:D $peer,
     Int:D $message-date,
+    Str:D $last-path,
     -->Str:D
 ) {
     return join("|",
@@ -467,6 +517,10 @@ sub short-line-withdrawn(
         $message-date,
         $peer,
         $prefix,
+        '',
+        '',
+        '',
+        $last-path,
         '',
     );
 }
@@ -481,6 +535,10 @@ sub short-line-open(
         $message-date,
         $peer,
         '',
+        '',
+        '',
+        '',
+        '',
     );
 }
 
@@ -493,13 +551,39 @@ sub map-event(
     :$lint-mode,
     :@cidr-filter,
     :@asn-filter,
+    :$track,
 ) {
     my $ret = Hash.new;
     $ret<event> = $event;
-    $ret<match> = is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode);
+    $ret<match> = is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode, :$track);
+    $ret<last-path> = {};
+
     return $ret unless $ret<match>.defined; # Short circuit here.
 
-    $ret<str>   = $short-format ?? short-lines($event) !! $event.Str;
+    if $track {
+        if $event ~~ Net::BGP::Event::BGP-Message and $event.message ~~ Net::BGP::Message::Update {
+            my @nlri = @( $event.message.nlri ).append: @( $event.message.nlri6 );
+            for @nlri -> $prefix {
+                if %last-path{$event.peer}{$prefix}:exists {
+                    $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
+                }
+
+                my @old-path = @( $event.message.as-array );
+                @old-path.push( $event.message.origin );
+                %last-path{$event.peer}{$prefix} = @old-path;
+            }
+
+            my @withdrawn = @( $event.message.withdrawn ).append: @( $event.message.withdrawn6 );
+            for @withdrawn -> $prefix {
+                if %last-path{$event.peer}{$prefix}:exists {
+                    $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
+                }
+                %last-path{$event.peer}{$prefix}:delete;
+            }
+        }
+    }
+
+    $ret<str>   = $short-format ?? short-lines($event, $ret<last-path>) !! $event.Str;
 
     if $lint-mode and $event ~~ Net::BGP::Event::BGP-Message {
         $ret<errors> = Net::BGP::Validation::errors(
@@ -509,6 +593,10 @@ sub map-event(
         );
     } else {
         $ret<errors> = Array.new;
+    }
+
+    if $event ~~ Net::BGP::Event::Closed-Connection {
+        %last-path{$event.peer}:delete;
     }
 
     return $ret;
