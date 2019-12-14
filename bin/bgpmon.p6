@@ -578,6 +578,7 @@ sub map-event(
                 if %last-path{$event.peer}{$prefix}:exists {
                     $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
                 }
+
                 %last-path{$event.peer}{$prefix}:delete;
             }
         }
