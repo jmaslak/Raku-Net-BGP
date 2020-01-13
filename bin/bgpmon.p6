@@ -290,7 +290,8 @@ multi is-filter-match(
         }
 
         if $track {
-            my @nlri = @( $event.message.nlri ).append( @($event.message.nlri6) );
+            my @nlri = @( $event.message.nlri );
+            @nlri.append: @($event.message.nlri6);
             for @nlri -> $prefix {
                 if %last-path{$event.peer}{$prefix}:exists {
                     if @asn-filter.elems {
@@ -303,7 +304,8 @@ multi is-filter-match(
                }
             }
 
-            my @withdrawn = @( $event.message.withdrawn ).append( @($event.message.withdrawn6) );
+            my @withdrawn = @( $event.message.withdrawn );
+            @withdrawn.append: @($event.message.withdrawn6);
             for @withdrawn -> $prefix {
                 if %last-path{$event.peer}{$prefix}:exists {
                     if @asn-filter.elems {
@@ -562,7 +564,8 @@ sub map-event(
 
     if $track {
         if $event ~~ Net::BGP::Event::BGP-Message and $event.message ~~ Net::BGP::Message::Update {
-            my @nlri = @( $event.message.nlri ).append: @( $event.message.nlri6 );
+            my @nlri = @( $event.message.nlri );
+            @nlri.append: @( $event.message.nlri6 );
             for @nlri -> $prefix {
                 if %last-path{$event.peer}{$prefix}:exists {
                     $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
@@ -573,7 +576,8 @@ sub map-event(
                 %last-path{$event.peer}{$prefix} = @old-path;
             }
 
-            my @withdrawn = @( $event.message.withdrawn ).append: @( $event.message.withdrawn6 );
+            my @withdrawn = @( $event.message.withdrawn );
+            @withdrawn.append: @( $event.message.withdrawn6 );
             for @withdrawn -> $prefix {
                 if %last-path{$event.peer}{$prefix}:exists {
                     $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
