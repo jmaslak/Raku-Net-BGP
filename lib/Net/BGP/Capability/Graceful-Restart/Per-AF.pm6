@@ -9,7 +9,7 @@ use Net::BGP::AFI  :ALL;
 use Net::BGP::SAFI :ALL;
 
 use StrictClass;
-unit class Net::BGP::Capability::Graceful-Restart::Per-AF:ver<0.1.8>:auth<cpan:JMASLAK>
+unit class Net::BGP::Capability::Graceful-Restart::Per-AF:ver<0.1.9>:auth<cpan:JMASLAK>
     does StrictClass;
 
 has UInt:D $.afi   is required;

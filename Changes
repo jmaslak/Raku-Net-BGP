@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.1.9  2020-01-15T06:07:37Z
     - Enhancement: bgpmon.p6 --track option maintains history of
       previous AS path elements. This is also used during match operations.
     - Enhancement: Adjusted stringification of open/close events to match

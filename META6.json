@@ -27,6 +27,7 @@
     "Net::BGP::Capability" : "lib/Net/BGP/Capability.pm6",
     "Net::BGP::Capability::ASN32" : "lib/Net/BGP/Capability/ASN32.pm6",
     "Net::BGP::Capability::Deprecated-Dynamic-Capability" : "lib/Net/BGP/Capability/Deprecated-Dynamic-Capability.pm6",
+    "Net::BGP::Capability::FQDN" : "lib/Net/BGP/Capability/FQDN.pm6",
     "Net::BGP::Capability::Generic" : "lib/Net/BGP/Capability/Generic.pm6",
     "Net::BGP::Capability::Graceful-Restart" : "lib/Net/BGP/Capability/Graceful-Restart.pm6",
     "Net::BGP::Capability::Graceful-Restart::Per-AF" : "lib/Net/BGP/Capability/Graceful-Restart/Per-AF.pm6",
@@ -62,6 +63,11 @@
     "Net::BGP::Message::Generic" : "lib/Net/BGP/Message/Generic.pm6",
     "Net::BGP::Message::Keep-Alive" : "lib/Net/BGP/Message/Keep-Alive.pm6",
     "Net::BGP::Message::Notify" : "lib/Net/BGP/Message/Notify.pm6",
+    "Net::BGP::Message::Notify::Cease" : "lib/Net/BGP/Message/Notify/Cease.pm6",
+    "Net::BGP::Message::Notify::Cease::Administrative-Reset" : "lib/Net/BGP/Message/Notify/Cease/Administrative-Reset.pm6",
+    "Net::BGP::Message::Notify::Cease::Administrative-Shutdown" : "lib/Net/BGP/Message/Notify/Cease/Administrative-Shutdown.pm6",
+    "Net::BGP::Message::Notify::Cease::Connection-Rejected" : "lib/Net/BGP/Message/Notify/Cease/Connection-Rejected.pm6",
+    "Net::BGP::Message::Notify::Cease::Generic" : "lib/Net/BGP/Message/Notify/Cease/Generic.pm6",
     "Net::BGP::Message::Notify::Generic" : "lib/Net/BGP/Message/Notify/Generic.pm6",
     "Net::BGP::Message::Notify::Header" : "lib/Net/BGP/Message/Notify/Header.pm6",
     "Net::BGP::Message::Notify::Header::Connection-Not-Syncronized" : "lib/Net/BGP/Message/Notify/Header/Connection-Not-Syncronized.pm6",
@@ -104,5 +110,5 @@
   "source-url" : "https://github.com/jmaslak/Perl6-Net-BGP.git",
   "tags" : [ ],
   "test-depends" : [ ],
-  "version" : "0.1.8"
+  "version" : "0.1.9"
 }
