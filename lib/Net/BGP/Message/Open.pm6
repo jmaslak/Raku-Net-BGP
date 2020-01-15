@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -51,7 +51,7 @@ method parameters() {
     return gather {
         while $buf.bytes {
             if $buf.bytes < 2             { die("Parameter too short"); }
-            if ($buf[1] + 2) > $buf.bytes { die("Parameter too short"); }
+            if ($buf[1] + 2) > $buf.bytes { die("Parameter too short ({$buf[1]+2} > {$buf.bytes})"); }
 
             my $opt = Net::BGP::Parameter.from-raw($buf.subbuf(0, 2+$buf[1]));
             take $opt;

@@ -50,7 +50,7 @@ subtest 'Open Message w/ Capabilities', {
     is $bgp.parameters[0].parameter-name, "Capabilities", "Parameter has proper name";
 
     my $caps = $bgp.parameters[0].capabilities;
-    is $caps.elems, 5, "Proper number of capabilities";
+    is $caps.elems, 6, "Proper number of capabilities";
 
     ok $caps[0] ~~ Net::BGP::Capability::Route-Refresh, "Capability¹ is proper type";
     is $caps[0].capability-code, 2,                     "Capability¹ has proper code";
@@ -90,6 +90,12 @@ subtest 'Open Message w/ Capabilities', {
     is $per-af[0].afi-name,      'IP',            "Capability⁵ has proper per-af AFI Name";
     is $per-af[0].safi-name,     'unicast',       "Capability⁵ has proper per-af SAFI Name";
     is $per-af[0].flags,         0,               "Capability⁵ has proper per-af Flags";
+
+    ok $caps[5] ~~ Net::BGP::Capability::FQDN,    "Capability⁶ is proper type";
+    is $caps[5].capability-code, 73,              "Capability⁶ has proper code";
+    is $caps[5].capability-name, "FQDN",          "Capability⁶ has proper name";
+    is $caps[5].hostname,        "Foo",           "Capability⁶ has proper hostname";
+    is $caps[5].domain,          "example.com",   "Capability⁶ has proper domain";
 
     ok check-list($bgp.raw, read-message('open-message-capabilities')), 'Message value correct';;
 

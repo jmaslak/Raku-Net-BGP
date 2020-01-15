@@ -1,7 +1,7 @@
 use v6.d;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -68,6 +68,9 @@ has Bool:D $.add-unknown-peers = False;
 
 has Str:D %!md5;
 
+has Str $.hostname;
+has Str $.domain;
+
 submethod BUILD( *%args ) {
     for %args.keys -> $k {
         given $k {
@@ -76,6 +79,8 @@ submethod BUILD( *%args ) {
             when 'my-asn'            { $!my-asn            = %args{$k} }
             when 'identifier'        { $!identifier        = %args{$k} }
             when 'add-unknown-peers' { $!add-unknown-peers = %args{$k} }
+            when 'hostname'          { $!hostname          = %args{$k} }
+            when 'domain'            { $!domain            = %args{$k} }
             default { die("Invalid attribute set in call to constructor: $k") }
         }
     }
@@ -90,6 +95,8 @@ submethod BUILD( *%args ) {
     $!controller    = Net::BGP::Controller.new(
         :$!my-asn,
         :$!identifier,
+        :$!hostname,
+        :$!domain,
         :$!user-supplier,
         :add-unknown-peers($unknown),
     );

@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -10,6 +10,7 @@ use v6;
 use Net::BGP::Capability;
 use Net::BGP::Capability::ASN32;
 use Net::BGP::Capability::Deprecated-Dynamic-Capability;
+use Net::BGP::Capability::FQDN;
 use Net::BGP::Capability::Generic;
 use Net::BGP::Capability::Graceful-Restart;
 use Net::BGP::Capability::MPBGP;
@@ -114,7 +115,7 @@ method capabilities( -->Array[Net::BGP::Capability:D] ) {
         my $cap-len = $!data[$start+1] + 2;
 
         if ($start + $cap-len) > $!data.bytes {
-            die("Capability too long for option field");
+            die("Capability too long for option field ({$start} {$cap-len} {$!data.bytes})");
         }
 
         my $cap-raw = $!data[ $start..($start + $cap-len - 1) ];
@@ -192,7 +193,7 @@ Joelle Maslak <jmaslak@antelope.net>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2018-2019 Joelle Maslak
+Copyright © 2018-2020 Joelle Maslak
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 

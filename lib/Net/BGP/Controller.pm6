@@ -5,6 +5,8 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
+use Sys::Hostname;
+
 use Net::BGP::AFI-SAFI;
 use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
@@ -26,6 +28,8 @@ unit class Net::BGP::Controller:ver<0.1.8>:auth<cpan:JMASLAK>
 
 has Int:D      $.my-asn            is required where ^(2³²);
 has Int:D      $.identifier        is required where ^(2³²);
+has Str        $.hostname;
+has Str        $.domain;
 has Supplier:D $.user-supplier     is required;
 has Bool:D     $.add-unknown-peers is required;
 
@@ -368,7 +372,15 @@ method send-open(
                 afi             => $family.afi-code,
                 safi            => $family.safi-code,
             };
-        };
+        }
+
+        if ($.hostname // hostname) ne '' or ($.domain // '') ne '' {
+            %msg-hash<capabilities>.push: %{
+                capability-name => 'FQDN',
+                hostname        => $.hostname // hostname,
+                domain          => $.domain // '',
+            };
+        }
     }
 
     my $msg = Net::BGP::Message.from-hash(%msg-hash);

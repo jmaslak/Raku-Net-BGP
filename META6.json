@@ -10,6 +10,7 @@
     "NativeHelpers::Blob",
     "OO::Monitors",
     "StrictClass",
+    "Sys::Hostname",
     "TCP::LowLevel",
     "Terminal::ANSIColor"
   ],

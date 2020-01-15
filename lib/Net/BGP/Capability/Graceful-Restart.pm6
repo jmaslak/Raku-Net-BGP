@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -44,20 +44,20 @@ method from-hash(%params is copy)  {
     if %params<restart-state>:exists {
         %params<flags> = %params<flags> +& 0x8;
         %params<flags> = %params<flags> +| 0x8 if %params<restart-state>;
-        %params<restart-state>.delete;
+        %params<restart-state>:delete;
     }
 
     if %params<graceful-restart-on-notify>:exists {
         %params<flags> = %params<flags> +& 0x4;
         %params<flags> = %params<flags> +| 0x4 if %params<graceful-restart-on-notify>;
-        %params<graceful-restart-on-notify>.delete;
+        %params<graceful-restart-on-notify>:delete;
     }
 
     if %params<capability-name>:exists {
         if %params<capability-name> ne self.implemented-capability-name {
             die "Can only create a {self.implemented-capability-name} capability";
         }
-        %params<capability-name>.delete;
+        %params<capability-name>:delete;
     }
 
     if @REQUIRED.sort.list !~~ %params.keys.sort.list {
@@ -241,7 +241,7 @@ Joelle Maslak <jmaslak@antelope.net>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2018-2019 Joelle Maslak
+Copyright © 2018-2020 Joelle Maslak
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 

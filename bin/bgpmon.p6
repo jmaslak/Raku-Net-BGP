@@ -2,7 +2,7 @@
 use v6.d;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -26,6 +26,8 @@ sub MAIN(
     UInt:D               :$my-asn,
     UInt                 :$max-log-messages,
     Net::BGP::IP::ipv4:D :$my-bgp-id,
+    Str                  :$hostname,
+    Str                  :$domain,
     Int:D                :$batch-size = 32,
     Str                  :$cidr-filter,
     Str                  :$asn-filter,
@@ -49,6 +51,8 @@ sub MAIN(
         :$port,
         :$listen-host,
         :$my-asn,
+        :$hostname,
+        :$domain,
         :identifier(ipv4-to-int($my-bgp-id)),
         :add-unknown-peers($allow-unknown-peers),
     );

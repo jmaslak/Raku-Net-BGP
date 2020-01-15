@@ -1,13 +1,13 @@
 ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
-00 38                                                   # Length
+00 4A                                                   # Length
 01                                                      # Message Type (Open)
 04                                                      # BGP Version
 10 20                                                   # Autonomous System
 00 03                                                   # Hold Time
 01 02 03 04                                             # BGP Identifier
-1E                                                      # Opt Parameter Len
+30                                                      # Opt Parameter Len
 02                                                      # Capability Option
-1C                                                      # Capability Length
+2E                                                      # Capability Length
 02 00                                                   # Route Refresh Capability, 0 Length
 41                                                      # ASN32 Capability
 04                                                      # ASN32 Capability Length
@@ -23,4 +23,11 @@ ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
 81 00                                                   # Graceful-Restart Flags (restarting) and time (256sec)
 00 01 01                                                # Graceful-Restart AFI/SAFI
 00                                                      # Graceful-Restart AFI/SAFI Flags
+
+49                                                      # FQDN Capability
+10                                                      # FQDN Length
+03                                                      #   Hostname Length
+46 6F 6F                                                #   Hostname (Foo)
+0B                                                      #   Domain Length
+65 78 61 6D 70 6C 65 2E 63 6F 6D                        #   Domain (example)
 

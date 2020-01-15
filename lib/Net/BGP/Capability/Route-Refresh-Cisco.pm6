@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -37,14 +37,14 @@ method from-hash(%params is copy)  {
         if %params<capability-code> ≠ 128 {
             die "Can only create a route-refresh capability";
         }
-        %params<capability-code>.delete;
+        %params<capability-code>:delete;
     }
 
     if %params<capability-name>:exists {
         if %params<capability-name> ne "Route-Refresh-Cisco" {
             die "Can only create a route-refresh capability";
         }
-        %params<capability-name>.delete;
+        %params<capability-name>:delete;
     }
 
     if @REQUIRED.sort.list !~~ %params.keys.sort.list {
@@ -120,7 +120,7 @@ Joelle Maslak <jmaslak@antelope.net>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2018-2019 Joelle Maslak
+Copyright © 2018-2020 Joelle Maslak
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
