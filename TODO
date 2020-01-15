@@ -24,3 +24,5 @@ Todo Items:
   * All notifies should have a stringifier
   * Controller should also provide a default value for FQDN capability
     domain name field.
+  * bgpmon.p6 should default next-hop for updates to local address if
+    update lacks a next hop and is in the same address family.
