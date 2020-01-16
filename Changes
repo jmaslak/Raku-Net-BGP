@@ -1,6 +1,8 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+
+0.2.0  2020-01-16T22:59:14Z
     - Bug fix: Withdrawals included inappropriate path elements
     - Feature: FQDN Capabiliity will now attempt to guess domain name
     - Feature: --origin=i|e|? option for bgpmon.pl to set origin on

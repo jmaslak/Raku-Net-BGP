@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Message;
 
 use StrictClass;
-unit class Net::BGP::Message::Generic:ver<0.1.9>:auth<cpan:JMASLAK>
+unit class Net::BGP::Message::Generic:ver<0.2.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
     does StrictClass;
 
