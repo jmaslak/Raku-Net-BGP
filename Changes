@@ -1,6 +1,9 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Cleanup: Eliminate of unnecessary module - Use $*KERNEL.hostname
+      instead of Sys::Hostname
+    - Feature: FQDN Capabiliity will now attempt to guess domain name
 
 0.1.9  2020-01-15T06:07:37Z
     - Enhancement: bgpmon.p6 --track option maintains history of

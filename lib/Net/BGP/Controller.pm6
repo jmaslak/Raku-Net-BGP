@@ -5,8 +5,6 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-use Sys::Hostname;
-
 use Net::BGP::AFI-SAFI;
 use Net::BGP::Connection-List;
 use Net::BGP::Controller-Handle-BGP;
@@ -17,6 +15,7 @@ use Net::BGP::Message::Keep-Alive;
 use Net::BGP::Message::Update;
 use Net::BGP::Parameter::Capabilities;
 use Net::BGP::Time;
+use Sys::Domainname;
 
 # NOTE: The controller is running on the connection thread, for any
 # method that takes a controller.
@@ -374,11 +373,13 @@ method send-open(
             };
         }
 
-        if ($.hostname // hostname) ne '' or ($.domain // '') ne '' {
+        my $domain   = ($.domain // domainname) // '';
+        my $hostname = $.hostname // $*KERNEL.hostname;
+        if $hostname ne '' or $domain ne '' {
             %msg-hash<capabilities>.push: %{
                 capability-name => 'FQDN',
-                hostname        => $.hostname // hostname,
-                domain          => $.domain // '',
+                hostname        => $hostname,
+                domain          => $domain,
             };
         }
     }
