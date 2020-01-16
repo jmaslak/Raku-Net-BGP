@@ -192,6 +192,27 @@ subtest 'Update Message (ASN16)', {
     done-testing;
 };
 
+subtest 'Update Message Withdrawal Only (ASN16)', {
+    my $bgp = Net::BGP::Message.from-raw( read-message('update-withdrawal-only-asn16'), :!asn32 );
+    ok defined($bgp), "BGP message is defined";
+    ok $bgp ~~ Net::BGP::Message::Update, "BGP message is proper type";
+    is $bgp.message-code, 2, 'Message type is correct';
+    is $bgp.message-name, 'UPDATE', 'Message code is correct';
+
+    is $bgp.withdrawn.elems, 3, "Proper number of withdrawn prefixes";
+    is $bgp.withdrawn[0], '0.0.0.0/0',        "Withdrawn 1 correct";
+    is $bgp.withdrawn[1], '192.168.150.0/24', "Withdrawn 2 correct";
+    is $bgp.withdrawn[2], '192.168.150.1/32', "Withdrawn 3 correct";
+
+    is $bgp.path-attributes.elems, 0, "Proper number of path elements";
+
+    is $bgp.nlri.elems, 0, "Proper number of NLRI prefixes";
+
+    ok check-list($bgp.raw, read-message('update-withdrawal-only-asn16')), 'Message value correct';;
+
+    done-testing;
+};
+
 subtest 'Update Message (MP-BGP)', {
     my $bgp = Net::BGP::Message.from-raw( read-message('update-mp'), :!asn32 );
     ok defined($bgp), "BGP message is defined";

@@ -1,0 +1,8 @@
+ff ff ff ff   ff ff ff ff   ff ff ff ff   ff ff ff ff   # Marker
+00 23                                                   # Length
+02                                                      # Message Type (Open)
+00 0A                                                   # Withdrawn Length
+00                                                      #   0.0.0.0/0
+18 C0 A8 96                                             #   192.168.150.0/24
+20 C0 A8 96 01                                          #   192.168.150.1/32
+00 00                                                   # Path Attribute Length
