@@ -2,11 +2,13 @@ Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
     - Bug fix: Withdrawals included inappropriate path elements
-    - Cleanup: Eliminate of unnecessary module - Use $*KERNEL.hostname
-      instead of Sys::Hostname
     - Feature: FQDN Capabiliity will now attempt to guess domain name
     - Feature: --origin=i|e|? option for bgpmon.pl to set origin on
-      announced routes
+               announced routes
+    - Feature: --check-command and --check-seconds (default 1) to
+               bgpmon.p6 to only announce when the check succeeds
+    - Cleanup: Eliminate of unnecessary module - Use $*KERNEL.hostname
+               instead of Sys::Hostname
 
 0.1.9  2020-01-15T06:07:37Z
     - Enhancement: bgpmon.p6 --track option maintains history of
