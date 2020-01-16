@@ -32,6 +32,7 @@ sub MAIN(
     Str                  :$cidr-filter,
     Str                  :$asn-filter,
     Str                  :$announce,
+    Str:D                :$origin where ($origin eq 'i'|'e'|'?') = '?',
     Bool:D               :$short-format = False,
     Bool:D               :$af-ipv6 = False,
     Bool:D               :$allow-unknown-peers = False,
@@ -124,6 +125,7 @@ sub MAIN(
                                 announce(
                                     $bgp,
                                     $announce,
+                                    $origin,
                                     $event.connection-id,
                                     :@attrs,
                                     :@communities,
@@ -134,6 +136,7 @@ sub MAIN(
                                 announce(
                                     $bgp,
                                     $announce,
+                                    $origin,
                                     $event.connection-id,
                                     :@communities,
                                     :supports-ipv4($event.message.ipv4-support),
@@ -219,6 +222,7 @@ sub MAIN(
 sub announce(
     Net::BGP:D $bgp,
     Str        $announce,
+    Str        $origin,
     Int:D      $connection-id,
                :@attrs?,
                :@communities?,
@@ -240,6 +244,8 @@ sub announce(
             $connection-id,
             [ @parts[0] ],
             @parts[1],
+            "",     # AS path
+            $origin,
             :@attrs,
             :@communities,
         );
