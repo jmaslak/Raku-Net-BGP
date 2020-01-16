@@ -235,7 +235,7 @@ method from-hash(%params is copy, Bool:D :$asn32) {
 
     # Path Attributes
     my $path-attr = buf8.new;
-    if %params<origin> ne '' {
+    if %params<origin> ne '' and %params<nlri>.elems {
         $path-attr.append: Net::BGP::Path-Attribute.from-hash(
             {
                 path-attribute-name => 'Origin',
@@ -245,13 +245,15 @@ method from-hash(%params is copy, Bool:D :$asn32) {
         ).raw;
     }
 
-    $path-attr.append: Net::BGP::Path-Attribute.from-hash(
-        {
-            path-attribute-name => 'AS-Path',
-            as-path             => %params<as-path>,
-        },
-        :$asn32
-    ).raw;
+    if %params<nlri>.elems {
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+            {
+                path-attribute-name => 'AS-Path',
+                as-path             => %params<as-path>,
+            },
+            :$asn32
+        ).raw;
+    }
 
     if %params<address-family> eq 'ipv4' and %params<next-hop> ne '' {
         $path-attr.append: Net::BGP::Path-Attribute.from-hash(

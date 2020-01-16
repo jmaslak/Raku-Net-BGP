@@ -1,6 +1,7 @@
 Revision history for Perl6-Net-BGP
 
 {{$NEXT}}
+    - Bug fix: Withdrawals included inappropriate path elements
     - Cleanup: Eliminate of unnecessary module - Use $*KERNEL.hostname
       instead of Sys::Hostname
     - Feature: FQDN Capabiliity will now attempt to guess domain name
