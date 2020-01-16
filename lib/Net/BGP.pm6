@@ -128,7 +128,7 @@ method announce(
     -->Nil
 ) {
     die "Invalid origin" unless $origin.fc eq 'i'|'e'|'?';
-  
+
     my $connection  = $!controller.connections.get($connection-id);
     my $ip = $connection.peer-ip;
     my $peer = self.peer-get(:peer-ip($ip));
@@ -156,7 +156,7 @@ method announce(
     # way to do this.
     # XXX We should test for a special exception type when we construct
     # the announcement.
-    
+
     my $af = @prefixes.grep( { $_.contains(':') } ).elems ?? 'ipv6' !! 'ipv4';
 
     for @prefixes.batch(20) -> $batch {
@@ -173,6 +173,40 @@ method announce(
             %hash<community>   = @communities;
         }
 
+        %hash<address-family>  = $af;
+
+        my $msg = Net::BGP::Message.from-hash(%hash, :$asn32);
+        self.send-bgp($connection-id, $msg);
+    }
+}
+
+method withdrawal(Int:D $connection-id, @prefixes -->Nil) {
+    my $connection  = $!controller.connections.get($connection-id);
+    my $ip = $connection.peer-ip;
+    my $peer = self.peer-get(:peer-ip($ip));
+    my Bool $asn32;
+    my Bool $ibgp;
+    my Int  $my-asn;
+    $peer.lock.protect: {
+        die "Peer not defined" unless $peer.defined;
+        $asn32  = $peer.do-asn32;
+        $ibgp   = $peer.is-ibgp;
+        $my-asn = $peer.my-asn;
+    }
+
+    # We're going to assume we can fit 20 prefixes into an update
+    # message.  This is completely arbitrary and completely the wrong
+    # way to do this.
+    # XXX We should test for a special exception type when we construct
+    # the withdrawal.
+
+    my $af = @prefixes.grep( { $_.contains(':') } ).elems ?? 'ipv6' !! 'ipv4';
+
+    for @prefixes.batch(20) -> $batch {
+        my %hash;
+        %hash<message-name>    = 'UPDATE';
+        %hash<nlri>            = [];
+        %hash<withdrawn>       = @prefixes;
         %hash<address-family>  = $af;
 
         my $msg = Net::BGP::Message.from-hash(%hash, :$asn32);

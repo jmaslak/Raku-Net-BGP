@@ -32,6 +32,8 @@ sub MAIN(
     Str                  :$cidr-filter,
     Str                  :$asn-filter,
     Str                  :$announce,
+    Str                  :$check-command,
+    UInt:D               :$check-seconds = 1,
     Str:D                :$origin where ($origin eq 'i'|'e'|'?') = '?',
     Bool:D               :$short-format = False,
     Bool:D               :$af-ipv6 = False,
@@ -89,6 +91,10 @@ sub MAIN(
         }
     }
 
+    # Build community list
+    my @communities;
+    @communities = $communities.split(',') if $communities ne '';
+
     # Start the TCP socket
     $bgp.listen();
     lognote("Listening") unless $short-format;
@@ -99,8 +105,25 @@ sub MAIN(
     my $messages-logged = 0;
     my $start = monotonic-whole-seconds;
 
+    # Do initial check
+    my $last-check-successful = False;
+    if $check-command.defined {
+        $last-check-successful = check-command($check-command);
+    }
+
+    # Send check events
+    start {
+        react {
+            whenever Supply.interval($check-seconds, $check-seconds) {
+                $channel.send("TICK");
+            }
+        }
+    }
+
     react {
-        my %sent-connections;
+        my %connections;
+        my %conn-af-ipv4;
+        my %conn-af-ipv6;
 
         whenever $channel -> $event is copy {
             my @stack;
@@ -109,43 +132,62 @@ sub MAIN(
             repeat {
                 if $event ~~ Net::BGP::Event::BGP-Message {
                     if $event.message ~~ Net::BGP::Message::Open {
-                        if %sent-connections{ $event.connection-id }:!exists {
+                        if $last-check-successful {
+                            announce(
+                                $bgp,
+                                $announce,
+                                $origin,
+                                $event.connection-id,
+                                :$send-experimental-path-attribute,
+                                :@communities,
+                                :supports-ipv4($event.message.ipv4-support),
+                                :supports-ipv6($event.message.ipv6-support),
+                            );
+                        }
 
-                            my @communities;
-                            @communities = $communities.split(',') if $communities ne '';
+                        %connections{ $event.connection-id } = True;
+                        %conn-af-ipv4{ $event.connection-id } = $event.message.ipv4-support;
+                        %conn-af-ipv6{ $event.connection-id } = $event.message.ipv6-support;
+                    }
+                } elsif $event ~~ Net::BGP::Event::Closed-Connection {
+                    # We no longer want to track this.
+                    %connections{ $event.connection-id }:delete;
+                    %conn-af-ipv4{ $event.connection-id }:delete;
+                    %conn-af-ipv6{ $event.connection-id }:delete;
+                } elsif $event ~~ Str and $event eq 'TICK' {
+                    my $prev-state = $last-check-successful;
+                    $last-check-successful = check-command($check-command);
 
-                            if $send-experimental-path-attribute {
-                                my %attr;
-                                %attr<path-attribute-code> = 255;
-                                %attr<optional>            = 1;
-                                %attr<transitive>          = 1;
-                                %attr<value>               = buf8.new(0..31);
-                                my @attrs;
-                                @attrs.push(%attr);
-                                announce(
-                                    $bgp,
-                                    $announce,
-                                    $origin,
-                                    $event.connection-id,
-                                    :@attrs,
-                                    :@communities,
-                                    :supports-ipv4($event.message.ipv4-support),
-                                    :supports-ipv6($event.message.ipv6-support),
-                                );
-                            } else {
-                                announce(
-                                    $bgp,
-                                    $announce,
-                                    $origin,
-                                    $event.connection-id,
-                                    :@communities,
-                                    :supports-ipv4($event.message.ipv4-support),
-                                    :supports-ipv6($event.message.ipv6-support),
-                                );
-                            }
-                            %sent-connections{ $event.connection-id } = True;
+                    if $last-check-successful and !$prev-state {
+                        for %connections.keys -> $connection-id {
+                            announce(
+                                $bgp,
+                                $announce,
+                                $origin,
+                                Int($connection-id),
+                                :$send-experimental-path-attribute,
+                                :@communities,
+                                :supports-ipv4(%conn-af-ipv4{ $connection-id }),
+                                :supports-ipv6(%conn-af-ipv4{ $connection-id }),
+                            );
+                            # catch {}; # We ignore for now.
+                        }
+                    } elsif $prev-state and !$last-check-successful {
+                        for %connections.keys -> $connection-id {
+                            withdrawal(
+                                $bgp,
+                                $announce,
+                                Int($connection-id),
+                                :supports-ipv4(%conn-af-ipv4{ $connection-id }),
+                                :supports-ipv6(%conn-af-ipv4{ $connection-id }),
+                            );
+                            # catch {}; # We ignore for now.
                         }
                     }
+
+                    # We just fetch the next event here.
+                    $event = $channel.poll;
+                    next;
                 }
 
                 @stack.push: $event;
@@ -224,12 +266,24 @@ sub announce(
     Str        $announce,
     Str        $origin,
     Int:D      $connection-id,
-               :@attrs?,
+    Bool:D     :$send-experimental-path-attribute,
                :@communities?,
     Bool:D     :$supports-ipv4,
     Bool:D     :$supports-ipv6
     -->Nil
 ) {
+
+    # Handle the experimental path attribute
+    my @attrs;
+    if $send-experimental-path-attribute {
+        my %attr;
+        %attr<path-attribute-code> = 255;
+        %attr<optional>            = 1;
+        %attr<transitive>          = 1;
+        %attr<value>               = buf8.new(0..31);
+        @attrs.push(%attr);
+    }
+
     # Build the announcements
     my @announce-str = $announce.split(',') if $announce.defined;
     for @announce-str -> $info {
@@ -249,6 +303,29 @@ sub announce(
             :@attrs,
             :@communities,
         );
+    }
+}
+
+sub withdrawal(
+    Net::BGP:D $bgp,
+    Str        $prefixes,
+    Int:D      $connection-id,
+    Bool:D     :$supports-ipv4,
+    Bool:D     :$supports-ipv6
+    -->Nil
+) {
+
+    # Build the withdrawal
+    my @prefix-str = $prefixes.split(',') if $prefixes.defined;
+    for @prefix-str -> $info {
+        my @parts = $info.split('-');
+        die "Announcement must be in format <ip>-<nexthop>" unless @parts.elems == 2;
+
+        # Don't advertise unsupported address families
+        if ( $info.contains(':')) and (!$supports-ipv6) { next; }
+        if (!$info.contains(':')) and (!$supports-ipv4) { next; }
+
+        $bgp.withdrawal($connection-id, [ @parts[0] ]);
     }
 }
 
@@ -420,7 +497,7 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event, %last-paths -->Array[St
                     $event.peer,
                     $bgp,
                     $event.creation-date,
-                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '',
                 );
             }
         } elsif $bgp.nlri6.elems {
@@ -430,7 +507,7 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event, %last-paths -->Array[St
                     $event.peer,
                     $bgp,
                     $event.creation-date,
-                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '',
                 );
             }
         } elsif $bgp.withdrawn.elems {
@@ -439,7 +516,7 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event, %last-paths -->Array[St
                     $prefix,
                     $event.peer,
                     $event.creation-date,
-                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '',
                 );
             }
         } elsif $bgp.withdrawn6.elems {
@@ -448,7 +525,7 @@ multi short-lines(Net::BGP::Event::BGP-Message:D $event, %last-paths -->Array[St
                     $prefix,
                     $event.peer,
                     $event.creation-date,
-                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '', 
+                    %last-paths{$prefix}:exists ?? %last-paths{$prefix}.join(" ") !! '',
                 );
             }
         }
@@ -615,6 +692,19 @@ sub map-event(
     }
 
     return $ret;
+}
+
+sub check-command(Str $cmd is copy) {
+    return True unless $cmd.defined;
+
+    $cmd ~= " >/dev/null 2>/dev/null";
+    my $result = shell $cmd;
+
+    if $result.exitcode == 0 {
+        return True;
+    } else {
+        return False;
+    }
 }
 
 multi sub splitter(Str:U $str, $pattern --> Iterable) { @() }
