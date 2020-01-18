@@ -110,5 +110,5 @@
   "source-url" : "https://github.com/jmaslak/Raku-Net-BGP.git",
   "tags" : [ ],
   "test-depends" : [ ],
-  "version" : "0.2.0"
+  "version" : "0.2.1"
 }

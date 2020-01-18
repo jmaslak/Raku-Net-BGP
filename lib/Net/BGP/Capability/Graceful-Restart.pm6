@@ -12,7 +12,7 @@ use Net::BGP::Capability::Graceful-Restart::Per-AF;
 use Net::BGP::Conversions;
 
 use StrictClass;
-unit class Net::BGP::Capability::Graceful-Restart:ver<0.2.0>:auth<cpan:JMASLAK>
+unit class Net::BGP::Capability::Graceful-Restart:ver<0.2.1>:auth<cpan:JMASLAK>
     is Net::BGP::Capability
     does StrictClass;
 
