@@ -107,7 +107,7 @@
     "Net::BGP::Validation" : "lib/Net/BGP/Validation.pm6"
   },
   "resources" : [ ],
-  "source-url" : "https://github.com/jmaslak/Perl6-Net-BGP.git",
+  "source-url" : "https://github.com/jmaslak/Raku-Net-BGP.git",
   "tags" : [ ],
   "test-depends" : [ ],
   "version" : "0.2.0"

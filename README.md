@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/jmaslak/Perl6-Net-BGP.svg?branch=master)](https://travis-ci.org/jmaslak/Perl6-Net-BGP)
+[![Build Status](https://travis-ci.org/jmaslak/Raku-Net-BGP.svg?branch=master)](https://travis-ci.org/jmaslak/Raku-Net-BGP)
 
 NAME
 ====
