@@ -1,8 +1,11 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
-    - Feature: If BGP ID is not provided, bgpmon.p6 will now try to
-      find a global IP.
+    - Feature: bgpmon.p6 - If BGP ID is not provided, bgpmon.p6 will
+      now try to find a global IP.
+    - Feature: bgpmon.p6 - If nexthop not provided on a prefix to
+      announce, bgpmon.p6 will attempt to guess it on platforms
+      supported by Sys::HostAddr.
 
 0.2.1  2020-01-18T23:47:18Z
     - Cleanup: Rename GitHub Repo to refer to Raku

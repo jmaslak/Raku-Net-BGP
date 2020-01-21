@@ -20,15 +20,13 @@ my %last-path;
 
 my $COLORED;
 
-my $hostaddr = Sys::HostAddr.new;
-
 sub MAIN(
     Bool:D               :$passive = False,
     UInt:D               :$port = 179,
     Str:D                :$listen-host = '0.0.0.0',
     UInt:D               :$my-asn,
     UInt                 :$max-log-messages,
-    Net::BGP::IP::ipv4:D :$my-bgp-id = $hostaddr.guess-ip-for-host('0.0.0.0'),
+    Net::BGP::IP::ipv4:D :$my-bgp-id = Sys::HostAddr.new.guess-ip-for-host('0.0.0.0'),
     Str                  :$hostname,
     Str                  :$domain,
     Int:D                :$batch-size = 32,
@@ -143,12 +141,13 @@ sub MAIN(
                                 $event.connection-id,
                                 :$send-experimental-path-attribute,
                                 :@communities,
+                                :peer-ip($event.peer),
                                 :supports-ipv4($event.message.ipv4-support),
                                 :supports-ipv6($event.message.ipv6-support),
                             );
                         }
 
-                        %connections{ $event.connection-id } = True;
+                        %connections{ $event.connection-id }  = { peer-ip => $event.peer };
                         %conn-af-ipv4{ $event.connection-id } = $event.message.ipv4-support;
                         %conn-af-ipv6{ $event.connection-id } = $event.message.ipv6-support;
                     }
@@ -162,7 +161,7 @@ sub MAIN(
                     $last-check-successful = check-command($check-command);
 
                     if $last-check-successful and !$prev-state {
-                        for %connections.keys -> $connection-id {
+                        for %connections.kv -> $connection-id, $v {
                             announce(
                                 $bgp,
                                 $announce,
@@ -170,6 +169,7 @@ sub MAIN(
                                 Int($connection-id),
                                 :$send-experimental-path-attribute,
                                 :@communities,
+                                :peer-ip( $v<peer-ip> ),
                                 :supports-ipv4(%conn-af-ipv4{ $connection-id }),
                                 :supports-ipv6(%conn-af-ipv4{ $connection-id }),
                             );
@@ -269,12 +269,14 @@ sub announce(
     Str        $announce,
     Str        $origin,
     Int:D      $connection-id,
+    Str:D      :$peer-ip,
     Bool:D     :$send-experimental-path-attribute,
                :@communities?,
     Bool:D     :$supports-ipv4,
     Bool:D     :$supports-ipv6
     -->Nil
 ) {
+    state %cached-next-hop;
 
     # Handle the experimental path attribute
     my @attrs;
@@ -290,12 +292,23 @@ sub announce(
     # Build the announcements
     my @announce-str = $announce.split(',') if $announce.defined;
     for @announce-str -> $info {
-        my @parts = $info.split('-');
-        die "Announcement must be in format <ip>-<nexthop>" unless @parts.elems == 2;
-
         # Don't advertise unsupported address families
         if ( $info.contains(':')) and (!$supports-ipv6) { next; }
         if (!$info.contains(':')) and (!$supports-ipv4) { next; }
+
+        my @parts = $info.split('-');
+        if (@parts.elems == 1) {
+            if @parts[0].contains(':') and !$peer-ip.contains(':') {
+                die "Announcement must be in format <ip>-<nexthop>";
+            } elsif (!@parts[0].contains(':')) and $peer-ip.contains(':') {
+                die "Announcement must be in format <ip>-<nexthop>";
+            }
+
+            @parts[1] = guess-peer-next-hop($peer-ip);
+            die "Announcement must be in format <ip>-<nexthop>" unless @parts[1].defined;
+        } else {
+            die "Announcement must be in format <ip>-<nexthop>" unless @parts.elems == 2;
+        }
 
         $bgp.announce(
             $connection-id,
@@ -708,6 +721,17 @@ sub check-command(Str $cmd is copy) {
     } else {
         return False;
     }
+}
+
+sub guess-peer-next-hop(Str:D $peer-ip -->Str) {
+    state %peer-nexthop-cache;
+    return %peer-nexthop-cache if %peer-nexthop-cache{$peer-ip}:exists;
+
+    my $ipv = $peer-ip.contains(':') ?? 6 !! 4;
+    my $ha = Sys::HostAddr.new( ipv => $ipv );
+
+    %peer-nexthop-cache{$peer-ip} = $ha.guess-ip-for-host($peer-ip);
+    return %peer-nexthop-cache{$peer-ip};
 }
 
 multi sub splitter(Str:U $str, $pattern --> Iterable) { @() }

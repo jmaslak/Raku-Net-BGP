@@ -22,5 +22,3 @@ Todo Items:
   * Seeing after stop and restart, sometimes first connection does not
     establish a connection
   * All notifies should have a stringifier
-  * bgpmon.p6 should default next-hop for updates to local address if
-    update lacks a next hop and is in the same address family.
