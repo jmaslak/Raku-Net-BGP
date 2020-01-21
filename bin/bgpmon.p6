@@ -10,6 +10,7 @@ use Net::BGP;
 use Net::BGP::IP;
 use Net::BGP::Time;
 use Net::BGP::Validation;
+use Sys::HostAddr;
 use Terminal::ANSIColor;
 
 my subset Port of UInt where ^2¹⁶;
@@ -19,13 +20,15 @@ my %last-path;
 
 my $COLORED;
 
+my $hostaddr = Sys::HostAddr.new;
+
 sub MAIN(
     Bool:D               :$passive = False,
     UInt:D               :$port = 179,
     Str:D                :$listen-host = '0.0.0.0',
     UInt:D               :$my-asn,
     UInt                 :$max-log-messages,
-    Net::BGP::IP::ipv4:D :$my-bgp-id,
+    Net::BGP::IP::ipv4:D :$my-bgp-id = $hostaddr.guess-ip-for-host('0.0.0.0'),
     Str                  :$hostname,
     Str                  :$domain,
     Int:D                :$batch-size = 32,

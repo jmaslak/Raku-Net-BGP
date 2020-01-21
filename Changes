@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Feature: If BGP ID is not provided, bgpmon.p6 will now try to
+      find a global IP.
 
 0.2.1  2020-01-18T23:47:18Z
     - Cleanup: Rename GitHub Repo to refer to Raku

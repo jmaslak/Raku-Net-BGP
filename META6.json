@@ -11,6 +11,7 @@
     "OO::Monitors",
     "StrictClass",
     "Sys::Domainname",
+    "Sys::HostAddr",
     "TCP::LowLevel",
     "Terminal::ANSIColor"
   ],
