@@ -1,6 +1,7 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Bugfix: Code now cleanly compiles on newer Rakudo
 
 0.4.0  2020-02-01T00:35:58Z
     - Bugfix: Next-hop guessing no longer causes crash on peer

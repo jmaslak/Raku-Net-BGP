@@ -15,7 +15,7 @@ has UInt:D $.prefix-int    is required;
 has UInt:D $.prefix-length is required where ^129;
 
 our subset IP-Version where * == 4|6;
-has IP-Version $.ip-version = 2;
+has IP-Version $.ip-version = 4;
 
 # Private
 has Str $!cached-str;
