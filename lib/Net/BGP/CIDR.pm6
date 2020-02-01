@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -14,8 +14,8 @@ use Net::BGP::IP;
 has UInt:D $.prefix-int    is required;
 has UInt:D $.prefix-length is required where ^129;
 
-our subset IP-Version where * == 4|6;
-has IP-Version $.ip-version = 4;
+our subset IP-Version of Int:D where 4|6;
+has IP-Version $.ip-version is required;
 
 # Private
 has Str $!cached-str;
