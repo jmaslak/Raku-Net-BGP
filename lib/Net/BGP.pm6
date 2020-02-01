@@ -38,6 +38,7 @@ use Net::BGP::Message::Notify::Cease::Administrative-Reset;
 use Net::BGP::Message::Notify::Cease::Administrative-Shutdown;
 use Net::BGP::Message::Notify::Cease::Connection-Rejected;
 use Net::BGP::Message::Notify::Cease::Generic;
+use Net::BGP::Message::Notify::Cease::Peer-Deconfigured;
 use Net::BGP::Message::Notify::Open;
 use Net::BGP::Message::Notify::Open::Bad-Peer-AS;
 use Net::BGP::Message::Notify::Open::Generic;
