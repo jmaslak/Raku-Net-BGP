@@ -725,7 +725,7 @@ sub check-command(Str $cmd is copy) {
 
 sub guess-peer-next-hop(Str:D $peer-ip -->Str) {
     state %peer-nexthop-cache;
-    return %peer-nexthop-cache if %peer-nexthop-cache{$peer-ip}:exists;
+    return %peer-nexthop-cache{$peer-ip} if %peer-nexthop-cache{$peer-ip}:exists;
 
     my $ipv = $peer-ip.contains(':') ?? 6 !! 4;
     my $ha = Sys::HostAddr.new( ipv => $ipv );
