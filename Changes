@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+
+0.4.1  2020-02-01T02:24:14Z
     - Bugfix: Code now cleanly compiles on newer Rakudo
 
 0.4.0  2020-02-01T00:35:58Z
