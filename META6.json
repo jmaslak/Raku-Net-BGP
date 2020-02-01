@@ -69,6 +69,7 @@
     "Net::BGP::Message::Notify::Cease::Administrative-Shutdown" : "lib/Net/BGP/Message/Notify/Cease/Administrative-Shutdown.pm6",
     "Net::BGP::Message::Notify::Cease::Connection-Rejected" : "lib/Net/BGP/Message/Notify/Cease/Connection-Rejected.pm6",
     "Net::BGP::Message::Notify::Cease::Generic" : "lib/Net/BGP/Message/Notify/Cease/Generic.pm6",
+    "Net::BGP::Message::Notify::Cease::Peer-Deconfigured" : "lib/Net/BGP/Message/Notify/Cease/Peer-Deconfigured.pm6",
     "Net::BGP::Message::Notify::Generic" : "lib/Net/BGP/Message/Notify/Generic.pm6",
     "Net::BGP::Message::Notify::Header" : "lib/Net/BGP/Message/Notify/Header.pm6",
     "Net::BGP::Message::Notify::Header::Connection-Not-Syncronized" : "lib/Net/BGP/Message/Notify/Header/Connection-Not-Syncronized.pm6",
@@ -111,5 +112,5 @@
   "source-url" : "https://github.com/jmaslak/Raku-Net-BGP.git",
   "tags" : [ ],
   "test-depends" : [ ],
-  "version" : "0.3.0"
+  "version" : "0.4.0"
 }
