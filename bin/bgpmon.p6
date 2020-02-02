@@ -43,21 +43,23 @@ sub MAIN(
     *@args is copy
 ) {
     my $speaker = Net::BGP::Speaker.new(
-        colored     => $color,
-        cidr-filter => $cidr-filter,
-        asn-filter  => $asn-filter,
+        allow-unknown-peers => $allow-unknown-peers,
+        asn-filter          => $asn-filter,
+        cidr-filter         => $cidr-filter,
+        colored             => $color,
+        listen-port         => $port,
     );
 
     $*OUT.out-buffer = False;
 
     my $bgp = Net::BGP.new(
-        :$port,
+        :port($speaker.listen-port),
         :$listen-host,
         :$my-asn,
         :$hostname,
         :$domain,
         :identifier(ipv4-to-int($my-bgp-id)),
-        :add-unknown-peers($allow-unknown-peers),
+        :add-unknown-peers($speaker.allow-unknown-peers),
     );
 
     # Add peers

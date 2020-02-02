@@ -14,10 +14,11 @@ use Net::BGP::Speaker::Display;
 our subset Asn  of Int:D where ^2³²;
 our subset Port of Int:D where ^2¹⁶;
 
+has Bool:D                       $.allow-unknown-peers = False,
 has Net::BGP::Speaker::Display:D $.display = Net::BGP::Speaker::Display.new();
-
-has Net::BGP::CIDR:D @.wanted-cidr;
-has Asn:D            @.wanted-asn;
+has Port:D                       $.listen-port = 179,
+has Net::BGP::CIDR:D             @.wanted-cidr;
+has Asn:D                        @.wanted-asn;
 
 submethod TWEAK(
     Bool:D :$colored = False,
@@ -60,6 +61,9 @@ multi method colored(Bool:D $colored -->Bool:D) { $!display.colored($colored) }
     use Net::BGP::Speaker;
     
     $speaker = Net::BGP::Speaker.new(
+        allow-unknown-peers => False,
+        asn-filter => 65000,
+        cidr-filter => "10.0.0.0/16,192.168.0.0/16",
         colored => True,
     )
 
@@ -75,17 +79,9 @@ Defines a subset covering legal TCP/IP port numbers.
 
 =head1 ATTRIBUTES
 
-=head1 wanted-asn
+=head1 allow-unwanted-peers
 
-A list of C<Asn> objects that we are interested in observing.
-This can also be set by passing the constructor a comma-seperated string
-of ASNs the :asn-filter pseudo-attribute.
-
-=head1 wanted-cidr
-
-A list of L<Net::BGP::CIDR> objects that we are interested in observing.
-This can also be set by passing the constructor a comma-seperated string
-of CIDRs as the :cidr-filter pseudo-attribute.
+Allow unknown peers to be able to connect without having been pre-configured.
 
 =head1 colored
 
@@ -103,6 +99,22 @@ colored text.
 This is a L<Net::BGP::Speaker::Display> object.  It's intended to be
 created during object construction, but it can be overriden by a subclass
 of this object during construction.
+
+=head1 listen-port
+
+The port number to listen for BGP connections on (defaults to 179).
+
+=head1 wanted-asn
+
+A list of C<Asn> objects that we are interested in observing.
+This can also be set by passing the constructor a comma-seperated string
+of ASNs the :asn-filter pseudo-attribute.
+
+=head1 wanted-cidr
+
+A list of L<Net::BGP::CIDR> objects that we are interested in observing.
+This can also be set by passing the constructor a comma-seperated string
+of CIDRs as the :cidr-filter pseudo-attribute.
 
 =head1 AUTHOR
 
