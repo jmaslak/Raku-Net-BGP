@@ -71,7 +71,7 @@ submethod TWEAK(
 
 # We simulate an attribute here.
 multi method colored(                -->Bool:D) { $!display.colored }
-multi method colored(Bool:D $colored -->Bool:D) { $!display.colored($colored) }
+multi method colored(Bool:D $colored -->Bool:D) { $!display.colored = $colored }
 
 
 =begin pod
