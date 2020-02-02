@@ -8,46 +8,43 @@ use v6.d;
 
 use Net::BGP;
 use Net::BGP::IP;
+use Net::BGP::Speaker;
 use Net::BGP::Time;
 use Net::BGP::Validation;
 use Sys::HostAddr;
-use Terminal::ANSIColor;
-
-my subset Port of UInt where ^2¹⁶;
-my subset Asn  of UInt where ^2¹⁶;
 
 my %last-path;
 
-my $COLORED;
-
 sub MAIN(
-    Bool:D               :$passive = False,
-    UInt:D               :$port = 179,
-    Str:D                :$listen-host = '0.0.0.0',
-    UInt:D               :$my-asn,
-    UInt                 :$max-log-messages,
-    Net::BGP::IP::ipv4:D :$my-bgp-id = Sys::HostAddr.new.guess-ip-for-host('0.0.0.0'),
-    Str                  :$hostname,
-    Str                  :$domain,
-    Int:D                :$batch-size = 32,
-    Str                  :$cidr-filter,
-    Str                  :$asn-filter,
-    Str                  :$announce,
-    Str                  :$check-command,
-    UInt:D               :$check-seconds = 1,
-    Str:D                :$origin where ($origin eq 'i'|'e'|'?') = '?',
-    Bool:D               :$short-format = False,
-    Bool:D               :$af-ipv6 = False,
-    Bool:D               :$allow-unknown-peers = False,
-    Bool:D               :$send-experimental-path-attribute = False,
-    Str:D                :$communities = '',
-    Bool:D               :$lint-mode = False,
-    Bool:D               :$suppress-updates = False,
-    Bool:D               :$color = False, # XXX Should test for terminal
-    Bool:D               :$track = False,
+    Bool:D                  :$passive = False,
+    Net::BGP::Speaker::Port :$port = 179,
+    Str:D                   :$listen-host = '0.0.0.0',
+    Net::BGP::Speaker::Asn  :$my-asn,
+    UInt                    :$max-log-messages,
+    Net::BGP::IP::ipv4:D    :$my-bgp-id = Sys::HostAddr.new.guess-ip-for-host('0.0.0.0'),
+    Str                     :$hostname,
+    Str                     :$domain,
+    Int:D                   :$batch-size = 32,
+    Str                     :$cidr-filter,
+    Str                     :$asn-filter,
+    Str                     :$announce,
+    Str                     :$check-command,
+    UInt:D                  :$check-seconds = 1,
+    Str:D                   :$origin where ($origin eq 'i'|'e'|'?') = '?',
+    Bool:D                  :$short-format = False,
+    Bool:D                  :$af-ipv6 = False,
+    Bool:D                  :$allow-unknown-peers = False,
+    Bool:D                  :$send-experimental-path-attribute = False,
+    Str:D                   :$communities = '',
+    Bool:D                  :$lint-mode = False,
+    Bool:D                  :$suppress-updates = False,
+    Bool:D                  :$color = False, # XXX Should test for terminal
+    Bool:D                  :$track = False,
     *@args is copy
 ) {
-    $COLORED = $color;
+    my $speaker = Net::BGP::Speaker.new(
+        colored => $color,
+    );
 
     $*OUT.out-buffer = False;
 
@@ -65,7 +62,7 @@ sub MAIN(
     while @args {
         my $peer-ip  = @args.shift;
         if ! @args.elems { die("Must specify peer ASN after the peer IP"); }
-        my $peer-asn = @args.shift;
+        my Net::BGP::Speaker::Asn:D $peer-asn = @args.shift;
 
         my $md5;
         if @args.elems {
@@ -98,7 +95,7 @@ sub MAIN(
 
     # Start the TCP socket
     $bgp.listen();
-    lognote("Listening") unless $short-format;
+    lognote($speaker, "Listening") unless $short-format;
     short-format-output(short-line-header, Array.new) if $short-format;
 
     my $channel = $bgp.user-channel;
@@ -248,13 +245,16 @@ sub MAIN(
                         short-format-output($entry, $event<errors>);
                     }
                 } else {
-                    long-format-output($event<str>, $event<errors>, $event<match>, $event<last-path>);
+                    long-format-output($speaker, $event<str>, $event<errors>, $event<match>, $event<last-path>)
                 }
 
                 $messages-logged++;
                 if $max-log-messages.defined && ($messages-logged ≥ $max-log-messages) {
                     if ! $short-format {
-                        log('*', "RUN TIME: " ~ (monotonic-whole-seconds() - $start) );
+                        $speaker.display.log(
+                            '*',
+                            "RUN TIME: " ~ (monotonic-whole-seconds() - $start),
+                        );
                     }
                     exit;
                 }
@@ -350,7 +350,6 @@ multi is-filter-match(
     :@cidr-filter,
     :@asn-filter,
     :$lint-mode,
-    :$colored = $COLORED,
     :$track,
     -->Str
 ) {
@@ -434,46 +433,30 @@ multi is-filter-match(
         return Str;
     }
 }
-multi is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode, :$track -->Str) {
+multi is-filter-match(
+    $event,
+    :@cidr-filter,
+    :@asn-filter,
+    :$lint-mode,
+    :$track
+    -->Str
+) {
     return $lint-mode ?? Str !! '';
 }
 
 multi get-str($event, :@cidr-filter -->Str) { $event.Str }
 
-sub logevent(Str:D $event) {
+sub logevent($speaker, Str:D $event) {
     state $counter = 0;
 
-    lognote("«" ~ $counter++ ~ "» " ~ $event);
+    lognote($speaker, "«" ~ $counter++ ~ "» " ~ $event);
 }
 
-sub lognote(Str:D $msg) {
-    log('N', $msg);
+sub lognote($speaker, Str:D $msg) {
+    $speaker.display.log('N', $msg)
 }
 
-sub log(Str:D $type, Str:D $msg, Bool:D $colored = $COLORED) {
-    my @lines = $msg.split("\n");
-    my $first = @lines.shift;
-
-    if $colored {
-        if ! @lines.elems {
-            print color('cyan');
-        } elsif (@lines[*-1] ~~ m/\s+ MATCH:.*WITHDRAWN/ ) {
-            print color('red');
-        } elsif (@lines[*-1] ~~ m/\s+ MATCH:.*NLRI/ ) {
-            print color('green');
-        } else {
-            print color('cyan');
-        }
-    }
-    print "{DateTime.now.Str} [$type] $first";
-
-    say "";
-    say @lines.join("\n") if @lines.elems;
-
-    print RESET if $colored;
-}
-
-sub long-format-output(Str:D $event is copy, @errors, Str $match, %last-paths -->Nil) {
+sub long-format-output($speaker, Str:D $event is copy, @errors, Str $match, %last-paths -->Nil) {
     if @errors.elems {
         for @errors -> $err {
             $event ~= "\n      ERROR: {$err.key} ({$err.value})";
@@ -488,7 +471,7 @@ sub long-format-output(Str:D $event is copy, @errors, Str $match, %last-paths --
         $event ~= "\n      MATCH: $match";
     }
 
-    logevent($event);
+    logevent($speaker, $event);
 }
 
 sub short-format-output(Str:D $line, @errors -->Nil) {
@@ -660,7 +643,13 @@ sub map-event(
 ) {
     my $ret = Hash.new;
     $ret<event> = $event;
-    $ret<match> = is-filter-match($event, :@cidr-filter, :@asn-filter, :$lint-mode, :$track);
+    $ret<match> = is-filter-match(
+        $event,
+        :@cidr-filter,
+        :@asn-filter,
+        :$lint-mode,
+        :$track
+    );
     $ret<last-path> = {};
 
     return $ret unless $ret<match>.defined; # Short circuit here.
