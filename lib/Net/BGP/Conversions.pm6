@@ -1,7 +1,7 @@
 use v6.d;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -10,8 +10,8 @@ unit module Net::BGP::Conversions:ver<0.4.1>:auth<cpan:JMASLAK>;
 use if;
 
 # Select right helper library based on compiler version
-use Net::BGP::Conversions-Pre201812:if( $*PERL.compiler.version ≤ v2018.11);
-use Net::BGP::Conversions-Post201812:if($*PERL.compiler.version > v2018.11);
+use Net::BGP::Conversions-Pre201812:if( $*PERL.compiler.version < v2018.12);
+use Net::BGP::Conversions-Post201812:if($*PERL.compiler.version ≥ v2018.12);
 
 use Net::BGP::IP;
 
