@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -213,12 +213,12 @@ multi ipv6-cannonical(ipv4_as_ipv6:D $ip -->Str) {
     return %cached{$ip} //= (S:i/^ '::ffff:' // given $ip);
 }
 
-our proto ip-valid(Str:D $ip -->Bool) is export {*};
+our proto ip-valid(Str:D $ip -->Bool:D) is export {*};
 
-multi ip-valid(ipv6:D $ip         -->Bool) { True }
-multi ip-valid(ipv4:D $ip         -->Bool) { True }
-multi ip-valid(ipv4_as_ipv6:D $ip -->Bool) { True }
-multi ip-valid(Str:D $ip          -->Bool) { False }
+multi ip-valid(ipv6:D $ip         -->Bool:D) { True }
+multi ip-valid(ipv4:D $ip         -->Bool:D) { True }
+multi ip-valid(ipv4_as_ipv6:D $ip -->Bool:D) { True }
+multi ip-valid(Str:D $ip          -->Bool:D) { False }
 
 
 =begin pod

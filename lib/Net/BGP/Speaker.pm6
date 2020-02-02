@@ -8,15 +8,24 @@ use v6.d;
 
 unit class Net::BGP::Speaker:ver<0.0.1>:auth<cpan:JMASLAK>;
 
+use Net::BGP;
 use Net::BGP::CIDR;
+use Net::BGP::IP;
 use Net::BGP::Speaker::Display;
+use Sys::HostAddr;
 
-our subset Asn  of Int:D where ^2³²;
-our subset Port of Int:D where ^2¹⁶;
+our subset Asn  of Int where ^2³²;
+our subset Port of Int where ^2¹⁶;
 
-has Bool:D                       $.allow-unknown-peers = False,
+has Bool:D                       $.allow-unknown-peers = False;
+has Net::BGP                     $.bgp;
 has Net::BGP::Speaker::Display:D $.display = Net::BGP::Speaker::Display.new();
-has Port:D                       $.listen-port = 179,
+has Str                          $.listen-host where { (! $_.defined) || Net::BGP::IP::ip-valid($_) };
+has Port:D                       $.listen-port = 179;
+has Asn:D                        $.my-asn is required;
+has Net::BGP::IP::ipv4           $.my-bgp-id = Sys::HostAddr.new.guess-ip-for-host('0.0.0.0');
+has Str                          $.my-domain;
+has Str                          $.my-hostname;
 has Net::BGP::CIDR:D             @.wanted-cidr;
 has Asn:D                        @.wanted-asn;
 
@@ -45,6 +54,19 @@ submethod TWEAK(
             }
         }
     }
+
+    if ! $!listen-host.defined { $!listen-host = '0.0.0.0' }
+
+    # Create BGP object
+    $!bgp = Net::BGP.new(
+        port              => $!listen-port,
+        listen-host       => $!listen-host,
+        my-asn            => $!my-asn,
+        domain            => $!my-domain,
+        hostname          => $!my-hostname,
+        identifier        => ipv4-to-int($!my-bgp-id),
+        add-unknown-peers => $!allow-unknown-peers,
+    )
 }
 
 # We simulate an attribute here.
@@ -100,9 +122,34 @@ This is a L<Net::BGP::Speaker::Display> object.  It's intended to be
 created during object construction, but it can be overriden by a subclass
 of this object during construction.
 
+=head1 listen-host
+
+The host to listen on for BGP connections on (defaults to C<0.0.0.0>).  This
+is a string.
+
 =head1 listen-port
 
-The port number to listen for BGP connections on (defaults to 179).
+The port number to listen for BGP connections on (defaults to C<179>).
+
+=head1 my-asn
+
+Our Autonymous System Number.
+
+=head1 my-domain
+
+Domain name of local system, to be sent in FQDN capability during OPEN.
+Can be undefined, which will result in L<Net::BGP> attempting to guess
+the domain name.
+
+=head1 my-hostname
+
+Hostname of local system, to be sent in FQDN capability during OPEN.
+Can be undefined, which will result in L<Net::BGP> attempting to guess
+the host name.
+
+=head1 my-asn
+
+Our Autonymous System Number.
 
 =head1 wanted-asn
 

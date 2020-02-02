@@ -6,7 +6,6 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-use Net::BGP;
 use Net::BGP::IP;
 use Net::BGP::Speaker;
 use Net::BGP::Time;
@@ -16,30 +15,30 @@ use Sys::HostAddr;
 my %last-path;
 
 sub MAIN(
-    Bool:D                  :$passive = False,
-    Net::BGP::Speaker::Port :$port = 179,
-    Str:D                   :$listen-host = '0.0.0.0',
-    Net::BGP::Speaker::Asn  :$my-asn,
-    UInt                    :$max-log-messages,
-    Net::BGP::IP::ipv4:D    :$my-bgp-id = Sys::HostAddr.new.guess-ip-for-host('0.0.0.0'),
-    Str                     :$hostname,
-    Str                     :$domain,
-    Int:D                   :$batch-size = 32,
-    Str                     :$cidr-filter,
-    Str                     :$asn-filter,
-    Str                     :$announce,
-    Str                     :$check-command,
-    UInt:D                  :$check-seconds = 1,
-    Str:D                   :$origin where ($origin eq 'i'|'e'|'?') = '?',
-    Bool:D                  :$short-format = False,
-    Bool:D                  :$af-ipv6 = False,
-    Bool:D                  :$allow-unknown-peers = False,
-    Bool:D                  :$send-experimental-path-attribute = False,
-    Str:D                   :$communities = '',
-    Bool:D                  :$lint-mode = False,
-    Bool:D                  :$suppress-updates = False,
-    Bool:D                  :$color = False, # XXX Should test for terminal
-    Bool:D                  :$track = False,
+    Bool:D                    :$passive = False,
+    Net::BGP::Speaker::Port:D :$port = 179,
+    Str                       :$listen-host,
+    Net::BGP::Speaker::Asn:D  :$my-asn,
+    UInt                      :$max-log-messages,
+    Net::BGP::IP::ipv4:D      :$my-bgp-id = Sys::HostAddr.new.guess-ip-for-host('0.0.0.0'),
+    Str                       :$hostname,
+    Str                       :$domain,
+    Int:D                     :$batch-size = 32,
+    Str                       :$cidr-filter,
+    Str                       :$asn-filter,
+    Str                       :$announce,
+    Str                       :$check-command,
+    UInt:D                    :$check-seconds = 1,
+    Str:D                     :$origin where ($origin eq 'i'|'e'|'?') = '?',
+    Bool:D                    :$short-format = False,
+    Bool:D                    :$af-ipv6 = False,
+    Bool:D                    :$allow-unknown-peers = False,
+    Bool:D                    :$send-experimental-path-attribute = False,
+    Str:D                     :$communities = '',
+    Bool:D                    :$lint-mode = False,
+    Bool:D                    :$suppress-updates = False,
+    Bool:D                    :$color = False, # XXX Should test for terminal
+    Bool:D                    :$track = False,
     *@args is copy
 ) {
     my $speaker = Net::BGP::Speaker.new(
@@ -47,20 +46,15 @@ sub MAIN(
         asn-filter          => $asn-filter,
         cidr-filter         => $cidr-filter,
         colored             => $color,
+        listen-host         => $listen-host,
         listen-port         => $port,
+        my-asn              => $my-asn,
+        my-bgp-id           => $my-bgp-id,
+        my-domain           => $domain,
+        my-hostname         => $hostname,
     );
 
     $*OUT.out-buffer = False;
-
-    my $bgp = Net::BGP.new(
-        :port($speaker.listen-port),
-        :$listen-host,
-        :$my-asn,
-        :$hostname,
-        :$domain,
-        :identifier(ipv4-to-int($my-bgp-id)),
-        :add-unknown-peers($speaker.allow-unknown-peers),
-    );
 
     # Add peers
     while @args {
@@ -72,11 +66,11 @@ sub MAIN(
         if @args.elems {
             if @args[0] ~~ m/^ '--md5='/ {
                 $md5 = S/^ '--md5='// given @args.shift;
-                $bgp.add-md5($peer-ip, $md5);
+                $speaker.bgp.add-md5($peer-ip, $md5);
             }
         }
 
-        $bgp.peer-add( :$peer-asn, :$peer-ip, :$passive, :ipv6($af-ipv6) );
+        $speaker.bgp.peer-add( :$peer-asn, :$peer-ip, :$passive, :ipv6($af-ipv6) );
     }
 
     # Build community list
@@ -84,11 +78,11 @@ sub MAIN(
     @communities = $communities.split(',') if $communities ne '';
 
     # Start the TCP socket
-    $bgp.listen();
+    $speaker.bgp.listen();
     lognote($speaker, "Listening") unless $short-format;
     short-format-output(short-line-header, Array.new) if $short-format;
 
-    my $channel = $bgp.user-channel;
+    my $channel = $speaker.bgp.user-channel;
 
     my $messages-logged = 0;
     my $start = monotonic-whole-seconds;
@@ -122,7 +116,7 @@ sub MAIN(
                     if $event.message ~~ Net::BGP::Message::Open {
                         if $last-check-successful {
                             announce(
-                                $bgp,
+                                $speaker,
                                 $announce,
                                 $origin,
                                 $event.connection-id,
@@ -150,7 +144,7 @@ sub MAIN(
                     if $last-check-successful and !$prev-state {
                         for %connections.kv -> $connection-id, $v {
                             announce(
-                                $bgp,
+                                $speaker,
                                 $announce,
                                 $origin,
                                 Int($connection-id),
@@ -165,7 +159,7 @@ sub MAIN(
                     } elsif $prev-state and !$last-check-successful {
                         for %connections.keys -> $connection-id {
                             withdrawal(
-                                $bgp,
+                                $speaker,
                                 $announce,
                                 Int($connection-id),
                                 :supports-ipv4(%conn-af-ipv4{ $connection-id }),
@@ -199,7 +193,6 @@ sub MAIN(
                 ).map( { map-event(
                     :$speaker,
                     :event($^a),
-                    :$my-asn,
                     :$short-format,
                     :$lint-mode,
                     :$track,
@@ -209,7 +202,6 @@ sub MAIN(
                 @events = @stack.map( { map-event(
                     :$speaker,
                     :event($^a),
-                    :$my-asn,
                     :$short-format,
                     :$lint-mode,
                     :$track,
@@ -253,7 +245,7 @@ sub MAIN(
 }
 
 sub announce(
-    Net::BGP:D $bgp,
+               $speaker,
     Str        $announce,
     Str        $origin,
     Int:D      $connection-id,
@@ -298,7 +290,7 @@ sub announce(
             die "Announcement must be in format <ip>-<nexthop>" unless @parts.elems == 2;
         }
 
-        $bgp.announce(
+        $speaker.bgp.announce(
             $connection-id,
             [ @parts[0] ],
             @parts[1],
@@ -311,7 +303,7 @@ sub announce(
 }
 
 sub withdrawal(
-    Net::BGP:D $bgp,
+               $speaker,
     Str        $prefixes,
     Int:D      $connection-id,
     Bool:D     :$supports-ipv4,
@@ -329,7 +321,7 @@ sub withdrawal(
         if ( $info.contains(':')) and (!$supports-ipv6) { next; }
         if (!$info.contains(':')) and (!$supports-ipv4) { next; }
 
-        $bgp.withdrawal($connection-id, [ @parts[0] ]);
+        $speaker.bgp.withdrawal($connection-id, [ @parts[0] ]);
     }
 }
 
@@ -619,7 +611,6 @@ sub short-line-open(
 sub map-event(
     :$speaker,
     :$event,
-    :$my-asn,
     :$short-format,
     :$lint-mode,
     :$track,
@@ -667,7 +658,7 @@ sub map-event(
     if $lint-mode and $event ~~ Net::BGP::Event::BGP-Message {
         $ret<errors> = Net::BGP::Validation::errors(
             :message($event.message),
-            :my-asn($my-asn),
+            :my-asn($speaker.my-asn),
             :peer-asn($event.peer-asn),
         );
     } else {
