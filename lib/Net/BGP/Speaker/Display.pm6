@@ -6,7 +6,10 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::Speaker::Display:ver<0.0.1>:auth<cpan:JMASLAK>;
+use StrictClass;
+
+unit class Net::BGP::Speaker::Display:ver<0.0.1>:auth<cpan:JMASLAK>
+    does StrictClass;
 
 use Terminal::ANSIColor;
 
