@@ -8,6 +8,7 @@ use v6.d;
 
 unit class Net::BGP::Speaker:ver<0.0.1>:auth<cpan:JMASLAK>;
 
+use Net::BGP::CIDR;
 use Net::BGP::Speaker::Display;
 
 our subset Asn  of Int:D where ^2³²;
@@ -15,15 +16,40 @@ our subset Port of Int:D where ^2¹⁶;
 
 has Net::BGP::Speaker::Display:D $.display = Net::BGP::Speaker::Display.new();
 
+has Net::BGP::CIDR:D @.wanted-cidr;
+has Asn:D            @.wanted-asn;
+
 submethod TWEAK(
     Bool:D :$colored = False,
+    Str    :$asn-filter,
+    Str    :$cidr-filter,
 ) {
     $!display.colored = $colored;
+
+    # Set @!wanted-cidr from string
+    if $cidr-filter.defined {
+        @!wanted-cidr = gather {
+            for $cidr-filter.split(",") -> $cidr {
+                take Net::BGP::CIDR.from-str($cidr);
+            }
+        }
+    }
+
+    # Set @!wanted-asn from string
+    if $asn-filter.defined {
+        @!wanted-asn = gather {
+            for $asn-filter.split(",") -> $ele {
+                my Asn $asn = Int($ele);
+                take $asn;
+            }
+        }
+    }
 }
 
 # We simulate an attribute here.
 multi method colored(                -->Bool:D) { $!display.colored }
 multi method colored(Bool:D $colored -->Bool:D) { $!display.colored($colored) }
+
 
 =begin pod
 
@@ -48,6 +74,18 @@ Defines a subset covering legal ASN numbers.
 Defines a subset covering legal TCP/IP port numbers.
 
 =head1 ATTRIBUTES
+
+=head1 wanted-asn
+
+A list of C<Asn> objects that we are interested in observing.
+This can also be set by passing the constructor a comma-seperated string
+of ASNs the :asn-filter pseudo-attribute.
+
+=head1 wanted-cidr
+
+A list of L<Net::BGP::CIDR> objects that we are interested in observing.
+This can also be set by passing the constructor a comma-seperated string
+of CIDRs as the :cidr-filter pseudo-attribute.
 
 =head1 colored
 

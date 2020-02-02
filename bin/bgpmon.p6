@@ -43,7 +43,9 @@ sub MAIN(
     *@args is copy
 ) {
     my $speaker = Net::BGP::Speaker.new(
-        colored => $color,
+        colored     => $color,
+        cidr-filter => $cidr-filter,
+        asn-filter  => $asn-filter,
     );
 
     $*OUT.out-buffer = False;
@@ -73,20 +75,6 @@ sub MAIN(
         }
 
         $bgp.peer-add( :$peer-asn, :$peer-ip, :$passive, :ipv6($af-ipv6) );
-    }
-
-    # Build CIDR filter
-    my @cidr-filter = gather {
-        for splitter($cidr-filter, ',') -> $cidr {
-            take Net::BGP::CIDR.from-str($cidr);
-        }
-    }
-
-    # Build ASN filter
-    my @asn-filter = gather {
-        for splitter($asn-filter, ',') -> $asn {
-            take $asn.UInt;
-        }
     }
 
     # Build community list
@@ -207,23 +195,21 @@ sub MAIN(
                     :degree($*KERNEL.cpu-cores),
                     :batch((@stack.elems / $*KERNEL.cpu-cores).ceiling)
                 ).map( { map-event(
+                    :$speaker,
                     :event($^a),
                     :$my-asn,
                     :$short-format,
                     :$lint-mode,
-                    :@cidr-filter,
-                    :@asn-filter,
                     :$track,
                 ) } ).grep( { $^a<match>.defined } );
 
             } else {
                 @events = @stack.map( { map-event(
+                    :$speaker,
                     :event($^a),
                     :$my-asn,
                     :$short-format,
                     :$lint-mode,
-                    :@cidr-filter,
-                    :@asn-filter,
                     :$track,
                 ) } ).grep( { $^a<match>.defined } );
             }
@@ -346,28 +332,27 @@ sub withdrawal(
 }
 
 multi is-filter-match(
+    $speaker,
     Net::BGP::Event::BGP-Message:D $event,
-    :@cidr-filter,
-    :@asn-filter,
     :$lint-mode,
     :$track,
     -->Str
 ) {
     return '' unless $event.message ~~ Net::BGP::Message::Update; # We only care about UPDATEs
-    return '' unless @asn-filter.elems + @cidr-filter.elems > 0;
+    return '' unless $speaker.wanted-asn.elems + $speaker.wanted-cidr.elems > 0;
 
     my $nlri      = 'NLRI';
     my $withdrawn = 'WITHDRAWN';
 
     my @m;
 
-    if @cidr-filter.elems {
+    if $speaker.wanted-cidr.elems {
         my @nlri      = @( $event.message.nlri );
         my @withdrawn = @( $event.message.withdrawn );
         my $agg       = $event.message.aggregator-ip;
         $agg          = Net::BGP::CIDR.from-str("$agg/32") if $agg.defined;
 
-        for @cidr-filter.grep( { $^a.ip-version == 4 } ) -> $cidr {
+        for $speaker.wanted-cidr.grep( { $^a.ip-version == 4 } ) -> $cidr {
             if @nlri.first\    ( { $cidr.contains($^a) } ).defined { @m.push($nlri) }
             if @withdrawn.first( { $cidr.contains($^a) } ).defined { @m.push($withdrawn) }
 
@@ -378,14 +363,14 @@ multi is-filter-match(
 
         my @nlri6      = @( $event.message.nlri6 );
         my @withdrawn6 = @( $event.message.withdrawn6 );
-        for @cidr-filter.grep( { $^a.ip-version == 6 } ) -> $cidr {
+        for $speaker.wanted-cidr.grep( { $^a.ip-version == 6 } ) -> $cidr {
             if @nlri6.first\    ( { $cidr.contains($^a) } ).defined { @m.push($nlri) }
             if @withdrawn6.first( { $cidr.contains($^a) } ).defined { @m.push($withdrawn) }
         }
     }
 
-    if @asn-filter.elems {
-        for @asn-filter -> $as {
+    if $speaker.wanted-asn.elems {
+        for $speaker.wanted-asn -> $as {
             if $event.message.as-array.first( { $^a == $as } ).defined {
                 @m.push('AS-PATH');
             }
@@ -396,8 +381,8 @@ multi is-filter-match(
             @nlri.append: @($event.message.nlri6);
             for @nlri -> $prefix {
                 if %last-path{$event.peer}{$prefix}:exists {
-                    if @asn-filter.elems {
-                        for @asn-filter -> $as {
+                    if $speaker.wanted-asn.elems {
+                        for $speaker.wanted-asn -> $as {
                             if $as ∈ %last-path{$event.peer}{$prefix} {
                                 @m.push('PREFIX-PREVIOUS-MATCH');
                             }
@@ -410,8 +395,8 @@ multi is-filter-match(
             @withdrawn.append: @($event.message.withdrawn6);
             for @withdrawn -> $prefix {
                 if %last-path{$event.peer}{$prefix}:exists {
-                    if @asn-filter.elems {
-                        for @asn-filter -> $as {
+                    if $speaker.wanted-asn.elems {
+                        for $speaker.wanted-asn -> $as {
                             if $as ∈ %last-path{$event.peer}{$prefix} {
                                 @m.push('PREFIX-PREVIOUS-MATCH');
                             }
@@ -422,7 +407,7 @@ multi is-filter-match(
         }
 
         my $agg = $event.message.aggregator-asn;
-        if $agg.defined && @asn-filter.first( { $^a == $agg } ).defined {
+        if $agg.defined && $speaker.wanted-asn.first( { $^a == $agg } ).defined {
             @m.push('AGGREGATOR-ASN');
         }
     }
@@ -434,17 +419,14 @@ multi is-filter-match(
     }
 }
 multi is-filter-match(
+    $speaker,
     $event,
-    :@cidr-filter,
-    :@asn-filter,
     :$lint-mode,
     :$track
     -->Str
 ) {
     return $lint-mode ?? Str !! '';
 }
-
-multi get-str($event, :@cidr-filter -->Str) { $event.Str }
 
 sub logevent($speaker, Str:D $event) {
     state $counter = 0;
@@ -633,20 +615,18 @@ sub short-line-open(
 # We short circuit on matches, and don't execute this full sub.
 # This is a performance optimization.
 sub map-event(
+    :$speaker,
     :$event,
     :$my-asn,
     :$short-format,
     :$lint-mode,
-    :@cidr-filter,
-    :@asn-filter,
     :$track,
 ) {
     my $ret = Hash.new;
     $ret<event> = $event;
     $ret<match> = is-filter-match(
+        $speaker,
         $event,
-        :@cidr-filter,
-        :@asn-filter,
         :$lint-mode,
         :$track
     );
