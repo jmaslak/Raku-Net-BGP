@@ -26,3 +26,4 @@ Todo Items:
   * All notifies should have a stringifier
   * BGP::Message::Open should "guess" BGP ID when not provided.
   * Announce should "guess" route when not provided???
+  * Allow removing peers

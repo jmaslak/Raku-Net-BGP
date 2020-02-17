@@ -315,13 +315,15 @@ method listen(--> Nil) {
 }
 
 method peer-add (
-    Int:D  :$peer-asn,
+    UInt:D :$peer-asn,
     Str:D  :$peer-ip,
     Int:D  :$peer-port? = 179,
     Bool:D :$passive? = False,
     Bool:D :$ipv4? = True,
     Bool:D :$ipv6? = False,
+    Str    :$md5?,
 ) {
+    self.add-md5($peer-ip, $md5) if $md5.defined;
     $.controller.peers.add(
         :$peer-asn,
         :$peer-ip,

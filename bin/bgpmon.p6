@@ -62,15 +62,20 @@ sub MAIN(
         if ! @args.elems { die("Must specify peer ASN after the peer IP"); }
         my Net::BGP::Speaker::Asn:D $peer-asn = @args.shift;
 
-        my $md5;
+        my Str $md5;
         if @args.elems {
             if @args[0] ~~ m/^ '--md5='/ {
                 $md5 = S/^ '--md5='// given @args.shift;
-                $speaker.bgp.add-md5($peer-ip, $md5);
             }
         }
 
-        $speaker.bgp.peer-add( :$peer-asn, :$peer-ip, :$passive, :ipv6($af-ipv6) );
+        $speaker.bgp.peer-add(
+            :$peer-asn,
+            :$peer-ip,
+            :$passive,
+            :ipv6($af-ipv6),
+            :$md5,
+        );
     }
 
     # Build community list
