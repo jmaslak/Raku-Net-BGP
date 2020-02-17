@@ -81,8 +81,7 @@ sub MAIN(
     }
 
     # Build community list
-    my @communities;
-    @communities = $communities.split(',') if $communities ne '';
+    $speaker.communities = $communities.split(',') if $communities ne '';
 
     # Start the TCP socket
     $speaker.bgp.listen();
@@ -128,7 +127,6 @@ sub MAIN(
                                 $origin,
                                 $event.connection-id,
                                 :$send-experimental-path-attribute,
-                                :@communities,
                                 :peer-ip($event.peer),
                                 :supports-ipv4($event.message.ipv4-support),
                                 :supports-ipv6($event.message.ipv6-support),
@@ -156,7 +154,6 @@ sub MAIN(
                                 $origin,
                                 Int($connection-id),
                                 :$send-experimental-path-attribute,
-                                :@communities,
                                 :peer-ip( $v<peer-ip> ),
                                 :supports-ipv4(%conn-af-ipv4{ $connection-id }),
                                 :supports-ipv6(%conn-af-ipv4{ $connection-id }),
@@ -258,7 +255,6 @@ sub announce(
     Int:D      $connection-id,
     Str:D      :$peer-ip,
     Bool:D     :$send-experimental-path-attribute,
-               :@communities?,
     Bool:D     :$supports-ipv4,
     Bool:D     :$supports-ipv6
     -->Nil
@@ -304,7 +300,7 @@ sub announce(
             "",     # AS path
             $origin,
             :@attrs,
-            :@communities,
+            :communities($speaker.communities),
         );
     }
 }

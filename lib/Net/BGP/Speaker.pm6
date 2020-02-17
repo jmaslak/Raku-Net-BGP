@@ -19,6 +19,7 @@ our subset Port of Int where ^2¹⁶;
 
 has Bool:D                       $.allow-unknown-peers = False;
 has Net::BGP                     $.bgp;
+has Str:D                        @.communities;
 has Net::BGP::Speaker::Display:D $.display = Net::BGP::Speaker::Display.new();
 has Str                          $.listen-host where { (! $_.defined) || Net::BGP::IP::ip-valid($_) };
 has Port:D                       $.listen-port = 179;
@@ -135,6 +136,11 @@ however it can be changed via a helper method:
 
 If this is set to true, log messages will be displayed using ANSI-compatible
 colored text.
+
+=head2 communities
+
+A list of communities to use when advertising routes.  Communities are
+specified in string form (I.E. "65000:1000").
 
 =head2 display
 
