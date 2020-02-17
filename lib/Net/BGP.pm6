@@ -317,7 +317,7 @@ method listen(--> Nil) {
 method peer-add (
     UInt:D :$peer-asn,
     Str:D  :$peer-ip,
-    Int:D  :$peer-port? = 179,
+    UInt:D :$peer-port? = 179,
     Bool:D :$passive? = False,
     Bool:D :$ipv4? = True,
     Bool:D :$ipv6? = False,

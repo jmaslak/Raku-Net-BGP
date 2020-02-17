@@ -69,10 +69,12 @@ sub MAIN(
             }
         }
 
-        $speaker.bgp.peer-add(
+        $speaker.peer-add(
             :$peer-asn,
             :$peer-ip,
+            :peer-port(179),
             :$passive,
+            :ipv4(True),
             :ipv6($af-ipv6),
             :$md5,
         );

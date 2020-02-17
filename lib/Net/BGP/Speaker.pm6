@@ -73,6 +73,26 @@ submethod TWEAK(
 multi method colored(                -->Bool:D) { $!display.colored }
 multi method colored(Bool:D $colored -->Bool:D) { $!display.colored = $colored }
 
+method peer-add(
+    UInt:D :$peer-asn,
+    Str:D  :$peer-ip,
+    UInt:D :$peer-port,
+    Bool:D :$passive,
+    Bool:D :$ipv4,
+    Bool:D :$ipv6,
+    Str    :$md5?,
+) {
+    self.bgp.peer-add(
+        :$peer-asn,
+        :$peer-ip,
+        :$peer-port,
+        :$passive,
+        :$ipv4,
+        :$ipv6,
+        :$md5,
+    );
+}
+
 
 =begin pod
 
@@ -105,7 +125,7 @@ Defines a subset covering legal TCP/IP port numbers.
 
 Allow unknown peers to be able to connect without having been pre-configured.
 
-=head1 colored
+=head2 colored
 
 Note that this attribute can't be set directly except at construction time,
 however it can be changed via a helper method:
@@ -116,52 +136,73 @@ however it can be changed via a helper method:
 If this is set to true, log messages will be displayed using ANSI-compatible
 colored text.
 
-=head1 display
+=head2 display
 
 This is a L<Net::BGP::Speaker::Display> object.  It's intended to be
 created during object construction, but it can be overriden by a subclass
 of this object during construction.
 
-=head1 listen-host
+=head2 listen-host
 
 The host to listen on for BGP connections on (defaults to C<0.0.0.0>).  This
 is a string.
 
-=head1 listen-port
+=head2 listen-port
 
 The port number to listen for BGP connections on (defaults to C<179>).
 
-=head1 my-asn
+=head2 my-asn
 
 Our Autonymous System Number.
 
-=head1 my-domain
+=head2 my-domain
 
 Domain name of local system, to be sent in FQDN capability during OPEN.
 Can be undefined, which will result in L<Net::BGP> attempting to guess
 the domain name.
 
-=head1 my-hostname
+=head2 my-hostname
 
 Hostname of local system, to be sent in FQDN capability during OPEN.
 Can be undefined, which will result in L<Net::BGP> attempting to guess
 the host name.
 
-=head1 my-asn
+=head2 my-asn
 
 Our Autonymous System Number.
 
-=head1 wanted-asn
+=head2 wanted-asn
 
 A list of C<Asn> objects that we are interested in observing.
 This can also be set by passing the constructor a comma-seperated string
 of ASNs the :asn-filter pseudo-attribute.
 
-=head1 wanted-cidr
+=head2 wanted-cidr
 
 A list of L<Net::BGP::CIDR> objects that we are interested in observing.
 This can also be set by passing the constructor a comma-seperated string
 of CIDRs as the :cidr-filter pseudo-attribute.
+
+=head1 METHODS
+
+=head2 peer-add
+
+  $bgp.peer-add(
+      :peer-asn(65001),
+      :peer-ip("192.0.2.1"),
+      :peer-port(179),
+      :passive(False),
+      :ipv4(True),
+      :ipv6(False),
+      :md5($key),
+  );
+
+Add a new peer to the BGP server.
+
+Provide the peer information (C<peer-asn>, C<peer-ip>, and C<peer-port>),
+along with whether this should be a C<passive> session, whether the
+C<ipv4> and C<ipv6> address families should be negotiated, and, if necessary,
+an C<md5> key.
 
 =head1 AUTHOR
 
