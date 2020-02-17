@@ -49,8 +49,17 @@ is $speaker.display.colored, True, "Yes colored (2)";
 my $bgp = $speaker.bgp;
 is $bgp.port, 0, 'BGP Port is 0';
 
+$speaker.peer-add(
+    :peer-asn(0x1020),
+    :peer-ip('127.0.0.1'),
+    :peer-port(179),
+    :passive,
+    :ipv4(True),
+    :ipv6(False),
+    :md5(Str),
+);
+
 $bgp.listen();
-$bgp.peer-add( :peer-asn(0x1020), :peer-ip('127.0.0.1'), :passive );
 isnt $bgp.port, 0, 'BGP Port isnt 0';
 
 is $bgp.my-asn, 65000, "ASN is correct";
