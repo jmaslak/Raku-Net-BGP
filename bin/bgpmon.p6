@@ -13,6 +13,7 @@ use Net::BGP::Validation;
 use Sys::HostAddr;
 
 my %last-path;
+my $last-path-lock = Lock.new;
 
 sub MAIN(
     Bool:D                    :$passive = False,
@@ -39,6 +40,7 @@ sub MAIN(
     Bool:D                    :$suppress-updates = False,
     Bool:D                    :$color = False, # XXX Should test for terminal
     Bool:D                    :$track = False,
+    UInt:D                    :$cores = $*KERNEL.cpu-cores,
     *@args is copy
 ) {
     my $speaker = Net::BGP::Speaker.new(
@@ -179,7 +181,7 @@ sub MAIN(
                 }
 
                 @stack.push: $event;
-                if $cnt++ ≤ $*KERNEL.cpu-cores*2*$batch-size {
+                if $cnt++ ≤ $cores*2*$batch-size {
                     $event = $channel.poll;
                 } else {
                     $event = Nil;
@@ -192,8 +194,8 @@ sub MAIN(
             my @errlist;
             if (@stack.elems > $batch-size) {
                 @events = @stack.hyper(
-                    :degree($*KERNEL.cpu-cores),
-                    :batch((@stack.elems / $*KERNEL.cpu-cores).ceiling)
+                    :degree($cores),
+                    :batch((@stack.elems / $cores).ceiling)
                 ).map( { map-event(
                     :$speaker,
                     :event($^a),
@@ -374,33 +376,35 @@ multi is-filter-match(
         }
 
         if $track {
-            my @nlri = @( $event.message.nlri );
-            @nlri.append: @($event.message.nlri6);
-            for @nlri -> $prefix {
-                if %last-path{$event.peer}{$prefix}:exists {
-                    if $speaker.wanted-asn.elems {
-                        for $speaker.wanted-asn -> $as {
-                            if $as ∈ %last-path{$event.peer}{$prefix} {
-                                @m.push('PREFIX-PREVIOUS-MATCH');
+            $last-path-lock.protect: {
+                my @nlri = @( $event.message.nlri );
+                @nlri.append: @($event.message.nlri6);
+                for @nlri -> $prefix {
+                    if %last-path{$event.peer}{$prefix}:exists {
+                        if $speaker.wanted-asn.elems {
+                            for $speaker.wanted-asn -> $as {
+                                if $as ∈ %last-path{$event.peer}{$prefix} {
+                                    @m.push('PREFIX-PREVIOUS-MATCH');
+                                }
                             }
                         }
                     }
-               }
-            }
+                }
 
-            my @withdrawn = @( $event.message.withdrawn );
-            @withdrawn.append: @($event.message.withdrawn6);
-            for @withdrawn -> $prefix {
-                if %last-path{$event.peer}{$prefix}:exists {
-                    if $speaker.wanted-asn.elems {
-                        for $speaker.wanted-asn -> $as {
-                            if $as ∈ %last-path{$event.peer}{$prefix} {
-                                @m.push('PREFIX-PREVIOUS-MATCH');
+                my @withdrawn = @( $event.message.withdrawn );
+                @withdrawn.append: @($event.message.withdrawn6);
+                for @withdrawn -> $prefix {
+                    if %last-path{$event.peer}{$prefix}:exists {
+                        if $speaker.wanted-asn.elems {
+                            for $speaker.wanted-asn -> $as {
+                                if $as ∈ %last-path{$event.peer}{$prefix} {
+                                    @m.push('PREFIX-PREVIOUS-MATCH');
+                                }
                             }
                         }
                     }
-               }
-           }
+                }
+            }
         }
 
         my $agg = $event.message.aggregator-asn;
@@ -631,27 +635,29 @@ sub map-event(
     return $ret unless $ret<match>.defined; # Short circuit here.
 
     if $track {
-        if $event ~~ Net::BGP::Event::BGP-Message and $event.message ~~ Net::BGP::Message::Update {
-            my @nlri = @( $event.message.nlri );
-            @nlri.append: @( $event.message.nlri6 );
-            for @nlri -> $prefix {
-                if %last-path{$event.peer}{$prefix}:exists {
-                    $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
+        $last-path-lock.protect: {
+            if $event ~~ Net::BGP::Event::BGP-Message and $event.message ~~ Net::BGP::Message::Update {
+                my @nlri = @( $event.message.nlri );
+                @nlri.append: @( $event.message.nlri6 );
+                for @nlri -> $prefix {
+                    if %last-path{$event.peer}{$prefix}:exists {
+                        $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
+                    }
+
+                    my @old-path = @( $event.message.as-array );
+                    @old-path.push( $event.message.origin );
+                    %last-path{$event.peer}{$prefix} = @old-path;
                 }
 
-                my @old-path = @( $event.message.as-array );
-                @old-path.push( $event.message.origin );
-                %last-path{$event.peer}{$prefix} = @old-path;
-            }
+                my @withdrawn = @( $event.message.withdrawn );
+                @withdrawn.append: @( $event.message.withdrawn6 );
+                for @withdrawn -> $prefix {
+                    if %last-path{$event.peer}{$prefix}:exists {
+                        $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
+                    }
 
-            my @withdrawn = @( $event.message.withdrawn );
-            @withdrawn.append: @( $event.message.withdrawn6 );
-            for @withdrawn -> $prefix {
-                if %last-path{$event.peer}{$prefix}:exists {
-                    $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
+                    %last-path{$event.peer}{$prefix}:delete;
                 }
-
-                %last-path{$event.peer}{$prefix}:delete;
             }
         }
     }
@@ -669,7 +675,7 @@ sub map-event(
     }
 
     if $event ~~ Net::BGP::Event::Closed-Connection {
-        %last-path{$event.peer}:delete;
+        $last-path-lock.protect: { %last-path{$event.peer}:delete };
     }
 
     return $ret;

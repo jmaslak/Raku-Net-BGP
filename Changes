@@ -3,6 +3,10 @@ Revision history for Raku-Net-BGP
 {{$NEXT}}
     - Refactor: Started refactor of bgpmon.p6 into a proper module
     - Bugfix: Now runs on Rakudo 2018.11
+    - Bugfix: Fix crash from modifing common hash across multiple
+      threads
+    - Feature: Added "cores" option for bgpmon.p6 to determine degree of
+      parallization
 
 0.4.1  2020-02-01T02:24:14Z
     - Bugfix: Code now cleanly compiles on newer Rakudo
