@@ -5,5 +5,5 @@
 # All Rights Reserved - See License
 #
 
-PERL6LIB=lib perl6 t/benchmark.pl6
+PERL6LIB=lib time perl6 t/benchmark.pl6
 
