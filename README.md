@@ -59,12 +59,22 @@ Starts BGP listener, on the port provided in the port attribute.
 
 For a given instance of the BGP class, only one listener can be active at any point in time.
 
-add-peer
+peer-add
 --------
 
-    $bgp.add-peer(:peer-ip("192.0.2.1"), :peer-port(179), :peer-asn(65001));
+    $bgp.peer-add(
+                  :peer-asn(65001),
+                  :peer-ip("192.0.2.1"),
+                  :peer-port(179),
+                  :passive(False),
+                  :ipv4(True),
+                  :ipv6(False),
+                  :md5($key),
+    );
 
 Add a new peer to the BGP server.
+
+Providing `peer-asn` and `peer-ip` is required. However, if the `peer-port` is not provided, `179` will be used. If `passive` is not used, the connection will not be configured as a passive connection. If `ipv4` is not provided, it defaults to `True` (enabling the IPv4 address family), while `ipv6` defaults to `False` (disabling the IPv6 address family). If an `md5` parameter is provided, this is used to set up MD5 associations (on OSes that support this via the `TCP::LowLevel` module).
 
 PATRONS
 =======

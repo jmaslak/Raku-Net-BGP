@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+
+0.5.0  2020-05-10T04:16:05Z
     - Refactor: Started refactor of bgpmon.p6 into a proper module
     - Bugfix: Now runs on Rakudo 2018.11
     - Bugfix: Fix crash from modifing common hash across multiple

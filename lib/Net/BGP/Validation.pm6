@@ -5,7 +5,7 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-unit module Net::BGP::Validation:ver<0.4.1>:auth<cpan:JMASLAK>;
+unit module Net::BGP::Validation:ver<0.5.0>:auth<cpan:JMASLAK>;
 
 use Net::BGP::CIDR;
 use Net::BGP::Message;
