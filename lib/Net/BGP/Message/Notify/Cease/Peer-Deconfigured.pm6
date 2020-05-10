@@ -9,7 +9,7 @@ use Net::BGP::Conversions;
 use Net::BGP::Message::Notify::Cease;
 
 use StrictClass;
-unit class Net::BGP::Message::Notify::Cease::Peer-Deconfigured:ver<0.6.0>:auth<cpan:JMASLAK>
+unit class Net::BGP::Message::Notify::Cease::Peer-Deconfigured:ver<0.7.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message::Notify::Cease
     does StrictClass;
 
