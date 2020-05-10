@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Path-Attribute;
 
 use StrictClass;
-unit class Net::BGP::Path-Attribute::Next-Hop:ver<0.5.1>:auth<cpan:JMASLAK>
+unit class Net::BGP::Path-Attribute::Next-Hop:ver<0.6.0>:auth<cpan:JMASLAK>
     is Net::BGP::Path-Attribute
     does StrictClass;
 

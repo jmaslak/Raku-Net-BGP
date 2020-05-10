@@ -9,7 +9,7 @@ use Net::BGP::Error::Bad-Parameter-Length;
 use Net::BGP::Parameter;
 
 use StrictClass;
-unit class Net::BGP::Parameter::Generic:ver<0.5.1>:auth<cpan:JMASLAK>
+unit class Net::BGP::Parameter::Generic:ver<0.6.0>:auth<cpan:JMASLAK>
     is Net::BGP::Parameter
     does StrictClass;
 

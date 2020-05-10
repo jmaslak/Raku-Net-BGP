@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+
+0.6.0  2020-05-10T16:58:18Z
     - Feature: Decode (partially) extended communities.  RT is the only
       well-known extended community type+subtype currently well supported.
 
