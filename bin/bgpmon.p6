@@ -238,8 +238,6 @@ sub MAIN(
                     }
 
                 }
-
-                $event<str> = $short-format ?? short-lines($event<event>, $event<last-path>) !! $event<event>.Str;
             }
             
             race for @events.race(:$degree, :$batch) {
