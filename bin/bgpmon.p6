@@ -215,7 +215,7 @@ sub MAIN(
 
                 if $track {
                     if $event<event> ~~ Net::BGP::Event::BGP-Message and $event<event>.message ~~ Net::BGP::Message::Update {
-                        for $event<nlri> -> $prefix {
+                        for $event<nlri><> -> $prefix {
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
@@ -223,7 +223,7 @@ sub MAIN(
                             @old-path.push( $event<event>.message.origin );
                             %last-path{$event<event>.peer}{$prefix} = @old-path;
                         }
-                        for $event<nlri6> -> $prefix {
+                        for $event<nlri6><> -> $prefix {
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
@@ -232,13 +232,13 @@ sub MAIN(
                             %last-path{$event<event>.peer}{$prefix} = @old-path;
                         }
 
-                        for $event<withdrawn> -> $prefix {
+                        for $event<withdrawn><> -> $prefix {
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
                             %last-path{$event<event>.peer}{$prefix}:delete;
                         }
-                        for $event<withdrawn6> -> $prefix {
+                        for $event<withdrawn6><> -> $prefix {
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
