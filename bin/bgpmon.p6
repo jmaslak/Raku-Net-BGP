@@ -190,29 +190,63 @@ sub MAIN(
 
             if @stack.elems == 0 { next; }
 
-            my @events;
-            my @errlist;
-            if (@stack.elems > $batch-size) {
-                @events = @stack.hyper(
-                    :degree($cores),
-                    :batch((@stack.elems / $cores).ceiling)
-                ).map( { map-event(
-                    :$speaker,
-                    :event($^a),
-                    :$short-format,
-                    :$lint-mode,
-                    :$track,
-                ) } ).grep( { $^a<match>.defined } );
+            my $degree = (@stack.elems > $batch-size) ?? $cores !! 1;
+            my $batch  = (@stack.elems ÷ $degree).ceiling;
 
-            } else {
-                @events = @stack.map( { map-event(
-                    :$speaker,
-                    :event($^a),
-                    :$short-format,
+            my @events = @stack.hyper(
+                :$degree,
+                :$batch
+            ).map( { map-event(
+                :$speaker,
+                :event($^a),
+                :$lint-mode,
+            ) } );
+
+            for @events -> $event {
+                $event<match> = is-filter-match(
+                    $speaker,
+                    $event<event>,
+                    $event<nlri>,
+                    $event<nlri6>,
+                    $event<withdrawn>,
+                    $event<withdrawn6>,
                     :$lint-mode,
-                    :$track,
-                ) } ).grep( { $^a<match>.defined } );
+                    :$track
+                );
+
+                if $track {
+                    if $event<event> ~~ Net::BGP::Event::BGP-Message and $event<event>.message ~~ Net::BGP::Message::Update {
+                        for $event<nlri> -> $prefix {
+                            if %last-path{$event<event>.peer}{$prefix}:exists {
+                                $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
+                            }
+
+                            my @old-path = @( $event<event>.message.as-array );
+                            @old-path.push( $event<event>.message.origin );
+                            %last-path{$event<event>.peer}{$prefix} = @old-path;
+                        }
+
+                        for $event<withdrawn> -> $prefix {
+                            if %last-path{$event<event>.peer}{$prefix}:exists {
+                                $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
+                            }
+
+                            %last-path{$event<event>.peer}{$prefix}:delete;
+                        }
+                    } elsif $event ~~ Net::BGP::Event::Closed-Connection {
+                        %last-path{$event.peer}:delete;
+                    }
+
+                }
+
+                $event<str> = $short-format ?? short-lines($event<event>, $event<last-path>) !! $event<event>.Str;
             }
+            
+            race for @events.race(:$degree, :$batch) {
+                $_<str> = $short-format ?? short-lines($_<event>, $_<last-path>) !! $_<event>.Str;
+            }
+
+            @events = @events.hyper(:$degree, :$batch).grep( { $^a<match>.defined } );
 
             for @events -> $event {
                 if $event<event> ~~ Net::BGP::Event::BGP-Message {
@@ -333,6 +367,10 @@ sub withdrawal(
 multi is-filter-match(
     $speaker,
     Net::BGP::Event::BGP-Message:D $event,
+    @nlri,
+    @nlri6,
+    @withdrawn,
+    @withdrawn6,
     :$lint-mode,
     :$track,
     -->Str
@@ -346,8 +384,6 @@ multi is-filter-match(
     my @m;
 
     if $speaker.wanted-cidr.elems {
-        my @nlri      = @( $event.message.nlri );
-        my @withdrawn = @( $event.message.withdrawn );
         my $agg       = $event.message.aggregator-ip;
         $agg          = Net::BGP::CIDR.from-str("$agg/32") if $agg.defined;
 
@@ -360,8 +396,6 @@ multi is-filter-match(
             }
         }
 
-        my @nlri6      = @( $event.message.nlri6 );
-        my @withdrawn6 = @( $event.message.withdrawn6 );
         for $speaker.wanted-cidr.grep( { $^a.ip-version == 6 } ) -> $cidr {
             if @nlri6.first\    ( { $cidr.contains($^a) } ).defined { @m.push($nlri) }
             if @withdrawn6.first( { $cidr.contains($^a) } ).defined { @m.push($withdrawn) }
@@ -377,9 +411,9 @@ multi is-filter-match(
 
         if $track {
             $last-path-lock.protect: {
-                my @nlri = @( $event.message.nlri );
-                @nlri.append: @($event.message.nlri6);
-                for @nlri -> $prefix {
+                my @all-nlri = @nlri;
+                @all-nlri.append: @nlri6;
+                for @all-nlri -> $prefix {
                     if %last-path{$event.peer}{$prefix}:exists {
                         if $speaker.wanted-asn.elems {
                             for $speaker.wanted-asn -> $as {
@@ -391,9 +425,9 @@ multi is-filter-match(
                     }
                 }
 
-                my @withdrawn = @( $event.message.withdrawn );
-                @withdrawn.append: @($event.message.withdrawn6);
-                for @withdrawn -> $prefix {
+                my @all-withdrawn = @withdrawn;
+                @all-withdrawn.append: @all-withdrawn;
+                for @all-withdrawn -> $prefix {
                     if %last-path{$event.peer}{$prefix}:exists {
                         if $speaker.wanted-asn.elems {
                             for $speaker.wanted-asn -> $as {
@@ -422,6 +456,10 @@ multi is-filter-match(
 multi is-filter-match(
     $speaker,
     $event,
+    @nlri,
+    @nlri6,
+    @withdrawn,
+    @withdrawn6,
     :$lint-mode,
     :$track
     -->Str
@@ -618,51 +656,22 @@ sub short-line-open(
 sub map-event(
     :$speaker,
     :$event,
-    :$short-format,
     :$lint-mode,
-    :$track,
 ) {
     my $ret = Hash.new;
     $ret<event> = $event;
-    $ret<match> = is-filter-match(
-        $speaker,
-        $event,
-        :$lint-mode,
-        :$track
-    );
     $ret<last-path> = {};
+    $ret<nlri> = [];
+    $ret<nlri6> = [];
+    $ret<withdrawn> = [];
+    $ret<withdrawn6> = [];
 
-    return $ret unless $ret<match>.defined; # Short circuit here.
-
-    if $track {
-        $last-path-lock.protect: {
-            if $event ~~ Net::BGP::Event::BGP-Message and $event.message ~~ Net::BGP::Message::Update {
-                my @nlri = @( $event.message.nlri );
-                @nlri.append: @( $event.message.nlri6 );
-                for @nlri -> $prefix {
-                    if %last-path{$event.peer}{$prefix}:exists {
-                        $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
-                    }
-
-                    my @old-path = @( $event.message.as-array );
-                    @old-path.push( $event.message.origin );
-                    %last-path{$event.peer}{$prefix} = @old-path;
-                }
-
-                my @withdrawn = @( $event.message.withdrawn );
-                @withdrawn.append: @( $event.message.withdrawn6 );
-                for @withdrawn -> $prefix {
-                    if %last-path{$event.peer}{$prefix}:exists {
-                        $ret<last-path>{$prefix} = %last-path{$event.peer}{$prefix};
-                    }
-
-                    %last-path{$event.peer}{$prefix}:delete;
-                }
-            }
-        }
+    if $event ~~ Net::BGP::Event::BGP-Message and $event.message ~~ Net::BGP::Message::Update {
+        $ret<nlri>.append: @( $event.message.nlri );
+        $ret<nlri6>.append: @( $event.message.nlri6 );
+        $ret<withdrawn>.append: @( $event.message.withdrawn );
+        $ret<withdrawn6>.append: @( $event.message.withdrawn6 );
     }
-
-    $ret<str>   = $short-format ?? short-lines($event, $ret<last-path>) !! $event.Str;
 
     if $lint-mode and $event ~~ Net::BGP::Event::BGP-Message {
         $ret<errors> = Net::BGP::Validation::errors(
@@ -672,10 +681,6 @@ sub map-event(
         );
     } else {
         $ret<errors> = Array.new;
-    }
-
-    if $event ~~ Net::BGP::Event::Closed-Connection {
-        $last-path-lock.protect: { %last-path{$event.peer}:delete };
     }
 
     return $ret;
