@@ -174,8 +174,12 @@ subtest 'Update Message (ASN16)', {
 
     ok $bgp.path-attributes[10] ~~ Net::BGP::Path-Attribute::Extended-Community,
         "Path Attribute 10 Proper Type";
-    is $bgp.path-attributes[10].extended-community-list.join(" "), "RT:1:2", "Path Attribute 10 Proper Value";
-    is $bgp.extended-community-list.join(" "), "RT:1:2", "Extended Communities are proper";
+    is $bgp.path-attributes[10].extended-community-list.join(" "),
+        "RT:1:2 SoO:3:4",
+        "Path Attribute 10 Proper Value";
+    is $bgp.extended-community-list.join(" "),
+        "RT:1:2 SoO:3:4",
+        "Extended Communities are proper";
 
     ok $bgp.path-attributes[11] ~~ Net::BGP::Path-Attribute::AS4-Aggregator,
         "Path Attribute 11 Proper Type";

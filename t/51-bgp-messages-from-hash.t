@@ -199,7 +199,7 @@ subtest 'Update-ASN16', {
             aggregator-ip      => '192.0.2.6',
             originator-id      => '10.0.0.2',
             community          => [ '2571:258' ],
-            extended-community => [ 'RT:1:2' ],
+            extended-community => [ 'RT:1:2', 'SoO:3:4' ],
             cluster-list       => '10.0.0.10 10.0.0.11',
             nlri               => [
                 '10.0.0.0/8',

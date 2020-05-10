@@ -80,6 +80,11 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
             $extended-community-list.append: 0x02;
             $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
             $extended-community-list.append: nuint32-buf8(Int(@parts[2]));
+        } elsif @parts.elems == 3 and @parts[0] eq 'SoO' {
+            $extended-community-list.append: 0x00;
+            $extended-community-list.append: 0x03;
+            $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
+            $extended-community-list.append: nuint32-buf8(Int(@parts[2]));
         } else {
             $extended-community-list.append: Int(@parts[0]);
             $extended-community-list.append: Int(@parts[1]);
@@ -114,8 +119,13 @@ method extended-community-list(-->Array[Str:D]) {
             if self.raw[$base] == 0x00 {
                 # Two-octet AS-specific Transitive
                 if self.raw[$base+1] == 0x02 {
-                    # VPN
+                    # RT
                     take "RT:"
+                        ~ nuint16( self.raw.subbuf( $base+2, 2 ) ) ~ ':'
+                        ~ nuint32( self.raw.subbuf( $base+4, 4 ) );
+                } elsif self.raw[$base+1] == 0x03 {
+                    # Route Origin
+                    take "SoO:"
                         ~ nuint16( self.raw.subbuf( $base+2, 2 ) ) ~ ':'
                         ~ nuint32( self.raw.subbuf( $base+4, 4 ) );
                 } else {
@@ -199,9 +209,11 @@ should represent the desired path-attribute code.  The extended-community
 should be a list of attributes in the format T:S:V1:V2 where T is the
 type value (including transitive and IETF bits), S is the subtype value (or
 first byte of data where applicable), V1 is the first 16 bits of the value,
-and V2 is the last 32 bits of the value.  Optionally, instead of providing
-T and S, the string "RT" can be used to specify a route target type with
-transitive set.
+and V2 is the last 32 bits of the value.
+
+Optionally, instead of providing T and S, the string "RT" can be used to
+specify a route target type with transitive set.  "SoO" can be used to specify
+a route origin.
 
 =head1 Methods
 
