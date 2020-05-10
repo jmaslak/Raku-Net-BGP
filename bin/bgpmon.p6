@@ -13,7 +13,6 @@ use Net::BGP::Validation;
 use Sys::HostAddr;
 
 my %last-path;
-my $last-path-lock = Lock.new;
 
 sub MAIN(
     Bool:D                    :$passive = False,
@@ -220,7 +219,14 @@ sub MAIN(
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
-
+                            my @old-path = @( $event<event>.message.as-array );
+                            @old-path.push( $event<event>.message.origin );
+                            %last-path{$event<event>.peer}{$prefix} = @old-path;
+                        }
+                        for $event<nlri6> -> $prefix {
+                            if %last-path{$event<event>.peer}{$prefix}:exists {
+                                $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
+                            }
                             my @old-path = @( $event<event>.message.as-array );
                             @old-path.push( $event<event>.message.origin );
                             %last-path{$event<event>.peer}{$prefix} = @old-path;
@@ -230,7 +236,12 @@ sub MAIN(
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
-
+                            %last-path{$event<event>.peer}{$prefix}:delete;
+                        }
+                        for $event<withdrawn6> -> $prefix {
+                            if %last-path{$event<event>.peer}{$prefix}:exists {
+                                $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
+                            }
                             %last-path{$event<event>.peer}{$prefix}:delete;
                         }
                     } elsif $event ~~ Net::BGP::Event::Closed-Connection {
@@ -408,30 +419,28 @@ multi is-filter-match(
         }
 
         if $track {
-            $last-path-lock.protect: {
-                my @all-nlri = @nlri;
-                @all-nlri.append: @nlri6;
-                for @all-nlri -> $prefix {
-                    if %last-path{$event.peer}{$prefix}:exists {
-                        if $speaker.wanted-asn.elems {
-                            for $speaker.wanted-asn -> $as {
-                                if $as ∈ %last-path{$event.peer}{$prefix} {
-                                    @m.push('PREFIX-PREVIOUS-MATCH');
-                                }
+            my @all-nlri = @nlri;
+            @all-nlri.append: @nlri6;
+            for @all-nlri -> $prefix {
+                if %last-path{$event.peer}{$prefix}:exists {
+                    if $speaker.wanted-asn.elems {
+                        for $speaker.wanted-asn -> $as {
+                            if $as ∈ %last-path{$event.peer}{$prefix} {
+                                @m.push('PREFIX-PREVIOUS-MATCH');
                             }
                         }
                     }
                 }
+            }
 
-                my @all-withdrawn = @withdrawn;
-                @all-withdrawn.append: @all-withdrawn;
-                for @all-withdrawn -> $prefix {
-                    if %last-path{$event.peer}{$prefix}:exists {
-                        if $speaker.wanted-asn.elems {
-                            for $speaker.wanted-asn -> $as {
-                                if $as ∈ %last-path{$event.peer}{$prefix} {
-                                    @m.push('PREFIX-PREVIOUS-MATCH');
-                                }
+            my @all-withdrawn = @withdrawn;
+            @all-withdrawn.append: @all-withdrawn;
+            for @all-withdrawn -> $prefix {
+                if %last-path{$event.peer}{$prefix}:exists {
+                    if $speaker.wanted-asn.elems {
+                        for $speaker.wanted-asn -> $as {
+                            if $as ∈ %last-path{$event.peer}{$prefix} {
+                                @m.push('PREFIX-PREVIOUS-MATCH');
                             }
                         }
                     }
