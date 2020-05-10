@@ -76,15 +76,29 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
     for @(%params<extended-community>) -> $comm {
         my @parts = $comm.split(':');
         if @parts.elems == 3 and @parts[0] eq 'RT' {
-            $extended-community-list.append: 0x00;
-            $extended-community-list.append: 0x02;
-            $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
-            $extended-community-list.append: nuint32-buf8(Int(@parts[2]));
+            if Int(@parts[1]) < 2¹⁶ {
+                $extended-community-list.append: 0x00;
+                $extended-community-list.append: 0x02;
+                $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
+                $extended-community-list.append: nuint32-buf8(Int(@parts[2]));
+            } else {
+                $extended-community-list.append: 0x02;
+                $extended-community-list.append: 0x02;
+                $extended-community-list.append: nuint32-buf8(Int(@parts[1]));
+                $extended-community-list.append: nuint16-buf8(Int(@parts[2]));
+            }
         } elsif @parts.elems == 3 and @parts[0] eq 'SoO' {
-            $extended-community-list.append: 0x00;
-            $extended-community-list.append: 0x03;
-            $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
-            $extended-community-list.append: nuint32-buf8(Int(@parts[2]));
+            if Int(@parts[1]) < 2¹⁶ {
+                $extended-community-list.append: 0x00;
+                $extended-community-list.append: 0x03;
+                $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
+                $extended-community-list.append: nuint32-buf8(Int(@parts[2]));
+            } else {
+                $extended-community-list.append: 0x02;
+                $extended-community-list.append: 0x03;
+                $extended-community-list.append: nuint32-buf8(Int(@parts[1]));
+                $extended-community-list.append: nuint16-buf8(Int(@parts[2]));
+            }
         } elsif @parts.elems == 4 and @parts[0] eq 'OSPF-Route-Type' {
             $extended-community-list.append: 0x03;
             $extended-community-list.append: 0x06;
@@ -146,9 +160,21 @@ method extended-community-list(-->Array[Str:D]) {
                     ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
             } elsif self.raw[$base] == 0x02 {
                 # Four-octet AS-specific Transitive
-                take self.raw[$base] ~ ':' ~ self.raw[$base+1] ~ ':'
-                    ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
-                    ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
+                if self.raw[$base+1] == 0x02 {
+                    # RT
+                    take "RT:"
+                        ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
+                        ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
+                } elsif self.raw[$base+1] == 0x03 {
+                    # Route Origin
+                    take "SoO:"
+                        ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
+                        ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
+                } else {
+                    take self.raw[$base] ~ ':' ~ self.raw[$base+1] ~ ':'
+                        ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
+                        ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
+                }
             } elsif self.raw[$base] == 0x03 {
                 if self.raw[$base+1] == 0x06 {
                     # OSPF Route Type

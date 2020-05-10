@@ -12,7 +12,9 @@ use Net::BGP::Message::Update;
 subtest 'Extended-Community' => {
     my @route-type = (
         'RT:1:2',
+        'RT:100001:11',
         'SoO:1:1',
+        'SoO:200002:12',
         'OSPF-Route-Type:1000000:5:1',
     );
 

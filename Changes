@@ -3,7 +3,8 @@ Revision history for Raku-Net-BGP
 {{$NEXT}}
     - Bugfix: Proper decoding of IPv4-based extended community path attributes
     - Feature: Decode SoO extended community
-    - Feature: Decode OSPF route type extended committee
+    - Feature: Decode OSPF route type extended commity
+    - Feature: Decode 32-bit-ASN RT extended community
 
 0.6.0  2020-05-10T16:58:18Z
     - Feature: Decode (partially) extended communities.  RT is the only
