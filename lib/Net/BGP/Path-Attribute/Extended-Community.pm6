@@ -85,6 +85,12 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
             $extended-community-list.append: 0x03;
             $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
             $extended-community-list.append: nuint32-buf8(Int(@parts[2]));
+        } elsif @parts.elems == 4 and @parts[0] eq 'OSPF-Route-Type' {
+            $extended-community-list.append: 0x03;
+            $extended-community-list.append: 0x06;
+            $extended-community-list.append: nuint32-buf8(Int(@parts[1]));
+            $extended-community-list.append: Int(@parts[2]);
+            $extended-community-list.append: Int(@parts[3]);
         } else {
             $extended-community-list.append: Int(@parts[0]);
             $extended-community-list.append: Int(@parts[1]);
@@ -143,6 +149,18 @@ method extended-community-list(-->Array[Str:D]) {
                 take self.raw[$base] ~ ':' ~ self.raw[$base+1] ~ ':'
                     ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
                     ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
+            } elsif self.raw[$base] == 0x03 {
+                if self.raw[$base+1] == 0x06 {
+                    # OSPF Route Type
+                    take "OSPF-Route-Type:"
+                        ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
+                        ~ self.raw[ $base+6 ] ~ ':'
+                        ~ self.raw[ $base+7 ];
+                } else {
+                    take self.raw[$base] ~ ':' ~ self.raw[$base+1] ~ ':'
+                        ~ nuint16( self.raw.subbuf( $base+2, 2 ) ) ~ ':'
+                        ~ nuint32( self.raw.subbuf( $base+4, 4 ) );
+                }
             } elsif self.raw[$base] == 0x40 {
                 # Two-octet AS-Specific Non-transitive
                 take self.raw[$base] ~ ':' ~ self.raw[$base+1] ~ ':'
@@ -213,7 +231,10 @@ and V2 is the last 32 bits of the value.
 
 Optionally, instead of providing T and S, the string "RT" can be used to
 specify a route target type with transitive set.  "SoO" can be used to specify
-a route origin.
+a route origin.  "OSPF-Route-Type" can be used to specify an OSPF route type,
+when followed by the OSPF area, OSPF route type, and OSPF route options (for
+example, "OSPF-Route-Type:0:5:1" for an OSPF route in area 0, with a type
+of 5, and an option indicating a type 1 metric).
 
 =head1 Methods
 
