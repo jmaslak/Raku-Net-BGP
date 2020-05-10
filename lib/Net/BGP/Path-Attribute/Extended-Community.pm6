@@ -126,7 +126,7 @@ method extended-community-list(-->Array[Str:D]) {
             } elsif self.raw[$base] == 0x01 {
                 # Two-octet IPv4-Specific Transitive
                 take self.raw[$base] ~ ':' ~ self.raw[$base+1] ~ ':'
-                    ~ buf8-to-ipv4( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
+                    ~ buf8-to-ipv4( self.raw.subbuf( $base+2, 4 ).list ) ~ ':'
                     ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
             } elsif self.raw[$base] == 0x02 {
                 # Four-octet AS-specific Transitive
@@ -141,7 +141,7 @@ method extended-community-list(-->Array[Str:D]) {
             } elsif self.raw[$base] == 0x41 {
                 # Two-octet IPv4-Specific Non-transitive
                 take self.raw[$base] ~ ':' ~ self.raw[$base+1] ~ ':'
-                    ~ buf8-to-ipv4( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
+                    ~ buf8-to-ipv4( self.raw.subbuf( $base+2, 4 ).list ) ~ ':'
                     ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
             } elsif self.raw[$base] == 0x42 {
                 # Four-octet AS-specific Non-transitive

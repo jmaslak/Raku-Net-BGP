@@ -1,6 +1,7 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Bugfix: Proper decoding of IPv4-based extended community path attributes
 
 0.6.0  2020-05-10T16:58:18Z
     - Feature: Decode (partially) extended communities.  RT is the only
