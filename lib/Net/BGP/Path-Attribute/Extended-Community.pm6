@@ -75,7 +75,17 @@ method from-hash(%params is copy, Bool:D :$asn32)  {
     my $extended-community-list = buf8.new;
     for @(%params<extended-community>) -> $comm {
         my @parts = $comm.split(':');
-        if @parts.elems == 3 and @parts[0] eq 'RT' {
+        if @parts.elems == 2 and @parts[0] eq 'ET' {
+                $extended-community-list.append: 0x03;
+                $extended-community-list.append: 0x0c;
+                $extended-community-list.append: nuint32-buf8(0);
+                $extended-community-list.append: nuint16-buf8(Int(@parts[1]));
+        } elsif @parts.elems == 3 and @parts[0] eq 'ET' {
+                $extended-community-list.append: 0x03;
+                $extended-community-list.append: 0x0c;
+                $extended-community-list.append: nuint32-buf8(Int(@parts[1]));
+                $extended-community-list.append: nuint16-buf8(Int(@parts[2]));
+        } elsif @parts.elems == 3 and @parts[0] eq 'RT' {
             if (@parts[1] ~~ Net::BGP::IP::ipv4) {
                 $extended-community-list.append: 0x01;
                 $extended-community-list.append: 0x02;
@@ -198,7 +208,17 @@ method extended-community-list(-->Array[Str:D]) {
                         ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
                 }
             } elsif self.raw[$base] == 0x03 {
-                if self.raw[$base+1] == 0x06 {
+                if self.raw[$base+1] == 0x0c {
+                    # Encapsulation Type
+                    my $reserved = nuint32( self.raw.subbuf( $base+2, 4 ) );
+                    if $reserved == 0 {
+                        take "ET:" ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
+                    } else {
+                        take "ET:"
+                            ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
+                            ~ nuint16( self.raw.subbuf( $base+6, 2 ) );
+                    }
+                } elsif self.raw[$base+1] == 0x06 {
                     # OSPF Route Type
                     take "OSPF-Route-Type:"
                         ~ nuint32( self.raw.subbuf( $base+2, 4 ) ) ~ ':'
@@ -277,12 +297,12 @@ type value (including transitive and IETF bits), S is the subtype value (or
 first byte of data where applicable), V1 is the first 16 bits of the value,
 and V2 is the last 32 bits of the value.
 
-Optionally, instead of providing T and S, the string "RT" can be used to
-specify a route target type with transitive set.  "SoO" can be used to specify
-a route origin.  "OSPF-Route-Type" can be used to specify an OSPF route type,
-when followed by the OSPF area, OSPF route type, and OSPF route options (for
-example, "OSPF-Route-Type:0:5:1" for an OSPF route in area 0, with a type
-of 5, and an option indicating a type 1 metric).
+Optionally, instead of providing T and S,i
+
+=item "ET" can be used to specify an encapsulation type when followed by the type integer.
+=item "RT" can be used to specify a route target type with transitive set.
+=item "SoO" can be used to specify a route origin.
+=item "OSPF-Route-Type" can be used to specify an OSPF route type, when followed by the OSPF area, OSPF route type, and OSPF route options (for example, "OSPF-Route-Type:0:5:1" for an OSPF route in area 0, with a type of 5, and an option indicating a type 1 metric).
 
 =head1 Methods
 

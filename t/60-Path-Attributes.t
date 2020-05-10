@@ -18,6 +18,8 @@ subtest 'Extended-Community' => {
         'SoO:200002:12',
         'SoO:40.30.20.10:210',
         'OSPF-Route-Type:1000000:5:1',
+        'ET:13',
+        'ET:999999:13',
     );
 
     my $pa = Net::BGP::Path-Attribute.from-hash(
