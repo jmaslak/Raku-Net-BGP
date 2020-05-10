@@ -138,6 +138,11 @@ are output.
 Decoding the BGP messages is done with a multi-threaded process.  This selects
 how many messages should be processed per thread. 
 
+=head2 --cores
+
+Number of cores to use to decode BGP messages.  This defaults to the number of
+CPU cores installed in the system.
+
 =head2 --lint-mode
 
 Only output messages that trigger some "lint" checks (and match any filters in
