@@ -13,8 +13,10 @@ subtest 'Extended-Community' => {
     my @route-type = (
         'RT:1:2',
         'RT:100001:11',
+        'RT:4.3.2.1:21',
         'SoO:1:1',
         'SoO:200002:12',
+        'SoO:40.30.20.10:210',
         'OSPF-Route-Type:1000000:5:1',
     );
 
