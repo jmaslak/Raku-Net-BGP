@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Feature: Decode (partially) extended communities.  RT is the only
+      well-known extended community type+subtype currently well supported.
 
 0.5.1  2020-05-10T15:15:05Z
     - Bugfix: bgpmon.p6 no longer includes an empty last path prefix

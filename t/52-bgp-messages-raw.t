@@ -124,7 +124,7 @@ subtest 'Update Message (ASN16)', {
     is $bgp.withdrawn[1], '192.168.150.0/24', "Withdrawn 2 correct";
     is $bgp.withdrawn[2], '192.168.150.1/32', "Withdrawn 3 correct";
 
-    is $bgp.path-attributes.elems, 12, "Proper number of path elements";
+    is $bgp.path-attributes.elems, 13, "Proper number of path elements";
     ok $bgp.path-attributes[0] ~~ Net::BGP::Path-Attribute::Origin,
         "Path Attribute 1 Proper Type";
     is $bgp.path-attributes[0].origin, '?', "Path Attribute 1 Proper Value";
@@ -172,14 +172,19 @@ subtest 'Update Message (ASN16)', {
     is $bgp.path-attributes[9].cluster-list, "10.0.0.10 10.0.0.11",
         "Path Attribute 10 Proper Value";
 
-    ok $bgp.path-attributes[10] ~~ Net::BGP::Path-Attribute::AS4-Aggregator,
-        "Path Attribute 11 Proper Type";
-    is $bgp.path-attributes[10].asn, 65536, 'AS4-Aggregator ASN correct';
-    is $bgp.path-attributes[10].ip, '192.0.2.6', "AS4-Aggregator IP correct";
+    ok $bgp.path-attributes[10] ~~ Net::BGP::Path-Attribute::Extended-Community,
+        "Path Attribute 10 Proper Type";
+    is $bgp.path-attributes[10].extended-community-list.join(" "), "RT:1:2", "Path Attribute 10 Proper Value";
+    is $bgp.extended-community-list.join(" "), "RT:1:2", "Extended Communities are proper";
 
-    ok $bgp.path-attributes[11] ~~ Net::BGP::Path-Attribute::Long-Community,
+    ok $bgp.path-attributes[11] ~~ Net::BGP::Path-Attribute::AS4-Aggregator,
+        "Path Attribute 11 Proper Type";
+    is $bgp.path-attributes[11].asn, 65536, 'AS4-Aggregator ASN correct';
+    is $bgp.path-attributes[11].ip, '192.0.2.6', "AS4-Aggregator IP correct";
+
+    ok $bgp.path-attributes[12] ~~ Net::BGP::Path-Attribute::Long-Community,
         "Path Attribute 12 Proper Type";
-    is $bgp.path-attributes[11].long-community-list.join(" "), "1:2:3", "Path Attribute 12 Proper Value";
+    is $bgp.path-attributes[12].long-community-list.join(" "), "1:2:3", "Path Attribute 12 Proper Value";
     is $bgp.long-community-list.join(" "), "1:2:3", "Long Communities are proper";
 
     is $bgp.nlri.elems, 3, "Proper number of NLRI prefixes";

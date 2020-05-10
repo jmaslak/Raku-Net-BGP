@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2020 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -18,6 +18,7 @@ use Net::BGP::Path-Attribute::AS4-Path;
 use Net::BGP::Path-Attribute::Atomic-Aggregate;
 use Net::BGP::Path-Attribute::Cluster-List;
 use Net::BGP::Path-Attribute::Community;
+use Net::BGP::Path-Attribute::Extended-Community;
 use Net::BGP::Path-Attribute::Generic;
 use Net::BGP::Path-Attribute::Local-Pref;
 use Net::BGP::Path-Attribute::Long-Community;
@@ -45,6 +46,7 @@ has Int   $.cached-aggregator-asn;
 has Str   $.cached-aggregator-ip;
 has Int   $.cached-as4-aggregator-asn;
 has Str   $.cached-as4-aggregator-ip;
+has Str:D @.cached-extended-community-list;
 has Str:D @.cached-long-community-list;
 
 method new() {
@@ -104,6 +106,9 @@ method path-attributes(-->Array[Net::BGP::Path-Attribute:D]) {
                 $!cached-as4-aggregator-asn  = $attr.asn;
                 $!cached-as4-aggregator-ip   = $attr.ip;
             }
+            when Net::BGP::Path-Attribute::Extended-Community {
+                @!cached-extended-community-list = $attr.extended-community-list;
+            }
             when Net::BGP::Path-Attribute::Long-Community {
                 @!cached-long-community-list = $attr.long-community-list;
             }
@@ -135,6 +140,9 @@ method Str(-->Str) {
     my @comm = self.community-list;
     push @lines, "Communities: " ~ @comm.join(" ") if @comm.elems;
     
+    my @extended-comm = self.extended-community-list;
+    push @lines, "Extended-Communities: " ~ @extended-comm.join(" ") if @extended-comm.elems;
+
     my @long-comm = self.long-community-list;
     push @lines, "Long-Communities: " ~ @long-comm.join(" ") if @long-comm.elems;
 
@@ -155,6 +163,7 @@ method Str(-->Str) {
         next if $attr ~~ Net::BGP::Path-Attribute::Atomic-Aggregate;
         next if $attr ~~ Net::BGP::Path-Attribute::Aggregator;
         next if $attr ~~ Net::BGP::Path-Attribute::AS4-Aggregator;
+        next if $attr ~~ Net::BGP::Path-Attribute::Extended-Community;
         next if $attr ~~ Net::BGP::Path-Attribute::Long-Community;
 
         push @lines, "  ATTRIBUTE: " ~ $attr.Str;
@@ -177,26 +186,27 @@ method from-hash(%params is copy, Bool:D :$asn32) {
         withdrawn origin as-path as4-path next-hop med local-pref
         atomic-aggregate originator-id cluster-list community nlri
         address-family path-attributes aggregator-ip aggregator-asn
-        long-community
+        extended-community long-community
     »;
 
-    %params<withdrawn>        //= [];
-    %params<origin>           //= '?';
-    %params<as-path>          //= '';
-    %params<as4-path>         //= '';
-    %params<next-hop>         //= '';
-    %params<local-pref>       //= '';
-    %params<atomic-aggregate> //= False;
-    %params<med>              //= '';
-    %params<community>        //= [];
-    %params<originator-id>    //= '';
-    %params<cluster-list>     //= '';
-    %params<nlri>             //= [];
-    %params<address-family>   //= 'ipv4';
-    %params<path-attributes>  //= [];
-    %params<aggregator-asn>   //= Nil;
-    %params<aggregator-ip>    //= '';
-    %params<long-community>   //= [];
+    %params<withdrawn>          //= [];
+    %params<origin>             //= '?';
+    %params<as-path>            //= '';
+    %params<as4-path>           //= '';
+    %params<next-hop>           //= '';
+    %params<local-pref>         //= '';
+    %params<atomic-aggregate>   //= False;
+    %params<med>                //= '';
+    %params<community>          //= [];
+    %params<originator-id>      //= '';
+    %params<cluster-list>       //= '';
+    %params<nlri>               //= [];
+    %params<address-family>     //= 'ipv4';
+    %params<path-attributes>    //= [];
+    %params<aggregator-asn>     //= Nil;
+    %params<aggregator-ip>      //= '';
+    %params<extended-community> //= [];
+    %params<long-community>     //= [];
 
     # Delete unnecessary option
     if %params<message-code>:exists {
@@ -366,6 +376,16 @@ method from-hash(%params is copy, Bool:D :$asn32) {
         };
     }
    
+    if %params<extended-community>.elems {
+        $path-attr.append: Net::BGP::Path-Attribute.from-hash(
+            {
+                path-attribute-name => 'Extended-Community',
+                extended-community  => %params<extended-community>,
+            },
+            :$asn32
+        ).raw;
+    }
+
     if %params<as4-path> eq '' { 
         if !$asn32 and %params<as-path>.comb(/ <[0..9]>+ /).first(* ≥ 2¹⁶).defined {
             $path-attr.append: Net::BGP::Path-Attribute.from-hash(
@@ -558,6 +578,11 @@ method community-list(-->Array[Str:D]) {
     return @!cached-community-list;
 }
 
+method extended-community-list(-->Array[Str:D]) {
+    self.path-attributes.sink;
+    return @!cached-extended-community-list;
+}
+
 method long-community-list(-->Array[Str:D]) {
     self.path-attributes.sink;
     return @!cached-long-community-list;
@@ -684,6 +709,11 @@ Returns an array of path attributes.
 
 Returns an array of strings representing the communities in the BGP Community
 attribute.
+
+=head2 extended-community-list
+
+Returns an array of strings representing the communities in the BGP
+Extended-Community attribute.
 
 =head2 long-community-list
 
