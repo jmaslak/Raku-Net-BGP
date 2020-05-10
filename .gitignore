@@ -14,3 +14,5 @@ test2.sh
 /*.log
 /log.txt
 out*.txt
+core
+start.sh
