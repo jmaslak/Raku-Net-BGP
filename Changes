@@ -2,6 +2,9 @@ Revision history for Raku-Net-BGP
 
 {{$NEXT}}
     - Performance: Improved bgpmon.p6 performance with --track
+    - Bugfix: bgpmon.p6 with --track wrongly indicated a
+      PREVIOUS-PREFIX-MATCH for an ANNOUNCE update message that followed a
+      WITHDRAWL message.
 
 0.7.0  2020-05-10T22:04:10Z
     - Bugfix: Proper decoding of IPv4-based extended community path attributes
