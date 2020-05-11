@@ -13,6 +13,7 @@ use Net::BGP::Validation;
 use Sys::HostAddr;
 
 my %last-path;
+my %last-path-match;
 
 sub MAIN(
     Bool:D                    :$passive = False,
@@ -209,6 +210,8 @@ sub MAIN(
                     $event<nlri6>,
                     $event<withdrawn>,
                     $event<withdrawn6>,
+                    $event<as-path>,
+                    $event<as-path-match>,
                     :$lint-mode,
                     :$track
                 );
@@ -219,17 +222,15 @@ sub MAIN(
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
-                            my @old-path = @( $event<event>.message.as-array );
-                            @old-path.push( $event<event>.message.origin );
-                            %last-path{$event<event>.peer}{$prefix} = @old-path;
+                            %last-path{$event<event>.peer}{$prefix} = $event<as-path>;
+                            %last-path-match{$event<event>.peer}{$prefix} = $event<as-path-match>;
                         }
                         for $event<nlri6><> -> $prefix {
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
-                            my @old-path = @( $event<event>.message.as-array );
-                            @old-path.push( $event<event>.message.origin );
-                            %last-path{$event<event>.peer}{$prefix} = @old-path;
+                            %last-path{$event<event>.peer}{$prefix} = $event<as-path>;
+                            %last-path-match{$event<event>.peer}{$prefix} = $event<as-path-match>;
                         }
 
                         for $event<withdrawn><> -> $prefix {
@@ -246,6 +247,7 @@ sub MAIN(
                         }
                     } elsif $event ~~ Net::BGP::Event::Closed-Connection {
                         %last-path{$event.peer}:delete;
+                        %last-path-match{$event.peer}:delete;
                     }
 
                 }
@@ -380,6 +382,8 @@ multi is-filter-match(
     @nlri6,
     @withdrawn,
     @withdrawn6,
+    @as-path,
+    $as-path-match,
     :$lint-mode,
     :$track,
     -->Str
@@ -412,38 +416,24 @@ multi is-filter-match(
     }
 
     if $speaker.wanted-asn.elems {
-        for $speaker.wanted-asn -> $as {
-            if $event.message.as-array.first( { $^a == $as } ).defined {
-                @m.push('AS-PATH');
-            }
+        if $as-path-match {
+            @m.push('AS-PATH');
         }
 
         if $track {
             my @all-nlri = @nlri;
             @all-nlri.append: @nlri6;
             for @all-nlri -> $prefix {
-                if %last-path{$event.peer}{$prefix}:exists {
-                    if $speaker.wanted-asn.elems {
-                        for $speaker.wanted-asn -> $as {
-                            if $as ∈ %last-path{$event.peer}{$prefix} {
-                                @m.push('PREFIX-PREVIOUS-MATCH');
-                            }
-                        }
-                    }
+                if %last-path-match{$event.peer}{$prefix} {
+                    @m.push('PREFIX-PREVIOUS-MATCH');
                 }
             }
 
             my @all-withdrawn = @withdrawn;
             @all-withdrawn.append: @all-withdrawn;
             for @all-withdrawn -> $prefix {
-                if %last-path{$event.peer}{$prefix}:exists {
-                    if $speaker.wanted-asn.elems {
-                        for $speaker.wanted-asn -> $as {
-                            if $as ∈ %last-path{$event.peer}{$prefix} {
-                                @m.push('PREFIX-PREVIOUS-MATCH');
-                            }
-                        }
-                    }
+                if %last-path-match{$event.peer}{$prefix} {
+                    @m.push('PREFIX-PREVIOUS-MATCH');
                 }
             }
         }
@@ -467,6 +457,8 @@ multi is-filter-match(
     @nlri6,
     @withdrawn,
     @withdrawn6,
+    @as-path,
+    $as-path-match,
     :$lint-mode,
     :$track
     -->Str
@@ -672,12 +664,26 @@ sub map-event(
     $ret<nlri6> = [];
     $ret<withdrawn> = [];
     $ret<withdrawn6> = [];
+    $ret<as-path> = [];
+    $ret<as-path-match> = False;
 
     if $event ~~ Net::BGP::Event::BGP-Message and $event.message ~~ Net::BGP::Message::Update {
         $ret<nlri>.append: @( $event.message.nlri );
         $ret<nlri6>.append: @( $event.message.nlri6 );
         $ret<withdrawn>.append: @( $event.message.withdrawn );
         $ret<withdrawn6>.append: @( $event.message.withdrawn6 );
+
+        $ret<as-path> = [ $event.message.as-array ];
+
+        if $speaker.wanted-asn.elems {
+            for $speaker.wanted-asn -> $as {
+                if $as ∈ $ret<as-path> {
+                    $ret<as-path-match> = True;
+                }
+            }
+        }
+
+        $ret<as-path>.push( $event.message.origin );
     }
 
     if $lint-mode and $event ~~ Net::BGP::Event::BGP-Message {
