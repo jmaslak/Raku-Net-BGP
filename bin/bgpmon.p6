@@ -238,14 +238,14 @@ sub MAIN(
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
                             %last-path{$event<event>.peer}{$prefix}:delete;
-                            %last-path-match{$event.peer}:delete;
+                            %last-path-match{$event<event>.peer}:delete;
                         }
                         for $event<withdrawn6><> -> $prefix {
                             if %last-path{$event<event>.peer}{$prefix}:exists {
                                 $event<last-path>{$prefix} = %last-path{$event<event>.peer}{$prefix};
                             }
                             %last-path{$event<event>.peer}{$prefix}:delete;
-                            %last-path-match{$event.peer}:delete;
+                            %last-path-match{$event<event>.peer}:delete;
                         }
                     } elsif $event ~~ Net::BGP::Event::Closed-Connection {
                         %last-path{$event.peer}:delete;
