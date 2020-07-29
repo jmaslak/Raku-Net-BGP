@@ -292,7 +292,6 @@ sub MAIN(
                     exit;
                 }
             }
-            @events.list.sink;
         }
     }
 }

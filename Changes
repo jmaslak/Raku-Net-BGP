@@ -5,6 +5,8 @@ Revision history for Raku-Net-BGP
     - Bugfix: bgpmon.p6 with --track wrongly indicated a
       PREVIOUS-PREFIX-MATCH for an ANNOUNCE update message that followed a
       WITHDRAWL message.
+    - Bugfix: bgpmon.p6 had an unnecessary .sink that sometimes seemed
+      to trigger a Raku bug. Removed.
 
 0.7.0  2020-05-10T22:04:10Z
     - Bugfix: Proper decoding of IPv4-based extended community path attributes
