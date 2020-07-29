@@ -21,7 +21,7 @@ use Sys::Domainname;
 # method that takes a controller.
 
 use StrictClass;
-unit class Net::BGP::Controller:ver<0.7.0>:auth<cpan:JMASLAK>
+unit class Net::BGP::Controller:ver<0.7.1>:auth<cpan:JMASLAK>
     does StrictClass
     does Net::BGP::Controller-Handle-BGP;
 
