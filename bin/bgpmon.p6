@@ -184,7 +184,7 @@ sub MAIN(
                 if $cnt++ ≤ $cores*2*$batch-size {
                     $event = $channel.poll;
                 } else {
-                    $event = Nil;
+                    $event = Any;
                 }
             } while $event.defined;
 
