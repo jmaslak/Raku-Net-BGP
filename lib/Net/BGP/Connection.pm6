@@ -36,8 +36,25 @@ has Net::BGP::Controller-Handle-BGP:D $.bgp-handler is required;
 
 method handle-messages(-->Nil) {
     if self.closed { return; } # Do nothing;
+
+    my $socket-supply;
+    {
+        $socket-supply = self.socket.Supply(:bin);
+        CATCH {
+            default {
+                # Handle race condition where the socket gets closed before
+                # we can establish a supply.
+                # XXX We should throw a specific exception at line 79 in
+                # TCP::LowLevel::Socket-Connection-Linux
+                my $supplier = Supplier::Preserving.new;
+                $socket-supply = $supplier.Supply;
+                $supplier.done;
+            }
+        }
+    }
+
     react {
-        whenever self.socket.Supply(:bin) -> $buf {
+        whenever $socket-supply -> $buf {
             self.buffer.append($buf);
             $!debug.write($buf) if $!debug.defined;
             loop {

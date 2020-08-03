@@ -1,6 +1,9 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Bugfix: race condition no longer occurs if a socket is closed
+      before a supplier is created.
+    - Bugfix: Use "Any" instead of "Nil" to avoid runtime crash
 
 0.7.1  2020-07-29T22:55:10Z
     - Performance: Improved bgpmon.p6 performance with --track
