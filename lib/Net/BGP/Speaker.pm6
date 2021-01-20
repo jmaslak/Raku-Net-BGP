@@ -82,6 +82,7 @@ method peer-add(
     Bool:D :$ipv4,
     Bool:D :$ipv6,
     Str    :$md5?,
+    UInt:D :$my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60,
 ) {
     self.bgp.peer-add(
         :$peer-asn,
@@ -91,6 +92,7 @@ method peer-add(
         :$ipv4,
         :$ipv6,
         :$md5,
+        :$my-hold-time,
     );
 }
 

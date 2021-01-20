@@ -344,7 +344,7 @@ method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) {
 method send-open(
     Net::BGP::Connection-Role:D $connection,
     Bool                        :$supports-capabilities,
-    Int:D                       :$hold-time,
+    UInt:D                      :$hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60,
     Net::BGP::AFI-SAFI:D        :@af,
     -->Nil
 ) { 
