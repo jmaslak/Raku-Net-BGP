@@ -9,7 +9,7 @@ use Net::BGP::Conversions;
 use Net::BGP::Message;
 
 use StrictClass;
-unit class Net::BGP::Message::Notify:ver<0.7.2>:auth<cpan:JMASLAK>
+unit class Net::BGP::Message::Notify:ver<0.8.0>:auth<cpan:JMASLAK>
     is Net::BGP::Message
     does StrictClass;
 

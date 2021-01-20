@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+
+0.8.0  2021-01-20T20:23:56Z
     - Bugfix: [bgpmon.p6] Fix crash in match code
     - Feature: Allow --hold-time option to be specified for bgpmon.p6
 
