@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+
+0.8.1  2021-05-26T14:24:39Z
     - Bugfix: Fix parser for IPv6 addresses (1:55555:: was passing
       parsing, it is not now)
 

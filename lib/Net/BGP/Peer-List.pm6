@@ -10,7 +10,7 @@ use Net::BGP::Peer;
 use Net::BGP::Time;
 use OO::Monitors;
 
-unit monitor Net::BGP::Peer-List:ver<0.8.0>:auth<cpan:JMASLAK>;
+unit monitor Net::BGP::Peer-List:ver<0.8.1>:auth<cpan:JMASLAK>;
 
 has Net::BGP::Peer:D %!peers;
 has Int:D $.my-asn is required where ^(2³²);
