@@ -270,6 +270,7 @@ subtest 'IPv6 CIDRs', {
         ::/a
         2001:db8::/129
         2001:/16
+        2001:55555::/32
     »;
 
     for @BAD-CIDRS -> $cidr {
@@ -344,6 +345,7 @@ subtest 'IPv6 CIDRs', {
 
 subtest 'Misc. Tests' => {
     is buf8-to-ipv4(192, 0, 2, 1), '192.0.2.1', "buf8-to-ipv4 returns good value";
+    dies-ok { ipv6-to-int('1:55555:1::') }, "Long IPv6-ish parts fail parse";
 }
 
 

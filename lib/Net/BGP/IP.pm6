@@ -70,7 +70,7 @@ grammar IPv6 {
             { @*by16 = |@$0, |('0' xx 8 - (@$0 + @$1)), |@$1; }
     }
 
-    token h16 { (<:hexdigit>+) <?{ @$0 ≤ 4 }> }
+    token h16 { (<:hexdigit>+) <?{ $0.chars ≤ 4 }> }
 }
 
 # Need to define @*by16 to use the IPv6.parse() routine
