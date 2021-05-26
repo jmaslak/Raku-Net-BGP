@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Bugfix: Fix parser for IPv6 addresses (1:55555:: was passing
+      parsing, it is not now)
 
 0.8.0  2021-01-20T20:23:56Z
     - Bugfix: [bgpmon.p6] Fix crash in match code
