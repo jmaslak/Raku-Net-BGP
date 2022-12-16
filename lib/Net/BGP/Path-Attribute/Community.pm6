@@ -1,7 +1,7 @@
 use v6;
 
 #
-# Copyright © 2018-2019 Joelle Maslak
+# Copyright © 2018-2022 Joelle Maslak
 # All Rights Reserved - See License
 #
 
@@ -36,7 +36,7 @@ method payload-length(-->Int:D) {
 method from-raw(buf8:D $raw where { $^r.bytes ≥ 3 }, Bool:D :$asn32) {
     if ! $raw[0] +& 0x80 { die("Optional flag must be set on Community attribute") }
     if ! $raw[0] +& 0x40 { die("Transitive flag must be set on Community attribute") }
-    if   $raw[0] +& 0x20 { die("Partial flag not valid on Community attribute") }
+    # Partial flag is not tested
 
     my $offset = ($raw[0] +& 0x10) ?? 4 !! 3;
     my $len    = ($raw[0] +& 0x10) ?? nuint16($raw[2],$raw[3]) !! $raw[2];
