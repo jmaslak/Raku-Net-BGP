@@ -21,7 +21,7 @@ use Sys::Domainname;
 # method that takes a controller.
 
 use StrictClass;
-unit class Net::BGP::Controller:ver<0.7.1>:auth<cpan:JMASLAK>
+unit class Net::BGP::Controller:ver<0.8.1>:auth<cpan:JMASLAK>
     does StrictClass
     does Net::BGP::Controller-Handle-BGP;
 
@@ -344,7 +344,7 @@ method connection-closed(Net::BGP::Connection-Role:D $connection -->Nil) {
 method send-open(
     Net::BGP::Connection-Role:D $connection,
     Bool                        :$supports-capabilities,
-    Int:D                       :$hold-time,
+    UInt:D                      :$hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60,
     Net::BGP::AFI-SAFI:D        :@af,
     -->Nil
 ) { 

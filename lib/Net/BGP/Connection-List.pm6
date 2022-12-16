@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Connection;
 use OO::Monitors;
 
-unit monitor Net::BGP::Connection-List:ver<0.7.1>:auth<cpan:JMASLAK>;
+unit monitor Net::BGP::Connection-List:ver<0.8.1>:auth<cpan:JMASLAK>;
 
 has Net::BGP::Connection:D %!connections;
 

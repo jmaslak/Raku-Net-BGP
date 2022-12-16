@@ -6,7 +6,7 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::Speaker:ver<0.7.1>:auth<cpan:JMASLAK>;
+unit class Net::BGP::Speaker:ver<0.8.1>:auth<cpan:JMASLAK>;
 
 use Net::BGP;
 use Net::BGP::CIDR;
@@ -82,6 +82,7 @@ method peer-add(
     Bool:D :$ipv4,
     Bool:D :$ipv6,
     Str    :$md5?,
+    UInt:D :$my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60,
 ) {
     self.bgp.peer-add(
         :$peer-asn,
@@ -91,6 +92,7 @@ method peer-add(
         :$ipv4,
         :$ipv6,
         :$md5,
+        :$my-hold-time,
     );
 }
 

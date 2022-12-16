@@ -1,11 +1,28 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Bugfix: Allow partial bit to be set on Community path attribute
+
+0.8.1  2021-05-26T14:24:39Z
+    - Bugfix: Fix parser for IPv6 addresses (1:55555:: was passing
+      parsing, it is not now)
+
+0.8.0  2021-01-20T20:23:56Z
+    - Bugfix: [bgpmon.p6] Fix crash in match code
+    - Feature: Allow --hold-time option to be specified for bgpmon.p6
+
+0.7.2  2020-08-03T15:04:08Z
+    - Bugfix: race condition no longer occurs if a socket is closed
+      before a supplier is created.
+    - Bugfix: Use "Any" instead of "Nil" to avoid runtime crash
+
+0.7.1  2020-07-29T22:55:10Z
     - Performance: Improved bgpmon.p6 performance with --track
     - Bugfix: bgpmon.p6 with --track wrongly indicated a
       PREVIOUS-PREFIX-MATCH for an ANNOUNCE update message that followed a
       WITHDRAWL message.
-    - Bugfix: Allow partial bit to be set on Community path attribute
+    - Bugfix: bgpmon.p6 had an unnecessary .sink that sometimes seemed
+      to trigger a Raku bug. Removed.
 
 0.7.0  2020-05-10T22:04:10Z
     - Bugfix: Proper decoding of IPv4-based extended community path attributes

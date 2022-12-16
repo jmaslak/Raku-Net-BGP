@@ -41,6 +41,7 @@ sub MAIN(
     Bool:D                    :$color = False, # XXX Should test for terminal
     Bool:D                    :$track = False,
     UInt:D                    :$cores = $*KERNEL.cpu-cores,
+    UInt:D                    :$hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60,
     *@args is copy
 ) {
     my $speaker = Net::BGP::Speaker.new(
@@ -78,6 +79,7 @@ sub MAIN(
             :$passive,
             :ipv4(True),
             :ipv6($af-ipv6),
+            :my-hold-time($hold-time),
             :$md5,
         );
     }
@@ -184,7 +186,7 @@ sub MAIN(
                 if $cnt++ ≤ $cores*2*$batch-size {
                     $event = $channel.poll;
                 } else {
-                    $event = Nil;
+                    $event = Any;
                 }
             } while $event.defined;
 
@@ -259,7 +261,7 @@ sub MAIN(
                 $_<str> = $short-format ?? short-lines($_<event>, $_<last-path>) !! $_<event>.Str;
             }
 
-            @events = @events.hyper(:$degree, :$batch).grep( { $^a<match>.defined } );
+            @events = @events.hyper(:$degree, :$batch).grep( { $^a<match> } );
 
             for @events -> $event {
                 if $event<event> ~~ Net::BGP::Event::BGP-Message {
@@ -292,7 +294,6 @@ sub MAIN(
                     exit;
                 }
             }
-            @events.list.sink;
         }
     }
 }

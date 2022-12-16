@@ -10,7 +10,7 @@ use Net::BGP::Peer;
 use Net::BGP::Time;
 use OO::Monitors;
 
-unit monitor Net::BGP::Peer-List:ver<0.7.1>:auth<cpan:JMASLAK>;
+unit monitor Net::BGP::Peer-List:ver<0.8.1>:auth<cpan:JMASLAK>;
 
 has Net::BGP::Peer:D %!peers;
 has Int:D $.my-asn is required where ^(2³²);
@@ -27,10 +27,11 @@ method get(Str:D $peer-ip) {
 method add(
     Int:D  :$peer-asn,
     Str:D  :$peer-ip,
-    Int:D  :$peer-port? = 179,
-    Bool:D :$passive?   = False,
-    Bool:D :$ipv4?      = True,
-    Bool:D :$ipv6?      = False,
+    Int:D  :$peer-port?   = 179,
+    Bool:D :$passive?     = False,
+    Bool:D :$ipv4?        = True,
+    Bool:D :$ipv6?        = False,
+    UInt:D :$my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60,
 ) {
     my $key = self.peer-key($peer-ip);
 
@@ -50,6 +51,7 @@ method add(
         :$peer-asn,
         :$!my-asn,
         :$passive,
+        :$my-hold-time,
         :my-af(@af),
     );
 }

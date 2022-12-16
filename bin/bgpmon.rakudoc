@@ -106,6 +106,10 @@ routes provided.
 
 If present, advertise address family IPv6 Unicast support to the remote peer.
 
+=head2 --hold-time <seconds>
+
+If present, advertise the given hold time.  Must be zero or 3..65535.
+
 =head2 --short-format
 
 If present, use the short output format rather than the more human-readable

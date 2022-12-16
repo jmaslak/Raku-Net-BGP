@@ -50,7 +50,7 @@ use Net::BGP::Message::Update;
 use TCP::LowLevel;
 
 use StrictClass;
-unit class Net::BGP:ver<0.7.1>:auth<cpan:JMASLAK> does StrictClass;
+unit class Net::BGP:ver<0.8.1>:auth<cpan:JMASLAK> does StrictClass;
 
 our subset PortNum of Int where ^65536;
 
@@ -321,6 +321,7 @@ method peer-add (
     Bool:D :$passive? = False,
     Bool:D :$ipv4? = True,
     Bool:D :$ipv6? = False,
+    UInt:D :$my-hold-time where { $^h == 0 or $^h ~~ 3..65535 } = 60,
     Str    :$md5?,
 ) {
     self.add-md5($peer-ip, $md5) if $md5.defined;
@@ -330,7 +331,8 @@ method peer-add (
         :$peer-port,
         :$passive,
         :$ipv4,
-        :$ipv6
+        :$ipv6,
+        :$my-hold-time,
     );
 }
 
