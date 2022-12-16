@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Error;
 
 use StrictClass;
-unit class Net::BGP::Error::Length-Too-Long:ver<0.8.1>:auth<cpan:JMASLAK>
+unit class Net::BGP::Error::Length-Too-Long:ver<0.8.2>:auth<cpan:JMASLAK>
     is Net::BGP::Error
     does StrictClass;
 

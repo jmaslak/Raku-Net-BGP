@@ -7,7 +7,7 @@ use v6;
 
 use OO::Monitors;
 
-unit monitor Net::BGP::Peer:ver<0.8.1>:auth<cpan:JMASLAK>;
+unit monitor Net::BGP::Peer:ver<0.8.2>:auth<cpan:JMASLAK>;
 
 use Net::BGP::AFI-SAFI;
 use Net::BGP::Connection;
