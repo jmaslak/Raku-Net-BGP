@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Error;
 
 use StrictClass;
-unit class Net::BGP::Error::Unknown-Version:ver<0.7.0>:auth<cpan:JMASLAK>
+unit class Net::BGP::Error::Unknown-Version:ver<0.7.1>:auth<cpan:JMASLAK>
     is Net::BGP::Error
     does StrictClass;
 
