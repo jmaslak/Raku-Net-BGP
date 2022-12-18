@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit module Net::BGP::AFI:ver<0.8.2>:auth<cpan:JMASLAK>;
+unit module Net::BGP::AFI:ver<0.8.3>:auth<cpan:JMASLAK>;
 
 my %afi-names := Hash[UInt:D,Str:D].new;
 

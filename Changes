@@ -1,6 +1,8 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+
+0.8.3  2022-12-18T10:25:23-07:00
     - Bugfix: [bgpmon] Do not apply filters if none are specified
 
 0.8.2  2022-12-16T11:29:25-07:00

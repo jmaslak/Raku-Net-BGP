@@ -6,7 +6,7 @@ use v6;
 #
 
 use StrictClass;
-unit class Net::BGP::CIDR:ver<0.8.2>:auth<cpan:JMASLAK> does StrictClass;
+unit class Net::BGP::CIDR:ver<0.8.3>:auth<cpan:JMASLAK> does StrictClass;
 
 use Net::BGP::IP;
 

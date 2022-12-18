@@ -16,7 +16,7 @@ use Net::BGP::Parameter;
 use Net::BGP::Parameter::Capabilities;
 
 use StrictClass;
-unit class Net::BGP::Message::Open:ver<0.8.2>:auth<cpan:JMASLAK>
+unit class Net::BGP::Message::Open:ver<0.8.3>:auth<cpan:JMASLAK>
     is Net::BGP::Message
     does StrictClass;
 
