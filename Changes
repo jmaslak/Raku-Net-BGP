@@ -1,6 +1,7 @@
 Revision history for Raku-Net-BGP
 
 {{$NEXT}}
+    - Bugfix: [bgpmon] Do not apply filters if none are specified
 
 0.8.2  2022-12-16T11:29:25-07:00
     - Bugfix: Allow partial bit to be set on Community path attribute

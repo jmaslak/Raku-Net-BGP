@@ -261,7 +261,16 @@ sub MAIN(
                 $_<str> = $short-format ?? short-lines($_<event>, $_<last-path>) !! $_<event>.Str;
             }
 
-            @events = @events.hyper(:$degree, :$batch).grep( { $^a<match> } );
+            # Only apply filter if we're filtering based on ASN or CIDR
+            if $speaker.wanted-asn.elems + $speaker.wanted-cidr.elems > 0 {
+                @events = @events.hyper(:$degree, :$batch).grep(
+                    {
+                        $^a<match>
+                        || $^a<event> !~~ Net::BGP::Event::BGP-Message
+                        || $^a<event>.message !~~ Net::BGP::Message::Update 
+                    }
+                );
+            }
 
             for @events -> $event {
                 if $event<event> ~~ Net::BGP::Event::BGP-Message {
