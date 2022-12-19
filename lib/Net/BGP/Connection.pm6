@@ -18,7 +18,7 @@ use Net::BGP::Event::BGP-Message;
 use Net::BGP::Event::Closed-Connection;
 
 use StrictClass;
-unit class Net::BGP::Connection:ver<0.8.3>:auth<cpan:JMASLAK>
+unit class Net::BGP::Connection:ver<0.8.3>:auth<zef:jmaslak>
     does Net::BGP::Connection-Role;
 
 has                     $.socket           is required;

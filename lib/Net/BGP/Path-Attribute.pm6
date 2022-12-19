@@ -6,7 +6,7 @@ use v6;
 #
 
 use StrictClass;
-unit class Net::BGP::Path-Attribute:ver<0.8.3>:auth<cpan:JMASLAK>
+unit class Net::BGP::Path-Attribute:ver<0.8.3>:auth<zef:jmaslak>
     does StrictClass;
 
 use Net::BGP::Conversions;

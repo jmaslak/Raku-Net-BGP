@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Message;
 use Net::BGP::Command;
 
-unit class Net::BGP::Command::BGP-Message:ver<0.8.3>:auth<cpan:JMASLAK>
+unit class Net::BGP::Command::BGP-Message:ver<0.8.3>:auth<zef:jmaslak>
     is Net::BGP::Command;
 
 has Net::BGP::Message $.message;

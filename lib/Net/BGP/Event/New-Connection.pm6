@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Event;
 
 use StrictClass;
-unit class Net::BGP::Event::New-Connection:ver<0.8.3>:auth<cpan:JMASLAK>
+unit class Net::BGP::Event::New-Connection:ver<0.8.3>:auth<zef:jmaslak>
     is Net::BGP::Event
     does StrictClass;
 

@@ -5,7 +5,7 @@ use v6;
 # All Rights Reserved - See License
 #
 
-unit role Net::BGP::Controller-Handle-BGP:ver<0.8.3>:auth<cpan:JMASLAK>;
+unit role Net::BGP::Controller-Handle-BGP:ver<0.8.3>:auth<zef:jmaslak>;
 
 use Net::BGP::Connection-Role;
 use Net::BGP::Message;
