@@ -9,7 +9,7 @@ use v6.d;
 # Helper subs for Rakudo ≤ 2018.11
 #
 
-unit module Net::BGP::Conversions-Pre201812:ver<0.8.3>:auth<zef:jmaslak>;
+unit module Net::BGP::Conversions-Pre201812:ver<0.9.0>:auth<zef:jmaslak>;
 
 sub _nuint16(buf8 $b where $b.bytes == 2 --> Int) is export {
     return $b[0] × 2⁸ + $b[1];

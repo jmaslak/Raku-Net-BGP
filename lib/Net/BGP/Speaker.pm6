@@ -6,7 +6,7 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-unit class Net::BGP::Speaker:ver<0.8.3>:auth<zef:jmaslak>;
+unit class Net::BGP::Speaker:ver<0.9.0>:auth<zef:jmaslak>;
 
 use Net::BGP;
 use Net::BGP::CIDR;

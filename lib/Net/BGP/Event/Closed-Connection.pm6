@@ -8,7 +8,7 @@ use v6;
 use Net::BGP::Event;
 
 use StrictClass;
-unit class Net::BGP::Event::Closed-Connection:ver<0.8.3>:auth<zef:jmaslak>
+unit class Net::BGP::Event::Closed-Connection:ver<0.9.0>:auth<zef:jmaslak>
     is Net::BGP::Event
     does StrictClass;
 

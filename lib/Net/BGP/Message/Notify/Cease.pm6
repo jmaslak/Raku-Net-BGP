@@ -9,7 +9,7 @@ use Net::BGP::Conversions;
 use Net::BGP::Message::Notify;
 
 use StrictClass;
-unit class Net::BGP::Message::Notify::Cease:ver<0.8.3>:auth<zef:jmaslak>
+unit class Net::BGP::Message::Notify::Cease:ver<0.9.0>:auth<zef:jmaslak>
     is Net::BGP::Message::Notify
     does StrictClass;
 

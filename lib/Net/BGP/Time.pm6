@@ -7,7 +7,7 @@ use v6;
 
 use DateTime::Monotonic;
 
-module Net::BGP::Time:ver<0.8.3>:auth<zef:jmaslak> {
+module Net::BGP::Time:ver<0.9.0>:auth<zef:jmaslak> {
     sub monotonic-seconds(-->Numeric) is export {
         return DateTime::Monotonic::monotonic-seconds;
     }

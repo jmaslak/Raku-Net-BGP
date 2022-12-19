@@ -8,7 +8,7 @@ use v6.d;
 
 use StrictClass;
 
-unit class Net::BGP::Speaker::Display:ver<0.8.3>:auth<zef:jmaslak>
+unit class Net::BGP::Speaker::Display:ver<0.9.0>:auth<zef:jmaslak>
     does StrictClass;
 
 use Terminal::ANSIColor;

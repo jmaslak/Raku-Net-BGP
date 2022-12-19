@@ -6,7 +6,7 @@ use v6;
 #
 
 use StrictClass;
-unit class Net::BGP::Capability:ver<0.8.3>:auth<zef:jmaslak> does StrictClass;
+unit class Net::BGP::Capability:ver<0.9.0>:auth<zef:jmaslak> does StrictClass;
 
 my %capability-codes := Hash[Net::BGP::Capability:U,Int].new;
 my %capability-names := Hash[Net::BGP::Capability:U,Str].new;

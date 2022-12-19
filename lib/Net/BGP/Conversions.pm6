@@ -5,7 +5,7 @@ use v6.d;
 # All Rights Reserved - See License
 #
 
-unit module Net::BGP::Conversions:ver<0.8.3>:auth<zef:jmaslak>;
+unit module Net::BGP::Conversions:ver<0.9.0>:auth<zef:jmaslak>;
 
 use if;
 

@@ -50,7 +50,7 @@ use Net::BGP::Message::Update;
 use TCP::LowLevel;
 
 use StrictClass;
-unit class Net::BGP:ver<0.8.3>:auth<zef:jmaslak> does StrictClass;
+unit class Net::BGP:ver<0.9.0>:auth<zef:jmaslak> does StrictClass;
 
 our subset PortNum of Int where ^65536;
 

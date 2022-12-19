@@ -6,7 +6,7 @@ use v6;
 #
 
 use StrictClass;
-unit class Net::BGP::AFI-SAFI:ver<0.8.3>:auth<zef:jmaslak> does StrictClass;
+unit class Net::BGP::AFI-SAFI:ver<0.9.0>:auth<zef:jmaslak> does StrictClass;
 
 use Net::BGP::AFI  :ALL;
 use Net::BGP::SAFI :ALL;
