@@ -87,7 +87,7 @@ Joelle Maslak <jmaslak@antelope.net>
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright © 2018-2020 Joelle Maslak
+Copyright © 2018-2022 Joelle Maslak
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
